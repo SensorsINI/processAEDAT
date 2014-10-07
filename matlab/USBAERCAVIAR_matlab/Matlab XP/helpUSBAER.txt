@@ -1,0 +1,54 @@
+------------------------------------
+USBAER-Matlab Interface's functions:
+------------------------------------
+This USB interface makes possible to configure analogue chips through ipot cells, using these three matlab functions:
+
+- [hnd, error] = USBAEROpen(DevName)
+- [error] = USBAERSend(hnd,DatArray[,ParArray])
+- [error,DatArray] = USBAERreceive(hnd,NumData[,ParArray])
+- [error] = USBAERChangeAlias(hnd,DevName)
+- [error] = USBAERClose(hnd)
+- [error] = USBAERloadFPGA(hnd,'binfile')
+Where: 
+
+- hnd: Device handler. 
+- error: Indicates the error in the operation if its value is different than zero.
+- DevName: String of 28 characteres as maximum. Indicates de name of the USB device. Use 'Mapbul2Device0' as default.
+  The default device name changes when there are more than one board plugged or it's not the first time the board has been plugged when you try to open it from matlab.
+  It is recommended to change the Device Alias the first time you use the board. For doing that follow these steps:
+    - Open the device using the default device name.
+    - Call the USBAERChangeAlias function using a String (7 characteres maximum) to identify this board (for example 'ipot0')
+    - Next time you will need to open this board, use the new name for DevName ('ipot0').
+    - If you plan to use more than one board, use different names for the followings: ipot1, ipot2, ...
+      Otherwise, you can't use them at the same time.
+    - Once the Alias has been changed, it is stored in the Flash memory of the board, so this process only has to be done ONCE.
+- DatArray: Array of Bytes. This is a Nx1 matrix. Each byte (rows) is a number between 0 to 255.
+- ParArray: Array of Bytes. This is a Nx1 matrix. Each byte (rows) is a number between 0 to 255. Up to 16 parameters are permited
+        This is currently only used in the USBAER board. Those parameters Are send directly to the FPGA and their meaning is application dependent.
+- NumData: Number of elements to read.
+- binfile: file name of the file that contains an FPGA binary (i.e. framegraber, sequencer ...)
+
+Example for the USB_AER board
+-----------------------------
+[h,a]=USBAERopen('Mapbul2Device0')     //Open with default name for first USBAER device
+[e]=USBAERchangealias(h,'prueb')        //Change alias to prueb
+[e]=USBAERclose(h)
+
+Now unplug and replug the board so that new alias becomes efective.
+[h,a]=USBAERopen('prueb')
+[e]=USBAERloadFPGA(h,'aer_framegrabber_timer.bin')  //50ms integration time 32x32 framegrabber
+[e,A]=USBAERreceive(h,1024)  //Receive the image
+B=reshape(A,32,32) //reshape
+image(B)  //Display image
+
+
+
+
+Comments about the HW for iPOD board:
+
+ Each byte will be sent to the chip, through the board, from bit 0 to 7.
+- The ipot_data line is in the J3.15 pin. 
+- The ipot_clk is in the J3.13 pin.
+- The data is valid for each positive edge of the clock. And ipot_clk is idle when there is no data.
+- The ipot_clk2 is in the J3.11 pin. This is ipot_clk inverted.
+- GND of the board are in J3.14 and J3.12.

@@ -1,0 +1,1 @@
+showLiveRetina('chip','tmpdiff128');
