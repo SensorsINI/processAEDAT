@@ -31,8 +31,13 @@ if nargin < 5
     y1 = sizeY;
 end
 addr = abs(addr);
-addr = addr((addr&triggerevent) ~= triggerevent);
-addr = addr(bitand(addr,typemask)==typedvs);
+ids = (addr&triggerevent) ~= triggerevent;
+addr = addr(ids);
+ts = ts(ids);
+ids = bitand(addr,typemask)==typedvs;
+addr = addr(ids);
+ts = ts(ids);
+
 
 xo=double(sizeX-1-bitshift(bitand(addr,xmask),-xshift));
 yo=double(bitshift(bitand(addr,ymask),-yshift));
