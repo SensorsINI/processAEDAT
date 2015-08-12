@@ -86,10 +86,6 @@ polshift=11;
 numeventsread = length(addr);
 addr = abs(addr);
 
-ext_ids = (addr&triggerevent) == triggerevent;
-ext_addr = addr(ext_ids);
-ext_ts = ts(ext_ids);
-
 ids = (addr&triggerevent) ~= triggerevent;
 addr = addr(ids);
 ts = ts(ids);
@@ -98,6 +94,9 @@ ids = bitand(addr,typemask)==typedvs;
 addr = addr(ids);
 ts = ts(ids);
 
+ext_ids = find(addr == triggerevent);
+ext_addr = addr(ext_ids);
+ext_ts = ts(ext_ids);
 
 xo = sizeX-1-double(bitshift(bitand(addr,xmask), -xshift));
 yo = double(bitshift(bitand(addr,ymask),-yshift));
