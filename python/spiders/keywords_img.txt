@@ -1,0 +1,8 @@
+ball
+table
+chair
+lamp
+sun
+door
+moon
+

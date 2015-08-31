@@ -100,5 +100,16 @@ def go(query, path, number, tot_pages = 1000):
 
 
 ### change this line
-go('snake', '/home/federico/iniLabs/data/img_db/data/images/snakes', 0)
+database_dir = '/home/federico/iniLabs/data/img_db/data/images/'
+file_keywords = 'keywords_img.txt'
+start_index = 0
+
+with open(file_keywords, 'r') as f:
+    for line in f:
+        line = line.strip()
+        print line
+        if(len(line) > 3):
+            go(line, database_dir+line+'s', start_index)
+
+
 
