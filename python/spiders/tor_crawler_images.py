@@ -7,6 +7,12 @@
 # author federico.corradi@inilabs.com
 ##########################################
 
+### change this settings
+database_dir = '/home/federico/iniLabs/data/img_db/data/images/' #database dir
+file_keywords = 'keywords_img.txt'                        #keywords for image search
+start_index = 0                                     #index for google result pages
+## end settings
+
 import json
 import os
 import time
@@ -20,6 +26,7 @@ import mechanize
 from mechanize import Browser
 from TorCtl import TorCtl
 import urllib2
+import random 
  
 user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
 headers={'User-Agent':user_agent}
@@ -81,7 +88,7 @@ def go(query, path, number, tot_pages = 1000):
 
           # Remove file-system path characters from name.
           title = image_info['titleNoFormatting'].replace('/', '').replace('\\', '')
-
+          title = title.encode('ascii',errors='ignore')
           file = open(os.path.join(BASE_PATH, '%s.jpg') % title, 'w')
           try:
             Image.open(StringIO(image_r.content)).save(file, 'JPEG')
@@ -96,20 +103,15 @@ def go(query, path, number, tot_pages = 1000):
     print start
     
     # Be nice to Google and they'll be nice back :)
-    time.sleep(1.5)
+    time.sleep(random.randint(1,12))
 
-
-### change this line
-database_dir = '/home/federico/iniLabs/data/img_db/data/images/'
-file_keywords = 'keywords_img.txt'
-start_index = 0
 
 with open(file_keywords, 'r') as f:
-    for line in f:
-        line = line.strip()
-        print line
-        if(len(line) > 3):
-            go(line, database_dir+line+'s', start_index)
+  for line in f:
+    line = line.strip()
+    print line
+    if(len(line) > 3):
+      go(line, database_dir+line+'s', start_index, tot_pages=200)
 
 
 
