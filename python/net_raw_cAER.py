@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+
 ##########################################################
-# simple script that read events from network, using cAER
-# author federicocorradi@inilabs.com
+# script that reads events from network, using cAER
+# author federico.corradi@inilabs.com
 ##########################################################
 import socket
 import struct

@@ -4,7 +4,7 @@
 # REAL TIME EVENT DISPLAY FROM cAER
 # ONLY POLARITY make sure you change
 # PARAMETERS according to your setup
-# author federicocorradi@inilabs.com
+# author federico.corradi@inilabs.com
 ######################################
 
 import socket
