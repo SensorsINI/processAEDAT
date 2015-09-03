@@ -76,7 +76,7 @@ frames = zeros([4 size(cdsSignal)]);
 frames(1, :, :, :) = resetBuffer;
 frames(2, :, :, :) = readBuffer;
 frames(3, :, :, :) = cdsSignal;
-frames(4, :, :, :) = resetTsBuffer;
+frames(4, :, :, :) = readTsBuffer;
 frames(5, :, :, :) = resetTsBuffer;
 frames(6, :, :, :) = exposures;
 
