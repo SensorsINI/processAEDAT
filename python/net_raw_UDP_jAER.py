@@ -64,8 +64,8 @@ def net_raw_UDP_jAER(host = '127.0.0.1', port = 8991, buf_size=63000, num_read =
 	    #print sequence_number
 	    counter = 4
 	    while(counter < len(data)):
-		ts =  struct.unpack('>I',data[counter:counter+4])
-		addr =   struct.unpack('>I',data[counter+4:counter+8])
+		addr =  struct.unpack('>I',data[counter:counter+4])
+		ts =   struct.unpack('>I',data[counter+4:counter+8])
 		counter = counter + 8
 		#print "addr\t\t", addr
 		#print "timestamp\t", ts
