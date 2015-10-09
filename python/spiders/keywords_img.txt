@@ -1,19 +1,2 @@
-ball
-table
-chair
-lamp
-sun
-door
-moon
-lion
-dog
-book
-tree
-house
-can
-pen
-hand
-banana
-
-
+phone
 
