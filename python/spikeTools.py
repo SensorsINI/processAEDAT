@@ -13,8 +13,8 @@ size_frames = 32
 dim_to_estimates = 3
 camera = "DAVIS240"
 dim_multiplier = 1.6 
-DataDir = '/home/federico/Dropbox/_/Data/Raw/Fabian'
-filename="Female_Train_bad"
+DataDir = '/home/federico/Dropbox/FaceDetectionMattiaCorradi/Data/Raw/Fabian'
+filename="DAVIS240_Fabian_m_bus"
 
 if camera == "DAVIS240":
     xsize=240
@@ -143,5 +143,8 @@ def ccf(x, y, axis=None):
     iFxy = np.concatenate((iFxy[len(iFxy)/2:len(iFxy)],iFxy[0:len(iFxy)/2]))
     return iFxy/varxy 
 
+#to be improved
+spec = simple_frequency_spectrum(np.diff(timestamps[0:5000]))
+plot(spec)
 
-spec = simple_frequency_spectrum(np.diff(timestamps[0:5000]),np.diff(timestamps[0:5000]))
+
