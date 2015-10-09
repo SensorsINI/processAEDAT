@@ -15,6 +15,7 @@ camera = "DAVIS240"
 dim_multiplier = 1.6 
 DataDir = '/home/federico/Dropbox/FaceDetectionMattiaCorradi/Data/Raw/Fabian'
 filename="DAVIS240_Fabian_m_bus"
+max_spikes = 50000
 
 if camera == "DAVIS240":
     xsize=240
@@ -144,7 +145,7 @@ def ccf(x, y, axis=None):
     return iFxy/varxy 
 
 #to be improved
-spec = simple_frequency_spectrum(np.diff(timestamps[0:5000]))
+spec = simple_frequency_spectrum(np.diff(timestamps[0:max_spikes]))
 plot(spec)
 
 
