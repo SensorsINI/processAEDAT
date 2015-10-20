@@ -50,7 +50,7 @@ def ind2sub(array_shape, ind):
 def read_events():
     """ A simple function that read events from cAER tcp"""
     
-    data = sock.recv(24) #we read the header of the packet
+    data = sock.recv(28) #we read the header of the packet
     
     #read header
     eventtype = struct.unpack('H',data[0:2])
@@ -58,9 +58,10 @@ def read_events():
         eventsource = struct.unpack('H',data[2:4])
         eventsize = struct.unpack('I',data[4:8])
         eventoffset = struct.unpack('I',data[8:12])
-        eventcapacity = struct.unpack('I',data[12:16])
-        eventnumber = struct.unpack('I',data[16:20])
-        eventvalid = struct.unpack('I',data[20:24])
+        eventtsoverflow = struct.unpack('I',data[12:16])
+        eventcapacity = struct.unpack('I',data[16:20])
+        eventnumber = struct.unpack('I',data[20:24])
+        eventvalid = struct.unpack('I',data[24:28])
         next_read =  eventcapacity[0]*eventsize[0] # we now read the full packet
         #this sock.recv function reads exactly next_read bytes, thanks to the  socket.MSG_WAITALL option that works under Unix, if you want to use a different system than you need to repeat reading untill you read exactly next_read bytes
         data = sock.recv(next_read,socket.MSG_WAITALL) #we read exactly the N bytes (works in Unix)

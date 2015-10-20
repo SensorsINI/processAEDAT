@@ -21,6 +21,7 @@ sock.connect((host, port))
 # eventsource 2 bytes // Numerical source ID, unique inside a process.
 # eventsize 4 bytes   // Size of one event in bytes.
 # eventtsoffset 4 bytes // Offset in bytes at which the main 32bit time-stamp can be found
+# eventtsoverflow ; // Overflow counter for the standard 32bit event time-stamp.
 # eventCapacity 4 bytes // Maximum number of events this packet can store.
 # eventNumber 4 bytes   // Total number of events present in this packet (valid + invalid).
 # eventValid 4 bytes // Total number of valid events present in this packet.
@@ -41,7 +42,7 @@ sock.connect((host, port))
 # timestamp 4 bytes     // timestamp in us
 
 while(1):
-    data = sock.recv(24) #we read the header of the packet
+    data = sock.recv(28) #we read the header of the packet
     
     #read header
     eventtype = struct.unpack('H',data[0:2])
@@ -49,9 +50,10 @@ while(1):
         eventsource = struct.unpack('H',data[2:4])
         eventsize = struct.unpack('I',data[4:8])
         eventoffset = struct.unpack('I',data[8:12])
-        eventcapacity = struct.unpack('I',data[12:16])
-        eventnumber = struct.unpack('I',data[16:20])
-        eventvalid = struct.unpack('I',data[20:24])
+        eventtsoverflow = struct.unpack('I',data[12:16])
+        eventcapacity = struct.unpack('I',data[16:20])
+        eventnumber = struct.unpack('I',data[20:24])
+        eventvalid = struct.unpack('I',data[24:28])
         next_read =  eventcapacity[0]*eventsize[0] # we now read the full packet
         #this sock.recv function reads exactly next_read bytes, thanks to the  socket.MSG_WAITALL option that works under Unix, if you want to use a different system than you need to repeat reading untill you read exactly next_read bytes
         data = sock.recv(next_read,socket.MSG_WAITALL) #we read exactly the N bytes (works in Unix)
