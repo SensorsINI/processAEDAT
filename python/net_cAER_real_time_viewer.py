@@ -72,8 +72,8 @@ def read_events():
         while(data[counter:counter+4]):  #loop over all event packets
             aer_data = struct.unpack('I',data[counter:counter+4])
             timestamp = struct.unpack('I',data[counter+4:counter+4+4])
-            x_addr = (aer_data[0] >> 19) & 0x00001FFF
-            y_addr = (aer_data[0] >> 6) & 0x00001FFF
+            x_addr = (aer_data[0] >> 17) & 0x00007FFF
+            y_addr = (aer_data[0] >> 2) & 0x00007FFF
             x_addr_tot.append(x_addr)
             y_addr_tot.append(y_addr)
             pol = (aer_data[0] >> 1) & 0x00000001
