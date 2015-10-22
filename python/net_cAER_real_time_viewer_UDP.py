@@ -18,12 +18,12 @@ from matplotlib import pyplot as plt
 
 # PARAMETERS
 host = "127.0.0.1"
-port = 7777
+port = 8888
 xdim= 240
 ydim= 180
 
-sock = socket.socket()
-sock.connect((host, port))
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind((host, port))
 
 def matrix_active(x,y, pol):
     matrix = np.zeros([ydim,xdim])
@@ -50,7 +50,7 @@ def ind2sub(array_shape, ind):
 def read_events():
     """ A simple function that read events from cAER tcp"""
 
-    data = sock.recv(28) #we read the header of the packet
+    data, addr = sock.recvfrom(64 * 1024) #we read the full packet, which is one UDP message. Use a big size to ensure we get it all.
 
     #read header
     eventtype = struct.unpack('H',data[0:2])
@@ -62,10 +62,7 @@ def read_events():
         eventcapacity = struct.unpack('I',data[16:20])
         eventnumber = struct.unpack('I',data[20:24])
         eventvalid = struct.unpack('I',data[24:28])
-        next_read =  eventcapacity[0]*eventsize[0] # we now read the full packet
-        # this sock.recv function reads exactly next_read bytes, thanks to the  socket.MSG_WAITALL option that works under Unix, if you want to use a different system than you need to repeat reading until you read exactly next_read bytes
-        data = sock.recv(next_read,socket.MSG_WAITALL) #we read exactly the N bytes (works in Unix)
-        counter = 0 #eventnumber[0]
+        counter = 28 #eventnumber[0]
         x_addr_tot = []
         y_addr_tot = []
         pol_tot = []
