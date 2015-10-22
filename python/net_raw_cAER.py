@@ -27,13 +27,13 @@ sock.connect((host, port))
 # eventValid 4 bytes // Total number of valid events present in this packet.
 
 # eventtype table is:
-#    SPECIAL_EVENT = 0,
-#    POLARITY_EVENT = 1,
-#    SAMPLE_EVENT = 2,
-#    EAR_EVENT = 3,
-#    FRAME_EVENT = 4,
-#    IMU6_EVENT = 5,
-#    IMU9_EVENT = 6,
+#	SPECIAL_EVENT = 0,
+#	POLARITY_EVENT = 1,
+#	FRAME_EVENT = 2,
+#	IMU6_EVENT = 3,
+#	IMU9_EVENT = 4,
+#	SAMPLE_EVENT = 5,
+#	EAR_EVENT = 6,
 
 ##################################################
 # we then read the data packet.. if only polarity 
