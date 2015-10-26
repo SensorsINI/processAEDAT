@@ -1,6 +1,7 @@
 import struct
 import os
 
+V3 = "aedat3"
 V2 = "aedat" # current 32bit file format
 V1 = "dat" # old format
 
