@@ -22,7 +22,7 @@ class caer_communication:
         self.port_data = port_data
         self.port_control = port_control
         self.inputbuffersize = inputbuffersize
-        self.host = 'localhost'
+        self.host = host 
         self.s_commands = socket.socket()
         self.s_data = socket.socket()
         self.jaer_logging = False
@@ -138,7 +138,7 @@ class caer_communication:
         '''
         self.file =  open(filename,'w')
         while self.jaer_logging:
-            data = self.s_data.recv(self.header_length) #get header
+            data = self.s_data.recv(self.header_length,socket.MSG_WAITALL) #get header
             #decode header
             eventtype = struct.unpack('H',data[0:2])[0]
             eventsource = struct.unpack('H',data[2:4])[0]
@@ -150,8 +150,20 @@ class caer_communication:
             eventvalid = struct.unpack('I',data[24:28])[0]
             next_read =  eventcapacity*eventsize # we now read the full packet size
             self.file.write(data) # write header
-            data = self.s_data.recv(next_read) #we read exactly the N bytes of the packet        
-            self.file.write(data) # write packet
+	    #print next_read
+            if(self.data_buffer_size >= next_read):
+                # data packet can be obtained in a single read
+            	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
+                self.file.write(data)
+            else:
+                #print "multiple read are required"
+                num_read = int(next_read/self.data_buffer_size)
+                first_read = self.data_buffer_size
+                for this_read in range(num_read):
+                    if(this_read == (num_read-1)):
+                        first_read = next_read-(self.data_buffer_size*(num_read-1))
+                    data = self.s_data.recv(first_read,socket.MSG_WAITALL)    
+                    self.file.write(data) # write packet
                 
     def start_logging(self, filename):
         ''' Record data from UDP jAER stream of events
@@ -291,7 +303,7 @@ class caer_communication:
 if __name__ == "__main__":
     # init control class and open communication
     import numpy as np
-    control = caer_communication(host='localhost')
+    control = caer_communication(host='192.168.1.4')
 
     #control.open_communication()
     #control.start_logging('/tmp/ciaociao.aedat')
@@ -301,7 +313,7 @@ if __name__ == "__main__":
 
     control.open_communication_command()
     control.load_biases()    
-    control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(1000,50000,3))
+    control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(100,500,3))
     control.close_communication_command()    
 
     
