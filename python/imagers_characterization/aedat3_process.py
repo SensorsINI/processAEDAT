@@ -1,5 +1,5 @@
 # ############################################################
-# python class to control/save data from cAER via remote tcp
+# python class that deals with cAER aedat3 file format
 # author  Federico Corradi - federico.corradi@inilabs.com
 # ############################################################
 from __future__ import division
