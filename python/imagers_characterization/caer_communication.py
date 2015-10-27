@@ -29,6 +29,7 @@ class caer_communication:
         self.all_data = []
         self.t = None
         #caer control standards
+        self.header_length = 28
         self.max_cmd_parts = 5
         self.cmd_part_action = 0
         self.cmd_part_node = 1  
@@ -92,16 +93,29 @@ class caer_communication:
         return databuffer[0:databuffer_length]
 
 
-    def open_communication(self):
+    def open_communication_command(self):
         '''
          open jaer UDP communication
         '''
         # create dgram udp socket
         try:
+            self.s_commands = socket.socket()
             self.s_commands.connect((self.host, self.port_control))
+        except socket.error, msg:
+            print 'Failed to create socket %s' % msg
+            sys.exit()
+
+    def open_communication_data(self):
+        '''
+         open jaer UDP communication
+        '''
+        # create dgram udp socket
+        try:
+            self.s_data = socket.socket()
             self.s_data.connect((self.host, self.port_data))
-        except socket.error:
-            print 'Failed to create socket'
+        except socket.error, msg:
+            print 'Failed to create socket %s' % msg
+            print socket.error
             sys.exit()
 
     def get_header(self,data):
@@ -124,8 +138,20 @@ class caer_communication:
         '''
         self.file =  open(filename,'w')
         while self.jaer_logging:
-            data = self.s_data.recv(28)
-            self.file.write(data)
+            data = self.s_data.recv(self.header_length) #get header
+            #decode header
+            eventtype = struct.unpack('H',data[0:2])[0]
+            eventsource = struct.unpack('H',data[2:4])[0]
+            eventsize = struct.unpack('I',data[4:8])[0]
+            eventoffset = struct.unpack('I',data[8:12])[0]
+            eventtsoverflow = struct.unpack('I',data[12:16])[0]
+            eventcapacity = struct.unpack('I',data[16:20])[0]
+            eventnumber = struct.unpack('I',data[20:24])[0]
+            eventvalid = struct.unpack('I',data[24:28])[0]
+            next_read =  eventcapacity*eventsize # we now read the full packet size
+            self.file.write(data) # write header
+            data = self.s_data.recv(next_read) #we read exactly the N bytes of the packet        
+            self.file.write(data) # write packet
                 
     def start_logging(self, filename):
         ''' Record data from UDP jAER stream of events
@@ -145,12 +171,28 @@ class caer_communication:
         self.t.join()
         self.file.close()
         
-    def close_communication(self):
+    def close_communication_command(self):
         '''
             close tcp communication
         '''
-        self.s_commands.close()
-        self.s_data.close()
+        try:
+            self.s_commands.close()
+        except socket.error, msg:
+            print 'Failed to close socket %s' % msg
+            print socket.error
+            sys.exit()
+
+
+    def close_communication_data(self):
+        '''
+            close tcp communication
+        '''
+        try:
+            self.s_data.close()
+        except socket.error, msg:
+            print 'Failed to close socket %s' % msg
+            print socket.error
+            sys.exit()
 
     def send_command(self, string):
         '''
@@ -192,16 +234,21 @@ class caer_communication:
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:
+                self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
                 filename = folder + '/ptc_' + str(exp_time) + '.aedat'
                 #set exposure
-                self.send_command(string_control)                
+                self.send_command(string_control)         
+                self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')       
                 print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
                 time.sleep(0.5)
+                self.open_communication_data()
                 self.start_logging(filename)    
                 time.sleep(recording_time)
                 self.stop_logging()
+                self.close_communication_data()
+
         print("Done with PTC measurements")
         return            
 
@@ -252,10 +299,10 @@ if __name__ == "__main__":
     #control.stop_logging()
     #control.close_communication()
 
-    control.open_communication()
+    control.open_communication_command()
     control.load_biases()    
-    control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(100,5000,3))
-    control.close_communication()    
+    control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(1000,50000,3))
+    control.close_communication_command()    
 
     
 
