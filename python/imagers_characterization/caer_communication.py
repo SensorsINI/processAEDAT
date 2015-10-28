@@ -150,13 +150,13 @@ class caer_communication:
             eventvalid = struct.unpack('I',data[24:28])[0]
             next_read =  eventcapacity*eventsize # we now read the full packet size
             self.file.write(data) # write header
-	    print next_read
+	    #print next_read
             if(self.data_buffer_size >= next_read):
                 # data packet can be obtained in a single read
             	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
                 self.file.write(data)
             else:
-                print "multiple read are required"
+                #print "multiple read are required"
                 num_read = int(next_read/self.data_buffer_size)
                 first_read = self.data_buffer_size
                 for this_read in range(num_read):
@@ -221,10 +221,36 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_fpn(self):
+    def get_data_fpn(self, folder = 'fpn', recording_time = 15, exposure = 100):
         '''
            Fixed Pattern Noise
+            - global shutter is off
         '''
+        #make ptc directory
+        try:
+            os.stat(folder)
+        except:
+            os.mkdir(folder) 
+        #loop over exposures and save data
+        if(np.round(exposure) == 0):
+            print "exposure == 0 is not valid, skipping this step..."
+        else:
+            self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool false') 
+            self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+            exp_time = np.round(exposure) 
+            string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
+            filename = folder + '/ptc_' + str(exp_time) + '.aedat'
+            #set exposure
+            self.send_command(string_control)         
+            self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')       
+            print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
+            time.sleep(0.5)
+            self.open_communication_data()
+            self.start_logging(filename)    
+            time.sleep(recording_time)
+            self.stop_logging()
+            self.close_communication_data()
+
         return
 
     def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5)):
@@ -262,7 +288,7 @@ class caer_communication:
                 self.close_communication_data()
 
         print("Done with PTC measurements")
-        return            
+        return   
 
     def load_biases(self, xml_file = 'cameras/davis240b.xml'):
         '''
