@@ -1,12 +1,13 @@
 # ############################################################
-# python class to control and save data from cAER via tcp
+# python class that runs experiments and save data
 # author  Federico Corradi - federico.corradi@inilabs.com
 # ############################################################
 from __future__ import division
 import numpy as np
 import matplotlib
 from pylab import *
-# import caer communication and control instrumentations
+
+# import caer communication and control gpib/usb instrumentations
 import caer_communication
 import gpio_usb
 
@@ -15,6 +16,12 @@ import gpio_usb
 control = caer_communication.caer_communication(host='localhost')
 gpio_cnt = gpio_usb.gpio_usb()
 print gpio_cnt.query(gpio_cnt.fun_gen,"*IDN?")
+
+################################################################################
+## CONDITION 1 - Homegeneous light source
+## Homegeneous light source (integrating sphere, need to measure the luminosity)
+## also use the hp33120 to generate sine wave at .1 Hz for FPN measurements
+#################################################################################
 
 # 1 - Photon Transfer Curve - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
