@@ -26,7 +26,7 @@ class aedat3_process:
         '''
             load aedat file return
             ----
-                frames  - 2d vector - frames over time (y,x dim) - frames are flipped vertically
+                frames  - 2d vector - frames over time (y,x,dim) - frames are flipped vertically
                 xaddr   - 1D vector
                 yaddr   - 1D vector
                 ts      - 1D vector - timestamps

@@ -150,13 +150,13 @@ class caer_communication:
             eventvalid = struct.unpack('I',data[24:28])[0]
             next_read =  eventcapacity*eventsize # we now read the full packet size
             self.file.write(data) # write header
-	    #print next_read
+	    print next_read
             if(self.data_buffer_size >= next_read):
                 # data packet can be obtained in a single read
             	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
                 self.file.write(data)
             else:
-                #print "multiple read are required"
+                print "multiple read are required"
                 num_read = int(next_read/self.data_buffer_size)
                 first_read = self.data_buffer_size
                 for this_read in range(num_read):
@@ -303,7 +303,7 @@ class caer_communication:
 if __name__ == "__main__":
     # init control class and open communication
     import numpy as np
-    control = caer_communication(host='192.168.1.4')
+    control = caer_communication(host='localhost')
 
     #control.open_communication()
     #control.start_logging('/tmp/ciaociao.aedat')
