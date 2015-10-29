@@ -103,17 +103,16 @@ if __name__ == "__main__":
 
     aedat = aedat3_process()
 
-    #directory = 'measurements/ptc_dark_29_10_15-11_53_36/'
-    #files_in_dir = os.listdir(directory)
-    #files_in_dir.sort()  
-    #this_file = 0
-    #exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
-    #[frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
-    #frame = np.right_shift(frame,6)
-    #n_frames, ydim, xdim = np.shape(frame)        
-    #u_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))   # mean dark value
+    directory = 'measurements/ptc_dark_29_10_15-11_53_36/'
+    files_in_dir = os.listdir(directory)
+    files_in_dir.sort()  
+    this_file = 0
+    exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
+    [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+    frame = np.right_shift(frame,6)
+    n_frames, ydim, xdim = np.shape(frame)        
+    u_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))   # mean dark value
 
-    u_dark = 0.1
 
     ## PTC measurements
     illuminance = 10
@@ -122,7 +121,7 @@ if __name__ == "__main__":
     planck_cost = 6.62607004e-34
     speed_of_light = 299792458
     wavelenght_red = 650e-9
-    sensor_area = 180*240*pixel_area
+    sensor_area = xdim*ydim*pixel_area
     luminous_flux = 0.09290304 * illuminance * (sensor_area * 10.764)
     scale_factor_ = 0.107  # RED light 650 nm
                            # ******** 1988 C.I.E. Photopic Luminous Efficiency Function ********
