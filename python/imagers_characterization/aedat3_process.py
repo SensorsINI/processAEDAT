@@ -103,19 +103,34 @@ if __name__ == "__main__":
 
     aedat = aedat3_process()
 
-    directory = 'measurements/ptc_dark_29_10_15-11_53_36/'
+    #################################################################
+    ############### PTC DARK CURRENT
+    #################################################################
+    directory = 'measurements/ptc_dark_29_10_15-14_59_46/'
+
+    # select test pixels areas
+    frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_x_divisions = [[0,180]]
+
     files_in_dir = os.listdir(directory)
     files_in_dir.sort()  
     this_file = 0
+    u_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
     exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
     [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
-    frame = np.right_shift(frame,6)
-    n_frames, ydim, xdim = np.shape(frame)        
-    u_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))   # mean dark value
+    for this_file in range(len(files_in_dir)):
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div in range(len(frame_y_divisions)):            
+                frame_areas = [frame[this_frame][frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1], frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1]] for this_frame in range(len(frame))]
+                frame_areas = np.right_shift(frame_areas,6)
+                n_frames, ydim, xdim = np.shape(frame_areas)        
+                u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
+                u_dark_tot[this_file, this_div, this_div_x] = u_y
 
-
-    ## PTC measurements
-    illuminance = 10
+    #################################################################
+    ############### PTC measurements
+    #################################################################
+    illuminance = 10       # measured with photometer
     pixel_area = (18e-6*18e-6)
     exposure_time_scale = 10e-6
     planck_cost = 6.62607004e-34
@@ -125,33 +140,40 @@ if __name__ == "__main__":
     luminous_flux = 0.09290304 * illuminance * (sensor_area * 10.764)
     scale_factor_ = 0.107  # RED light 650 nm
                            # ******** 1988 C.I.E. Photopic Luminous Efficiency Function ********
-                           # http://donklipstein.com/photopic.html
-    
-
-
-    directory = 'measurements/ptc_29_10_15-13_23_40/'
+                           # http://donklipstein.com/photopic.html    
+    directory = 'measurements/ptc_29_10_15-14_59_46/'
     files_in_dir = os.listdir(directory)
     files_in_dir.sort()
-    u_y_tot = []
+    u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
     exposures = []
     for this_file in range(len(files_in_dir)):
         exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
         [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
-        #rescale frame to their values
-        frame = np.right_shift(frame,6)
-        n_frames, ydim, xdim = np.shape(frame)        
-        u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))  # 
-        u_y_tot.append(u_y)
+        #rescale frame to their values and divide the test pixels areas
+        #for this_frame in range(len(frame)):
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div in range(len(frame_y_divisions)):            
+                frame_areas = [frame[this_frame][frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1], frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1]] for this_frame in range(len(frame))]
+                frame_areas = np.right_shift(frame_areas,6)
+                n_frames, ydim, xdim = np.shape(frame_areas)        
+                u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
+                u_y_tot[this_file, this_div, this_div_x] = u_y
         exposures.append(exp)
-
-    u_y_tot = np.array(u_y_tot)
+                
     exposures = np.array(exposures)
     u_photon = ((scale_factor_*luminous_flux)*sensor_area*(exposures*exposure_time_scale))/((planck_cost*speed_of_light)/wavelenght_red) 
     u_photon_pixel = u_photon/(xdim*ydim)
-
     # sensitivity plot 
     title("Sensitivity APS")
-    plot( u_photon_pixel, u_y_tot-u_dark, 'o--' )  
+    un, y, una = np.shape(u_y_tot)
+    colors = cm.rainbow(np.linspace(0, 1, y))
+    for i in range(un):
+        for j in range(y):
+            if(j == 0):
+                plot( u_photon_pixel, u_y_tot[:,i]-u_dark_tot[2], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
+            else:
+                plot( u_photon_pixel, u_y_tot[:,i]-u_dark_tot[2], 'o--', color=colors[i])
+    legend(loc='best')
     xlabel('irradiation photons/pixel') 
     ylabel('gray value - dark value <u_y> - <u_d>')    
 

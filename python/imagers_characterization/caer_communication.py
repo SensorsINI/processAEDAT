@@ -276,7 +276,7 @@ class caer_communication:
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
-                filename = folder + '/ptc_' + str(exp_time) + '.aedat'
+                filename = folder + '/ptc_%07f.aedat' % exp_time
                 #set exposure
                 self.send_command(string_control)    
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            

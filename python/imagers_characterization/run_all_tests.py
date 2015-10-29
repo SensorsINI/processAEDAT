@@ -46,7 +46,7 @@ if do_ptc_dark:
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/ptc_dark_' +  current_date
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=[50,500,5000])
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(500,50000,6))
     control.close_communication_command()    
 
     print "Data saved in " +  folder
