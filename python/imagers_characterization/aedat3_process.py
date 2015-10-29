@@ -97,8 +97,66 @@ class aedat3_process:
     
 if __name__ == "__main__":
     #analyse ptc
-    ptc_folder = 'ptc/'
-    aedat = aedat3_process()
-    [frame, xaddr,yaddr, pol, ts] = aedat.load_file(ptc_folder+"ptc_50000.0.aedat")
 
+    import matplotlib
+    from pylab import *
+
+    aedat = aedat3_process()
+
+    #directory = 'measurements/ptc_dark_29_10_15-11_53_36/'
+    #files_in_dir = os.listdir(directory)
+    #files_in_dir.sort()  
+    #this_file = 0
+    #exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
+    #[frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+    #frame = np.right_shift(frame,6)
+    #n_frames, ydim, xdim = np.shape(frame)        
+    #u_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))   # mean dark value
+
+    u_dark = 0.1
+
+    ## PTC measurements
+    illuminance = 10
+    pixel_area = (18e-6*18e-6)
+    exposure_time_scale = 10e-6
+    planck_cost = 6.62607004e-34
+    speed_of_light = 299792458
+    wavelenght_red = 650e-9
+    sensor_area = 180*240*pixel_area
+    luminous_flux = 0.09290304 * illuminance * (sensor_area * 10.764)
+    scale_factor_ = 0.107  # RED light 650 nm
+                           # ******** 1988 C.I.E. Photopic Luminous Efficiency Function ********
+                           # http://donklipstein.com/photopic.html
+    
+
+
+    directory = 'measurements/ptc_29_10_15-13_23_40/'
+    files_in_dir = os.listdir(directory)
+    files_in_dir.sort()
+    u_y_tot = []
+    exposures = []
+    for this_file in range(len(files_in_dir)):
+        exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
+        [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+        #rescale frame to their values
+        frame = np.right_shift(frame,6)
+        n_frames, ydim, xdim = np.shape(frame)        
+        u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame,0))  # 
+        u_y_tot.append(u_y)
+        exposures.append(exp)
+
+    u_y_tot = np.array(u_y_tot)
+    exposures = np.array(exposures)
+    u_photon = ((scale_factor_*luminous_flux)*sensor_area*(exposures*exposure_time_scale))/((planck_cost*speed_of_light)/wavelenght_red) 
+    u_photon_pixel = u_photon/(xdim*ydim)
+
+    # sensitivity plot 
+    title("Sensitivity APS")
+    plot( u_photon_pixel, u_y_tot-u_dark, 'o--' )  
+    xlabel('irradiation photons/pixel') 
+    ylabel('gray value - dark value <u_y> - <u_d>')    
+
+
+
+ 
 
