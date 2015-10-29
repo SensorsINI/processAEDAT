@@ -235,14 +235,14 @@ class caer_communication:
         if(np.round(exposure) == 0):
             print "exposure == 0 is not valid, skipping this step..."
         else:
-            self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool false') 
+            self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true') 
             self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
             exp_time = np.round(exposure) 
             string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
             filename = folder + '/ptc_' + str(exp_time) + '.aedat'
             #set exposure
             self.send_command(string_control)         
-            self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')       
+            self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')   
             print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
             time.sleep(0.5)
             self.open_communication_data()
@@ -272,13 +272,14 @@ class caer_communication:
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:
+                self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true') 
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
                 filename = folder + '/ptc_' + str(exp_time) + '.aedat'
                 #set exposure
-                self.send_command(string_control)         
-                self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')       
+                self.send_command(string_control)    
+                self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            
                 print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
                 time.sleep(0.5)
                 self.open_communication_data()

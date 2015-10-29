@@ -14,6 +14,7 @@ import gpio_usb
 import aedat3_process
 
 # TEST SELECTION
+do_ptc_dark = True
 do_ptc = True
 do_fpn = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
@@ -39,7 +40,23 @@ except:
 
 # 1 - Photon Transfer Curve - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
+if do_ptc_dark:
+    print "we are doing dark current, please remove all lights.\n"
+    raw_input("Press Enter to continue...")
+    control.open_communication_command()
+    control.load_biases()    
+    folder = datadir + '/ptc_dark_' +  current_date
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=[50,500,5000])
+    control.close_communication_command()    
+
+    print "Data saved in " +  folder
+    #analyse data
+    #aedat = aedat3_process.aedat3_process()
+
 if do_ptc:
+    print "\n"
+    print "we are doing ptc measurements, please put homogeneous light source (integrating sphere)."
+    raw_input("Press Enter to continue...")
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/ptc_' +  current_date
