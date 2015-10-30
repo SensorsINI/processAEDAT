@@ -135,7 +135,7 @@ class aedat3_process:
                     figure(2)
                     hist(avr_all_frames, 10, alpha=0.5)
                     u_y_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    simga_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)
+                    simga_dark = np.std(frame_areas)#(1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)
                     u_dark_tot[this_file, this_div, this_div_x] = u_y_dark
                     sigma_dark_tot[this_file, this_div, this_div_x] = simga_dark
 
@@ -178,7 +178,7 @@ class aedat3_process:
                     figure(2)
                     hist(avr_all_frames, 10, alpha=0.5)     
                     u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    sigma_y = ((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
+                    sigma_y = np.std(frame_areas)#((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
                     u_y_tot[this_file, this_div, this_div_x] = u_y
                     sigma_tot[this_file, this_div, this_div_x] = sigma_y
             exposures.append(exp)
@@ -194,29 +194,29 @@ class aedat3_process:
         title("Sensitivity APS")
         un, y, una = np.shape(u_y_tot)
         colors = cm.rainbow(np.linspace(0, 1, y))
-        for i in range(un):
-            for j in range(y):
+        for i in range(y):
+            for j in range(un):
                 if(j == 0):
-                    plot( u_photon_pixel, u_y_tot[:,i]-u_dark_tot[2], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
+                    plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
                 else:
-                    plot( u_photon_pixel, u_y_tot[:,i]-u_dark_tot[2], 'o--', color=colors[i])
+                    plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i])
         legend(loc='best')
         xlabel('irradiation photons/pixel') 
-        ylabel('gray value - dark value <u_y> - <u_d> (DN)')    
+        ylabel('gray value - <u_d> ')    
         # photon transfer curve 
         figure()
         title("Standard deviation APS")
         un, y, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, y))
-        for i in range(un):
-            for j in range(y):
+        for i in range(y):
+            for j in range(un):
                 if(j == 0):
-                    plot( u_y_tot[:,i]-u_dark_tot[2], sigma_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
+                    plot( u_y_tot[:,i], sigma_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
                 else:
-                    plot( u_y_tot[:,i]-u_dark_tot[2], sigma_tot[:,i], 'o--', color=colors[i])
+                    plot( u_y_tot[:,i], sigma_tot[:,i], 'o--', color=colors[i])
         legend(loc='best')
-        xlabel('gray value - dark value <u_y> - <u_d> (DN)') 
-        ylabel('std grey value  <sigma> - <sigma_dark> ')    
+        xlabel('gray value <u_y>  ') 
+        ylabel('std grey value  <sigma>  ')    
 
 
 
