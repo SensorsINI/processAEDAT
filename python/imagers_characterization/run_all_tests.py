@@ -48,10 +48,7 @@ if do_ptc_dark:
     folder = datadir + '/ptc_dark_' +  current_date
     control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(500,50000,6))
     control.close_communication_command()    
-
     print "Data saved in " +  folder
-    #analyse data
-    #aedat = aedat3_process.aedat3_process()
 
 if do_ptc:
     print "\n"
@@ -62,10 +59,7 @@ if do_ptc:
     folder = datadir + '/ptc_' +  current_date
     control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(500,50000,6))
     control.close_communication_command()    
-
     print "Data saved in " +  folder
-    #analyse data
-    #aedat = aedat3_process.aedat3_process()
 
 
 # 2 - Fixed Pattern Noise - data
