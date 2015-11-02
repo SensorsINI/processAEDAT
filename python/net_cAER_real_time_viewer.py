@@ -9,7 +9,6 @@
 
 import socket
 import struct
-import sys
 import numpy as np
 import time
 import matplotlib
@@ -19,30 +18,30 @@ from matplotlib import pyplot as plt
 # PARAMETERS
 host = "127.0.0.1"
 port = 7777
-xdim= 240
-ydim= 180
+xdim = 240
+ydim = 180
 
 sock = socket.socket()
 sock.connect((host, port))
 
-def matrix_active(x,y, pol):
-    matrix = np.zeros([ydim,xdim])
-    if(len(x)==len(y)):
+def matrix_active(x, y, pol):
+    matrix = np.zeros([ydim, xdim])
+    if(len(x) == len(y)):
         for i in range(len(x)):
-            matrix[y[i],x[i]] = pol[i]#matrix[x[i],y[i]] + pol[i]
+            matrix[y[i], x[i]] = pol[i]  # matrix[x[i],y[i]] + pol[i]
     else:
         print("error x,y missmatch")
     return matrix
 
 def sub2ind(array_shape, rows, cols):
-    ind = rows*array_shape[1] + cols
+    ind = rows * array_shape[1] + cols
     ind[ind < 0] = -1
-    ind[ind >= array_shape[0]*array_shape[1]] = -1
+    ind[ind >= array_shape[0] * array_shape[1]] = -1
     return ind
 
 def ind2sub(array_shape, ind):
     ind[ind < 0] = -1
-    ind[ind >= array_shape[0]*array_shape[1]] = -1
+    ind[ind >= array_shape[0] * array_shape[1]] = -1
     rows = (ind.astype('int') / array_shape[1])
     cols = ind % array_shape[1]
     return (rows, cols)
@@ -50,36 +49,36 @@ def ind2sub(array_shape, ind):
 def read_events():
     """ A simple function that read events from cAER tcp"""
 
-    data = sock.recv(28) #we read the header of the packet
+    data = sock.recv(28)  # we read the header of the packet
 
-    #read header
-    eventtype = struct.unpack('H',data[0:2])
-    if(eventtype[0] == 1):  #something is wrong as we set in the cAER to send only polarity events
-        eventsource = struct.unpack('H',data[2:4])
-        eventsize = struct.unpack('I',data[4:8])
-        eventoffset = struct.unpack('I',data[8:12])
-        eventtsoverflow = struct.unpack('I',data[12:16])
-        eventcapacity = struct.unpack('I',data[16:20])
-        eventnumber = struct.unpack('I',data[20:24])
-        eventvalid = struct.unpack('I',data[24:28])
-        next_read =  eventcapacity[0]*eventsize[0] # we now read the full packet
+    # read header
+    eventtype = struct.unpack('H', data[0:2])[0]
+    if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
+        eventsource = struct.unpack('H', data[2:4])[0]
+        eventsize = struct.unpack('I', data[4:8])[0]
+        eventoffset = struct.unpack('I', data[8:12])[0]
+        eventtsoverflow = struct.unpack('I', data[12:16])[0]
+        eventcapacity = struct.unpack('I', data[16:20])[0]
+        eventnumber = struct.unpack('I', data[20:24])[0]
+        eventvalid = struct.unpack('I', data[24:28])[0]
+        next_read = eventcapacity * eventsize  # we now read the full packet
         # this sock.recv function reads exactly next_read bytes, thanks to the  socket.MSG_WAITALL option that works under Unix, if you want to use a different system than you need to repeat reading until you read exactly next_read bytes
-        data = sock.recv(next_read,socket.MSG_WAITALL) #we read exactly the N bytes (works in Unix)
-        counter = 0 #eventnumber[0]
+        data = sock.recv(next_read, socket.MSG_WAITALL)  # we read exactly the N bytes (works in Unix)
+        counter = 0  # eventnumber[0]
         x_addr_tot = []
         y_addr_tot = []
         pol_tot = []
-        while(data[counter:counter+4]):  #loop over all event packets
-            aer_data = struct.unpack('I',data[counter:counter+4])
-            timestamp = struct.unpack('I',data[counter+4:counter+4+4])
-            x_addr = (aer_data[0] >> 17) & 0x00007FFF
-            y_addr = (aer_data[0] >> 2) & 0x00007FFF
+        while(data[counter:counter + eventsize]):  # loop over all event packets
+            aer_data = struct.unpack('I', data[counter:counter + 4])[0]
+            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
+            x_addr = (aer_data >> 17) & 0x00007FFF
+            y_addr = (aer_data >> 2) & 0x00007FFF
             x_addr_tot.append(x_addr)
             y_addr_tot.append(y_addr)
-            pol = (aer_data[0] >> 1) & 0x00000001
+            pol = (aer_data >> 1) & 0x00000001
             pol_tot.append(pol)
-            #print (timestamp[0], x_addr, y_addr, pol)
-            counter = counter + 16
+            # print (timestamp, x_addr, y_addr, pol)
+            counter = counter + eventsize
 
     return x_addr_tot, y_addr_tot, pol_tot
 
@@ -93,8 +92,8 @@ def run(doblit=True):
     ax.set_xlim(0, xdim)
     ax.set_ylim(0, ydim)
     ax.hold(True)
-    x,y,p = read_events()
-    this_m = matrix_active(x,y,p)
+    x, y, p = read_events()
+    this_m = matrix_active(x, y, p)
 
     plt.show(False)
     plt.draw()
@@ -105,12 +104,14 @@ def run(doblit=True):
 
     points = ax.imshow(this_m, interpolation='nearest', cmap='gray')
     tic = time.time()
+    niter = 0
 
     while(1):
         # update the xy data
-        x,y,p = read_events()
-        this_m = matrix_active(x,y,p)
+        x, y, p = read_events()
+        this_m = matrix_active(x, y, p)
         points.set_data(this_m)
+        niter += 1
 
         if doblit:
             # restore background
@@ -126,8 +127,8 @@ def run(doblit=True):
             fig.canvas.draw()
 
     plt.close(fig)
-    print "Blit = %s, average FPS: %.2f" % (
-        str(doblit), niter / (time.time() - tic))
+    print ("Blit = %s, average FPS: %.2f" % (
+        str(doblit), niter / (time.time() - tic)))
 
 if __name__ == '__main__':
     run(doblit=True)

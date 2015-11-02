@@ -10,14 +10,13 @@ addr = 'localhost', 8997
 BUFSIZE = 1024
 
 line = 'startlogging mydata'
-s.sendto(line,addr)
+s.sendto(line, addr)
 data, fromaddr = s.recvfrom(BUFSIZE)
-print 'client received %r from %r' % (data, fromaddr)
+print ('client received %r from %r' % (data, fromaddr))
 
 time.sleep (1.5)
 
 line = 'stoplogging'
-s.sendto(line,addr)
+s.sendto(line, addr)
 data, fromaddr = s.recvfrom(BUFSIZE)
-print 'client received %r from %r' % (data, fromaddr)
-
+print ('client received %r from %r' % (data, fromaddr))
