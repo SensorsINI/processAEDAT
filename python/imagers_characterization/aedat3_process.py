@@ -228,9 +228,10 @@ class aedat3_process:
     def fpn_analysis(self,  fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
         '''
             fixed pattern noise
+		        - input signal is a sine wave, setup is in homogeneous lighting conditions
         '''
         #################################################################
-        ############### PTC DARK CURRENT
+        ############### FPN and SIGNAL RECOSTRUCTION
         #################################################################
         directory = fpn_dir
         files_in_dir = os.listdir(directory)
@@ -337,7 +338,7 @@ if __name__ == "__main__":
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
         # select test pixels areas only two are active
-        frame_x_divisions = [[0,20], [20,190], [210,220], [220,230], [230,240]]
+        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
