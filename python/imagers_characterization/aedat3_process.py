@@ -8,6 +8,7 @@ import struct
 import threading
 import sys
 import numpy as np
+from scipy.optimize import curve_fit
 
 class aedat3_process:
     def __init__(self):
@@ -121,7 +122,7 @@ class aedat3_process:
         for this_file in range(len(files_in_dir)):
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
-                    frame_areas = [frame[this_frame][frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1], frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1]] for this_frame in range(len(frame))]
+                    frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)        
                     #u_y_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
@@ -166,7 +167,7 @@ class aedat3_process:
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
-                    frame_areas = [frame[this_frame][frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1], frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1]] for this_frame in range(len(frame))]
+                    frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)   
                     avr_all_frames = []
@@ -207,16 +208,22 @@ class aedat3_process:
         figure()
         title("Standard deviation APS")
         un, y, una = np.shape(sigma_tot)
-        colors = cm.rainbow(np.linspace(0, 1, y))
-        for i in range(y):
-            for j in range(un):
-                if(j == 0):
-                    plot( u_y_tot[:,i], sigma_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
-                else:
-                    plot( u_y_tot[:,i], sigma_tot[:,i], 'o--', color=colors[i])
+        colors = cm.rainbow(np.linspace(0, 1, una))
+        for areas in range(una):
+            if(points == 0):
+                plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas], label='pixel area' + str(frame_x_divisions[areas]) )
+            else:
+                plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas])
         legend(loc='best')
         xlabel('gray value <u_y>  ') 
         ylabel('std grey value  <sigma>  ')    
+
+    def rms(self, predictions, targets):
+        return np.sqrt(np.mean((predictions-targets)**2))
+
+    # create the function we want to fit
+    def my_sin(self, x, freq, amplitude, phase, offset):
+        return np.sin( 2*np.pi* x * freq + phase) * amplitude + offset
 
     def fpn_analysis(self,  fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
         '''
@@ -232,26 +239,78 @@ class aedat3_process:
         sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
         [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
-        signal_rec = []
-        tmp = 0
-        delta_up = 0.1
-        delta_dn = 0.25
-        for this_ev in range(len(ts)):
-            if( pol[this_ev] == 1):
-                tmp = tmp+delta_up
-                signal_rec.append(tmp)
-            if( pol[this_ev] == 0):
-                tmp = tmp-delta_dn
-                signal_rec.append(tmp)
-        signal_rec  =np.array(signal_rec)
+
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+                signal_rec = []
+                tmp = 0
+                delta_up = 1.0
+                delta_dn = 1.0
+                delta_up_count = 0.0
+                delta_dn_count = 0.0
+                ts_t = []  
+                
+                #print(np.max(frame_y_divisions[0]))
+                for this_ev in range(len(ts)):
+                    if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                        xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                        yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                        yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                        if( pol[this_ev] == 1):
+                          delta_up_count = delta_up_count+1        
+                        if( pol[this_ev] == 0):
+                          delta_dn_count = delta_dn_count+1
+
+                if(delta_dn_count == 0 or delta_up_count == 0):
+                    print("Not even a single event up or down")
+                    print("we are skipping this section of the sensor")
+                else:
+                    if( delta_up_count > delta_dn_count):
+                        delta_dn = (delta_up_count / delta_dn_count) * (delta_up)
+                    else:
+                        delta_up = (delta_dn_count / delta_up_count) * (delta_dn)
+
+                    for this_ev in range(len(ts)):
+                        if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                            xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                            yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                            yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                            if( pol[this_ev] == 1):
+                                tmp = tmp+delta_up
+                                signal_rec.append(tmp)
+                                ts_t.append(ts[this_ev])
+                            if( pol[this_ev] == 0):
+                                tmp = tmp-delta_dn
+                                signal_rec.append(tmp)
+                                ts_t.append(ts[this_ev])
 
 
+                    figure()
+                    ts = np.array(ts)
+                    signal_rec = np.array(signal_rec)
+                    signal_rec = signal_rec - np.mean(signal_rec)
+                    amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
+                    signal_rec = signal_rec/amplitude_rec
+                    guess_amplitude = 1.0
+                    p0=[sine_freq, guess_amplitude,
+                            0.0, 0.0]
+                    tnew = (ts_t-np.min(ts))*1e-6
+                    fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                    data_first_guess = self.my_sin(tnew, *p0)        
+                    data_fit = self.my_sin(tnew, *fit[0])
+                    rms = self.rms(signal_rec, data_fit)
+                    stringa = "Root Mean Square Error: " + str('{0:.3f}'.format(rms*100))+ "%"
+                    plot(tnew, data_fit, label='Target with'+ stringa)
+                    plot(tnew, signal_rec, label='Measure')
+                    xlabel('Time [s]')
+                    ylabel('Norm. Amplitude')
+                    ylim([-1,1])
+             
+                    title('Measured and fitted curves for the DVS 0.3 Hz sinusoidal stimulation')
+                    legend(loc='best')
+                    print(stringa)
 
-        #for this_file in range(len(files_in_dir)):
-        #    for this_div_x in range(len(frame_x_divisions)) :
-        #        for this_div in range(len(frame_y_divisions)):            
-                    
-
+        return delta_up, delta_dn, rms
 
 if __name__ == "__main__":
     #analyse ptc
@@ -260,30 +319,31 @@ if __name__ == "__main__":
     from pylab import *
     ion()
     
-    do_ptc = False
-    do_fpn = True
+    do_ptc = True
+    do_fpn = False
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
         ptc_dir_dark = 'measurements/ptc_dark_29_10_15-14_59_46/'
         ptc_dir = 'measurements/ptc_30_10_15-16_44_43/'
         # select test pixels areas
-        frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-        frame_x_divisions = [[0,180]]
+        # note that x and y might be swapped inside the ptc_analysis function
+        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+        frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
+        #aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
-        # select test pixels areas
-        frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-        frame_x_divisions = [[0,180]]
+        # select test pixels areas only two are active
+        frame_x_divisions = [[0,20], [20,190], [210,220], [220,230], [230,240]]
+        frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        #aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3, )
+        delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
-
+    self = aedat
 
 
 
