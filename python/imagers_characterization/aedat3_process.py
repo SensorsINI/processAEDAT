@@ -218,6 +218,39 @@ class aedat3_process:
         xlabel('gray value <u_y>  ') 
         ylabel('std grey value  <sigma>  ')    
 
+    def fpn_analysis(self,  fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
+        '''
+            fixed pattern noise
+        '''
+        #################################################################
+        ############### PTC DARK CURRENT
+        #################################################################
+        directory = fpn_dir
+        files_in_dir = os.listdir(directory)
+        files_in_dir.sort()  
+        this_file = 0
+        sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
+        [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+        signal_rec = []
+        tmp = 0
+        delta_up = 0.1
+        delta_dn = 0.25
+        for this_ev in range(len(ts)):
+            if( pol[this_ev] == 1):
+                tmp = tmp+delta_up
+                signal_rec.append(tmp)
+            if( pol[this_ev] == 0):
+                tmp = tmp-delta_dn
+                signal_rec.append(tmp)
+        signal_rec  =np.array(signal_rec)
+
+
+
+        #for this_file in range(len(files_in_dir)):
+        #    for this_div_x in range(len(frame_x_divisions)) :
+        #        for this_div in range(len(frame_y_divisions)):            
+                    
 
 
 if __name__ == "__main__":
@@ -227,17 +260,30 @@ if __name__ == "__main__":
     from pylab import *
     ion()
     
-    ## Photon transfer curve and sensitivity plot
-    ptc_dir_dark = 'measurements/ptc_dark_29_10_15-14_59_46/'
-    ptc_dir = 'measurements/ptc_30_10_15-16_44_43/'
-    # select test pixels areas
-    frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_x_divisions = [[0,180]]
+    do_ptc = False
+    do_fpn = True
 
-    aedat = aedat3_process()
-    aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
+    if do_ptc:
+        ## Photon transfer curve and sensitivity plot
+        ptc_dir_dark = 'measurements/ptc_dark_29_10_15-14_59_46/'
+        ptc_dir = 'measurements/ptc_30_10_15-16_44_43/'
+        # select test pixels areas
+        frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+        frame_x_divisions = [[0,180]]
+
+        aedat = aedat3_process()
+        aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
+
+    if do_fpn:
+        fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
+        # select test pixels areas
+        frame_y_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+        frame_x_divisions = [[0,180]]
+
+        aedat = aedat3_process()
+        #aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3, )
 
 
 
- 
+
 
