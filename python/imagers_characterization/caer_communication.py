@@ -221,7 +221,7 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_fpn(self, folder = 'fpn', recording_time = 15, exposure = 100):
+    def get_data_fpn(self, folder = 'fpn', recording_time = 15):
         '''
            Fixed Pattern Noise
             - global shutter is off
@@ -232,24 +232,20 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #loop over exposures and save data
-        if(np.round(exposure) == 0):
-            print "exposure == 0 is not valid, skipping this step..."
-        else:
-            self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true') 
-            self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
-            exp_time = np.round(exposure) 
-            string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
-            filename = folder + '/ptc_' + str(exp_time) + '.aedat'
-            #set exposure
-            self.send_command(string_control)         
-            self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')   
-            print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
-            time.sleep(0.5)
-            self.open_communication_data()
-            self.start_logging(filename)    
-            time.sleep(recording_time)
-            self.stop_logging()
-            self.close_communication_data()
+        self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+        print("APS array is OFF")
+        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+        print("BackGroundActivity Filter is OFF")
+        print("Recording for " + str(recording_time))                
+        time.sleep(0.5)
+        self.open_communication_data()
+        filename = folder + '/fpn_recording_time_%70f.aedat' % recording_time
+        self.start_logging(filename)    
+        time.sleep(recording_time)
+        self.stop_logging()
+        self.close_communication_data()
+        self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
+        print("APS array is ON")
 
         return
 
@@ -276,7 +272,7 @@ class caer_communication:
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
-                filename = folder + '/ptc_%07f.aedat' % exp_time
+                filename = folder + '/ptc_%70f.aedat' % exp_time
                 #set exposure
                 self.send_command(string_control)    
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            

@@ -14,9 +14,9 @@ import gpio_usb
 import aedat3_process
 
 # TEST SELECTION
-do_ptc_dark = True
-do_ptc = True
-do_fpn = False
+do_ptc_dark = False
+do_ptc = False
+do_fpn = True
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
@@ -57,7 +57,7 @@ if do_ptc:
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/ptc_' +  current_date
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(500,50000,6))
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(50,65000,20))
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -69,8 +69,10 @@ if do_fpn:
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/fpn_' +  current_date
-    control.get_data_fpn(folder = folder, recording_time=20, exposure=1000 )
-    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 2, 0.1, 0") #0.1 Vpp sine wave at 1 Hz with a 0 volt offset
+    print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
+    raw_input("Press Enter to continue...")
+    control.get_data_fpn(folder = folder, recording_time=20)
     control.close_communication_command()    
 
 
