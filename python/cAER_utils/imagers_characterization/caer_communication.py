@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ############################################################
 # python class to control and save data from cAER via tcp
 # author  Federico Corradi - federico.corradi@inilabs.com
@@ -7,13 +8,56 @@ import os
 import struct
 import socket
 import threading
+import Queue
 import sys
 import time
+import errno
 import numpy as np
 from xml.dom import minidom
 
 class caer_communication:
     def __init__(self, host = 'localhost',  port_control = 4040, port_data = 7777, inputbuffersize = 8000):
+
+        if sys.platform=="win32":
+            self.USE_MSG_WAITALL = False # it doesn't work reliably on Windows even though it's defined
+        else:
+            self.USE_MSG_WAITALL = hasattr(socket, "MSG_WAITALL")
+
+        if sys.version_info<(3, 0):
+            self.EMPTY_BYTES=""
+        else:
+            self.EMPTY_BYTES=bytes([])
+
+    
+        # Note: other interesting errnos are EPERM, ENOBUFS, EMFILE
+        # but it seems to me that all these signify an unrecoverable situation.
+        # So I didn't include them in de list of retryable errors.
+        self.ERRNO_RETRIES=[errno.EINTR, errno.EAGAIN, errno.EWOULDBLOCK, errno.EINPROGRESS]
+        if hasattr(errno, "WSAEINTR"):
+            self.ERRNO_RETRIES.append(errno.WSAEINTR)
+        if hasattr(errno, "WSAEWOULDBLOCK"):
+            self.ERRNO_RETRIES.append(errno.WSAEWOULDBLOCK)
+        if hasattr(errno, "WSAEINPROGRESS"):
+            self.ERRNO_RETRIES.append(errno.WSAEINPROGRESS)
+
+        self.ERRNO_BADF=[errno.EBADF]
+        if hasattr(errno, "WSAEBADF"):
+            self.ERRNO_BADF.append(errno.WSAEBADF)
+
+        self.ERRNO_ENOTSOCK=[errno.ENOTSOCK]
+        if hasattr(errno, "WSAENOTSOCK"):
+            self.ERRNO_ENOTSOCK.append(errno.WSAENOTSOCK)
+        if not hasattr(socket, "SOL_TCP"):
+            socket.SOL_TCP=socket.IPPROTO_TCP
+
+        self.ERRNO_EADDRNOTAVAIL=[errno.EADDRNOTAVAIL]
+        if hasattr(errno, "WSAEADDRNOTAVAIL"):
+            self.ERRNO_EADDRNOTAVAIL.append(errno.WSAEADDRNOTAVAIL)
+
+        self.ERRNO_EADDRINUSE=[errno.EADDRINUSE]
+        if hasattr(errno, "WSAEADDRINUSE"):
+            self.ERRNO_EADDRINUSE.append(errno.WSAEADDRINUSE)
+
 
         self.V2 = "aedat" # current 32bit file format
         self.V1 = "dat" # old format
@@ -25,9 +69,13 @@ class caer_communication:
         self.host = host 
         self.s_commands = socket.socket()
         self.s_data = socket.socket()
-        self.jaer_logging = False
+        self.caer_logging = False
+        self.caer_streaming = False
         self.all_data = []
         self.t = None
+        self.ts = None
+        self.data_stream = "/tmp/data_stream.aedat"
+
         #caer control standards
         self.header_length = 28
         self.max_cmd_parts = 5
@@ -49,7 +97,7 @@ class caer_communication:
     def parse_command(self, command):
         '''
           parse string command
-            es string: 3 /1/1-DAVISFX2/aps/ Exposure int 10
+            es string: put /1/1-DAVISFX2/aps/ Exposure int 10
         '''    
         databuffer = bytearray(b'\x00' * self.data_buffer_size)
         node_length = 0
@@ -118,68 +166,138 @@ class caer_communication:
             print socket.error
             sys.exit()
 
-    def get_header(self,data):
+    def get_header(self, data):
         '''
           get header packet
         '''
-        eventtype = struct.unpack('H',data[0:2])
-        eventsource = struct.unpack('H',data[2:4])
-        eventsize = struct.unpack('I',data[4:8])
-        eventoffset = struct.unpack('I',data[8:12])
-        eventtsoverflow = struct.unpack('I',data[12:16])
-        eventcapacity = struct.unpack('I',data[16:20])
-        eventnumber = struct.unpack('I',data[20:24])
-        eventvalid = struct.unpack('I',data[24:28])
+        eventtype = struct.unpack('H',data[0:2])[0]
+        eventsource = struct.unpack('H',data[2:4])[0]
+        eventsize = struct.unpack('I',data[4:8])[0]
+        eventoffset = struct.unpack('I',data[8:12])[0]
+        eventtsoverflow = struct.unpack('I',data[12:16])[0]
+        eventcapacity = struct.unpack('I',data[16:20])[0]
+        eventnumber = struct.unpack('I',data[20:24])[0]
+        eventvalid = struct.unpack('I',data[24:28])[0]
         return [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid]
+
+    def receive_data(self, sock, size):
+        """Retrieve a given number of bytes from a socket.
+        It is expected the socket is able to supply that number of bytes.
+        If it isn't, an exception is raised (you will not get a zero length result
+        or a result that is smaller than what you asked for). The partial data that
+        has been received however is stored in the 'partialData' attribute of
+        the exception object."""
+        try:
+            retrydelay=0.0
+            msglen=0
+            chunks=[]
+            if self.USE_MSG_WAITALL:
+                # waitall is very convenient and if a socket error occurs,
+                # we can assume the receive has failed. No need for a loop,
+                # unless it is a retryable error.
+                # Some systems have an erratic MSG_WAITALL and sometimes still return
+                # less bytes than asked. In that case, we drop down into the normal
+                # receive loop to finish the task.
+                while True:
+                    try:
+                        data=sock.recv(size, socket.MSG_WAITALL)
+                        if len(data)==size:
+                            return data
+                        # less data than asked, drop down into normal receive loop to finish
+                        msglen=len(data)
+                        chunks=[data]
+                        break
+                    except socket.timeout:
+                        raise Exception("receiving: timeout")
+                    except socket.error:
+                        x=sys.exc_info()[1]
+                        err=getattr(x, "errno", x.args[0])
+                        #if err not in self.ERRNO_RETRIES:
+                        #    raise Exception("receiving: connection lost: "+str(x))
+                        time.sleep(0.00001+retrydelay)  # a slight delay to wait before retrying
+                        #retrydelay=__nextRetrydelay(retrydelay)
+            # old fashioned recv loop, we gather chunks until the message is complete
+            while True:
+                try:
+                    while msglen<size:
+                        # 60k buffer limit avoids problems on certain OSes like VMS, Windows
+                        chunk=sock.recv(min(60000, size-msglen))
+                        if not chunk:
+                            break
+                        chunks.append(chunk)
+                        msglen+=len(chunk)
+                    data=self.EMPTY_BYTES.join(chunks)
+                    del chunks
+                    if len(data)!=size:
+                        err=Exception("receiving: not enough data")
+                        err.partialData=data  # store the message that was received until now
+                        raise err
+                    return data  # yay, complete
+                except socket.timeout:
+                    raise Exception("receiving: timeout")
+                except socket.error:
+                    x=sys.exc_info()[1]
+                    err=getattr(x, "errno", x.args[0])
+                    if err not in self.ERRNO_RETRIES:
+                        raise Exception("receiving: connection lost: "+str(x))
+                    time.sleep(0.00001+retrydelay)  # a slight delay to wait before retrying
+                    retrydelay=__nextRetrydelay(retrydelay)
+        except socket.timeout:
+            raise TimeoutError("receiving: timeout")
+
+    def _streaming(self):
+        '''
+            Thread read streamed events
+        '''
+        data = self.receive_data(self.s_data, self.header_length)
+        [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data)
+        next_read =  eventcapacity*eventsize # we now read the full packet size
+        data = self.receive_data(self.s_data, next_read)
+        return data     
 
     def _logging(self, filename):
         '''
             Thread that dumps the tcp stream to a file
         '''
         self.file =  open(filename,'w')
-        while self.jaer_logging:
-            data = self.s_data.recv(self.header_length,socket.MSG_WAITALL) #get header
+        while self.caer_logging:
+            data = self.receive_data(self.s_data, self.header_length)
             #decode header
-            eventtype = struct.unpack('H',data[0:2])[0]
-            eventsource = struct.unpack('H',data[2:4])[0]
-            eventsize = struct.unpack('I',data[4:8])[0]
-            eventoffset = struct.unpack('I',data[8:12])[0]
-            eventtsoverflow = struct.unpack('I',data[12:16])[0]
-            eventcapacity = struct.unpack('I',data[16:20])[0]
-            eventnumber = struct.unpack('I',data[20:24])[0]
-            eventvalid = struct.unpack('I',data[24:28])[0]
+            [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data)
             next_read =  eventcapacity*eventsize # we now read the full packet size
             self.file.write(data) # write header
-	    #print next_read
-            if(self.data_buffer_size >= next_read):
-                # data packet can be obtained in a single read
-            	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
-                self.file.write(data)
-            else:
+	        #print next_read
+            data = self.receive_data(self.s_data, next_read)
+            self.file.write(data)
+            #if(self.data_buffer_size >= next_read):
+            # data packet can be obtained in a single read
+            #	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
+            #    self.file.write(data)
+            #else:
                 #print "multiple read are required"
-                num_read = int(next_read/self.data_buffer_size)
-                first_read = self.data_buffer_size
-                for this_read in range(num_read):
-                    if(this_read == (num_read-1)):
-                        first_read = next_read-(self.data_buffer_size*(num_read-1))
-                    data = self.s_data.recv(first_read,socket.MSG_WAITALL)    
-                    self.file.write(data) # write packet
+            #    num_read = int(next_read/self.data_buffer_size)
+            #    first_read = self.data_buffer_size
+            #    for this_read in range(num_read):
+            #        if(this_read == (num_read-1)):
+            #            first_read = next_read-(self.data_buffer_size*(num_read-1))
+            #        data = self.s_data.recv(first_read,socket.MSG_WAITALL)    
+            #        self.file.write(data) # write packet
                 
     def start_logging(self, filename):
-        ''' Record data from UDP jAER stream of events
+        ''' Record data from TCP cAER stream of events
          input argument:
             filename - string, file with full path (where data will be saved)
         '''
-        self.jaer_logging = True
+        self.caer_logging = True
         self.t = threading.Thread(target=self._logging,args=(filename,))
         self.t.start()
 
     def stop_logging(self):
-        ''' Stop recording data from UDP jAER stream of events
+        ''' Stop recording data from TCP cAER stream of events
          input argument:
             filename - string, file with full path (where data will be saved)
         '''
-        self.jaer_logging = False
+        self.caer_logging = False
         self.t.join()
         self.file.close()
         
@@ -193,7 +311,6 @@ class caer_communication:
             print 'Failed to close socket %s' % msg
             print socket.error
             sys.exit()
-
 
     def close_communication_data(self):
         '''
@@ -239,7 +356,7 @@ class caer_communication:
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
-        filename = folder + '/fpn_recording_time_%70f.aedat' % recording_time
+        filename = folder + '/fpn_recording_time_'+format(int(recording_time), '07d')+'.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
@@ -272,7 +389,7 @@ class caer_communication:
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
-                filename = folder + '/ptc_%70f.aedat' % exp_time
+                filename = folder + '/ptc_'+format(int(exp_time), '07d')+'.aedat' 
                 #set exposure
                 self.send_command(string_control)    
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            
@@ -320,22 +437,16 @@ class caer_communication:
                                     #print final_v
                                     cear_command = base_aa + " " + base_ab + " " + base_ac + " " + base_ad + " " + final_v
                                     print cear_command
-                                    self.send_command(cear_command)
-                                    
+                                    self.send_command(cear_command)                  
 
 if __name__ == "__main__":
     # init control class and open communication
     import numpy as np
     control = caer_communication(host='localhost')
 
-    #control.open_communication()
-    #control.start_logging('/tmp/ciaociao.aedat')
-    #control.send_command('put /1/1-DAVISFX2/aps/ Exposure int 100')
-    #control.stop_logging()
-    #control.close_communication()
-
     control.open_communication_command()
     control.load_biases()    
+    control.get_data_fpn(folder='fpn', recording_time=3)
     control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(100,500,3))
     control.close_communication_command()    
 
