@@ -186,7 +186,6 @@ class gpio_usb:
         '''
         self.query(self.k236,'J0X')
 
-
     def meas_k236(self, mode, sweep_l, compliance, delay = 0.1):
         '''
             dc I or V depending on mode
@@ -232,7 +231,6 @@ if __name__ == "__main__":
     #gpio_cnt.set_inst(gpio_cnt.fun_gen,"VOLT:OFFS -2.5")
     #gpio_cnt.set_inst(gpio_cnt.fun_gen,"FUNC:SHAP SIN")
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.1, 0.1, 0") #0.1 Vpp sine wave at 1 Hz with a 0 volt offset
-
 
     measured = gpio_cnt.meas_k236( 'I', np.linspace(0,0.005,10), 100)
 

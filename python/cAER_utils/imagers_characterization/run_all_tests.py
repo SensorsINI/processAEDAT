@@ -20,8 +20,6 @@ do_fpn = True
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
-
-
 # 0 - INIT control tools
 # init control class and open communication
 control = caer_communication.caer_communication(host='localhost')
@@ -60,7 +58,6 @@ if do_ptc:
     control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(50,65000,20))
     control.close_communication_command()    
     print "Data saved in " +  folder
-
 
 # 2 - Fixed Pattern Noise - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)

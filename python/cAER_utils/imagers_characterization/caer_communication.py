@@ -21,14 +21,13 @@ class caer_communication:
         if sys.platform=="win32":
             self.USE_MSG_WAITALL = False # it doesn't work reliably on Windows even though it's defined
         else:
-            self.USE_MSG_WAITALL = hasattr(socket, "MSG_WAITALL")
+            self.USE_MSG_WAITALL = False #hasattr(socket, "MSG_WAITALL")
 
         if sys.version_info<(3, 0):
             self.EMPTY_BYTES=""
         else:
             self.EMPTY_BYTES=bytes([])
 
-    
         # Note: other interesting errnos are EPERM, ENOBUFS, EMFILE
         # but it seems to me that all these signify an unrecoverable situation.
         # So I didn't include them in de list of retryable errors.
@@ -57,7 +56,6 @@ class caer_communication:
         self.ERRNO_EADDRINUSE=[errno.EADDRINUSE]
         if hasattr(errno, "WSAEADDRINUSE"):
             self.ERRNO_EADDRINUSE.append(errno.WSAEADDRINUSE)
-
 
         self.V2 = "aedat" # current 32bit file format
         self.V1 = "dat" # old format
@@ -140,7 +138,6 @@ class caer_communication:
 
         return databuffer[0:databuffer_length]
 
-
     def open_communication_command(self):
         '''
          open jaer UDP communication
@@ -212,8 +209,8 @@ class caer_communication:
                     except socket.error:
                         x=sys.exc_info()[1]
                         err=getattr(x, "errno", x.args[0])
-                        #if err not in self.ERRNO_RETRIES:
-                        #    raise Exception("receiving: connection lost: "+str(x))
+                        if err not in self.ERRNO_RETRIES:
+                            raise Exception("receiving: connection lost: "+str(x))
                         time.sleep(0.00001+retrydelay)  # a slight delay to wait before retrying
                         #retrydelay=__nextRetrydelay(retrydelay)
             # old fashioned recv loop, we gather chunks until the message is complete
@@ -249,11 +246,15 @@ class caer_communication:
         '''
             Thread read streamed events
         '''
-        data = self.receive_data(self.s_data, self.header_length)
-        [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data)
+        data_header = self.receive_data(self.s_data, self.header_length)
+        [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data_header)
         next_read =  eventcapacity*eventsize # we now read the full packet size
         data = self.receive_data(self.s_data, next_read)
-        return data     
+        data_f = data_header + data
+        if(eventtype == 1):
+            return data_f 
+        else:
+            return None     
 
     def _logging(self, filename):
         '''
