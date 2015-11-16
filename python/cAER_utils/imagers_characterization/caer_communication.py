@@ -21,7 +21,7 @@ class caer_communication:
         if sys.platform=="win32":
             self.USE_MSG_WAITALL = False # it doesn't work reliably on Windows even though it's defined
         else:
-            self.USE_MSG_WAITALL = False #hasattr(socket, "MSG_WAITALL")
+            self.USE_MSG_WAITALL = False#hasattr(socket, "MSG_WAITALL")
 
         if sys.version_info<(3, 0):
             self.EMPTY_BYTES=""
@@ -82,7 +82,7 @@ class caer_communication:
         self.cmd_part_key = 2
         self.cmd_part_type = 3
         self.cmd_part_value = 4
-        self.data_buffer_size = 4096
+        self.data_buffer_size = 4069*30
         self.NODE_EXISTS = 0
         self.ATTR_EXISTS = 1
         self.GET = 2
@@ -156,7 +156,10 @@ class caer_communication:
         '''
         # create dgram udp socket
         try:
-            self.s_data = socket.socket()
+            self.s_data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s_data.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 1)
+            self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 5)
             self.s_data.connect((self.host, self.port_data))
         except socket.error, msg:
             print 'Failed to create socket %s' % msg
@@ -238,23 +241,27 @@ class caer_communication:
                     if err not in self.ERRNO_RETRIES:
                         raise Exception("receiving: connection lost: "+str(x))
                     time.sleep(0.00001+retrydelay)  # a slight delay to wait before retrying
-                    retrydelay=__nextRetrydelay(retrydelay)
+                    #retrydelay=__nextRetrydelay(retrydelay)
         except socket.timeout:
             raise TimeoutError("receiving: timeout")
 
     def _streaming(self):
         '''
-            Thread read streamed events
+            Thread to stream events
         '''
-        data_header = self.receive_data(self.s_data, self.header_length)
+        data_header = None
+        while data_header == None:
+            data_header = self.receive_data(self.s_data, self.header_length)
         [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data_header)
         next_read =  eventcapacity*eventsize # we now read the full packet size
-        data = self.receive_data(self.s_data, next_read)
-        data_f = data_header + data
-        if(eventtype == 1):
+        if(next_read < 327960):
+            #print("next_read ", (next_read))
+            data = self.receive_data(self.s_data, next_read)
+            data_f = data_header + data
+            #print("len ", len(data_f))
             return data_f 
         else:
-            return None     
+            return None
 
     def _logging(self, filename):
         '''
@@ -267,7 +274,6 @@ class caer_communication:
             [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data)
             next_read =  eventcapacity*eventsize # we now read the full packet size
             self.file.write(data) # write header
-	        #print next_read
             data = self.receive_data(self.s_data, next_read)
             self.file.write(data)
             #if(self.data_buffer_size >= next_read):

@@ -16,6 +16,9 @@ from glumpy.transforms import PanZoom, Position
 
 import caer_communication
 
+from joblib import Parallel, delayed  
+import multiprocessing
+
 vertex = """
     uniform vec4 viewport;
     attribute vec2 position;
@@ -72,7 +75,7 @@ class ProducerThread(threading.Thread):
                     q.put(item)
         return
 
-                  
+
 if __name__ == "__main__":
     # init control class and open communication
 
@@ -82,10 +85,37 @@ if __name__ == "__main__":
     xdim = 240
     ydim = 180
     zoom_factor  = 2
+    parallel = False
 
+    
     q = Queue.Queue(BUF_SIZE)
-    qprogram = Queue.Queue(BUF_SIZE)
     window = app.Window(width=xdim*zoom_factor, height=ydim*zoom_factor, color=(1,1,1,1))
+
+    num_cores = multiprocessing.cpu_count()
+
+    def sub2ind(array_shape, rows, cols):
+        ind = rows * array_shape[1] + cols
+        ind[ind < 0] = -1
+        ind[ind >= array_shape[0] * array_shape[1]] = -1
+        return ind
+
+    def ind2sub(array_shape, ind):
+        ind[ind < 0] = -1
+        ind[ind >= array_shape[0] * array_shape[1]] = -1
+        rows = (ind.astype('int') / array_shape[1])
+        cols = ind % array_shape[1]
+        return (rows, cols)
+
+    def matrix_active_fast(x, y, pol):
+        matrix = np.zeros([xdim*ydim])
+        ind = sub2ind(np.shape(matrix), x, y)
+        matrix[ind] = pol
+        matrix = np.reshape(matrix, [xdim,ydim])
+        return matrix
+
+    def matrix_active_p(x,y,p, matrix_p):
+        matrix_p[x,y] = p*0.5+0.1
+        return matrix_p[x,y]
 
     def matrix_active(x, y, pol):
         matrix = np.zeros([xdim, ydim])
@@ -97,12 +127,25 @@ if __name__ == "__main__":
             print("error x,y missmatch")
         return matrix
 
+    def processInput(item, i, x_addr_tot, y_addr_tot, pol_tot):  
+        counter = 28+(i*8)
+        aer_data = struct.unpack('I', item[counter:counter + 4])[0]
+        timestamp = struct.unpack('I', item[counter + 4:counter + 8])[0]
+        x_addr = (aer_data >> 17) & 0x00007FFF
+        y_addr = (aer_data >> 2) & 0x00007FFF
+        pol = (aer_data >> 1) & 0x00000001
+        x_addr_tot[i] = x_addr
+        y_addr_tot[i] = y_addr
+        pol_tot[i] = pol
+        this_tot = [x_addr_tot[i], y_addr_tot[i], pol_tot[i]]
+        return this_tot
+
     @window.event
     def on_draw(dt):
         window.clear()
-        program.draw(gl.GL_TRIANGLE_STRIP)
         if not q.empty():
             item = q.get()
+            #start_time = time.clock()
             eventtype = struct.unpack('H',item[0:2])[0]
             eventsource = struct.unpack('H',item[2:4])[0]
             eventsize = struct.unpack('I',item[4:8])[0]
@@ -111,25 +154,36 @@ if __name__ == "__main__":
             eventcapacity = struct.unpack('I',item[16:20])[0]
             eventnumber = struct.unpack('I',item[20:24])[0]
             eventvalid = struct.unpack('I',item[24:28])[0]
-            if(eventtype == 1):  
-                counter = 28
-                x_addr_tot = []
-                y_addr_tot = []
-                pol_tot = []
-                while(item[counter:counter + eventsize]):  # loop over all event packets
-                    aer_data = struct.unpack('I', item[counter:counter + 4])[0]
-                    timestamp = struct.unpack('I', item[counter + 4:counter + 8])[0]
-                    x_addr = (aer_data >> 17) & 0x00007FFF
-                    y_addr = (aer_data >> 2) & 0x00007FFF
-                    pol = (aer_data >> 1) & 0x00000001
-                    counter = counter + 8
-                    #print x_addr, y_addr
-                    x_addr_tot.append(x_addr)
-                    y_addr_tot.append(y_addr)
-                    pol_tot.append(pol)
-                matrix =  matrix_active(x_addr_tot, y_addr_tot, pol_tot)
-                #if(y_addr < ydim and x_addr  < xdim):
-                program['data'] = matrix
+            next_read = eventcapacity*eventsize
+            x_addr_tot = np.zeros((next_read/8))
+            y_addr_tot = np.zeros((next_read/8))
+            pol_tot = np.zeros((next_read/8))
+            #this_entry = 0
+            #print("ora")
+            if True:
+                if parallel:
+                    all_tot = Parallel(n_jobs=num_cores)(delayed(processInput)(item,i,x_addr_tot,y_addr_tot,pol_tot) for i in range(next_read/8)) 
+                    all_tot = np.array(all_tot)
+                    matrix_p =  matrix_active(all_tot[:,0], all_tot[:,1], all_tot[:,2])
+                if not parallel :         
+                    counter = 28
+                    for i in range(next_read/8):
+                        aer_data = struct.unpack('I', item[counter:counter + 4])[0]
+                        timestamp = struct.unpack('I', item[counter + 4:counter + 8])[0]
+                        x_addr = (aer_data >> 17) & 0x00007FFF
+                        y_addr = (aer_data >> 2) & 0x00007FFF
+                        pol = (aer_data >> 1) & 0x00000001
+                        x_addr_tot[i] = x_addr
+                        y_addr_tot[i] = y_addr
+                        pol_tot[i] = pol
+                        counter = counter + 8
+                    matrix_p =  matrix_active(x_addr_tot, y_addr_tot, pol_tot)
+                #print time.clock() - start_time, "seconds"
+                program['data'] = matrix_p#np.random.uniform(0,1,(xdim,ydim))
+                program.draw(gl.GL_TRIANGLE_STRIP)
+            #print time.clock() - start_time, "seconds"
+        else:
+            print("empty")
 
     @window.event
     def on_key_press(key, modifiers):
@@ -141,7 +195,6 @@ if __name__ == "__main__":
         program['viewport'] = 0, 0, width, height
 
     program = gloo.Program(vertex, fragment, count=4)
-    n = 240
     program['position'] = [(-1,-1), (-1,1), (1,-1), (1,1)]
     program['texcoord'] = [( 0, 1), ( 0, 0), ( 1, 1), ( 1, 0)]
     program['data'] = np.random.uniform(0,1,(xdim,ydim))
@@ -152,7 +205,7 @@ if __name__ == "__main__":
     control = caer_communication.caer_communication(host='localhost')   
     p = ProducerThread(control, name='producer')
     p.start()
-    app.run(framerate=190)
+    app.run(framerate=120)
 
 
   
