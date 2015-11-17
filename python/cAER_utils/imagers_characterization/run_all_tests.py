@@ -16,7 +16,8 @@ import aedat3_process
 # TEST SELECTION
 do_ptc_dark = False
 do_ptc = False
-do_fpn = True
+do_fpn = False
+do_latency_pixel = True
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
@@ -72,4 +73,15 @@ if do_fpn:
     control.get_data_fpn(folder = folder, recording_time=20)
     control.close_communication_command()    
 
+if do_latency_pixel:
+    print "\n"
+    print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
+    raw_input("Press Enter to continue...")
+    control.open_communication_command()
+    control.load_biases()    
+    folder = datadir + '/latency_' +  current_date
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE 50, 4, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt
+    control.get_data_latency( folder = folder, recording_time=3)
+    control.close_communication_command()    
+    print "Data saved in " +  folder
 

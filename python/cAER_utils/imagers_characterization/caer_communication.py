@@ -345,6 +345,32 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
+    def get_data_latency(self, folder = 'latency', recording_time = 3):
+        '''
+           Pixel Latency
+        '''
+        #make ptc directory
+        try:
+            os.stat(folder)
+        except:
+            os.mkdir(folder) 
+        #loop over exposures and save data
+        self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+        print("APS array is OFF")
+        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+        print("BackGroundActivity Filter is OFF")
+        print("Recording for " + str(recording_time))                
+        time.sleep(0.5)
+        self.open_communication_data()
+        filename = folder + '/latency_recording_time_'+format(int(recording_time), '07d')+'.aedat' 
+        self.start_logging(filename)    
+        time.sleep(recording_time)
+        self.stop_logging()
+        self.close_communication_data()
+        self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
+        print("APS array is ON")
+        return        
+
     def get_data_fpn(self, folder = 'fpn', recording_time = 15):
         '''
            Fixed Pattern Noise

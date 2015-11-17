@@ -1,6 +1,6 @@
 # ############################################################
 # python class that deals with usb_gpio 
-# for controlling various instrumentation
+# for controlling various instrumentations
 # author  Federico Corradi - federico.corradi@inilabs.com
 # ############################################################
 from __future__ import division
