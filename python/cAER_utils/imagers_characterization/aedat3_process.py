@@ -8,6 +8,9 @@ import struct
 import threading
 import sys
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.optimize import curve_fit
 
 class aedat3_process:
@@ -22,6 +25,7 @@ class aedat3_process:
         self.x_addr = []
         self.y_addr = []
         self.timestamp = []
+        self.time_res = 1e-6
 
     def load_file(self, filename):
         '''
@@ -38,6 +42,8 @@ class aedat3_process:
         pol_tot = []
         ts_tot = []
         frame_tot = []
+        special_ts = []
+        special_types = []
         test_c = 0
         with open(filename, "rb") as f:       
             while True:
@@ -89,11 +95,24 @@ class aedat3_process:
                         counter = counter + eventsize
                 elif(eventtype == 3): #imu event
                     continue
+                if(eventtype == 0):
+                    #special event
+                    counter = 0 #eventnumber[0]
+                    while(data[counter:counter+8]):  #loop over all event packets
+                        data = struct.unpack('I',data[counter:counter+4])[0]
+                        timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
+                        special_type = (data >> 1) & 0x07F
+                        #print (timestamp[0], x_addr, y_addr, pol)
+                        counter = counter + 8
+                        special_ts.append(timestamp)
+                        special_types.append(special_type)
+                        #2 rising edge
+                        #3 falling edge
                 else:
                     print("packet data type not understood")
                     raise Exception
                 test_c+=1
-            return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot
+            return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot, special_ts, special_types
 
     
     def ptc_analysis(self, ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions, wavelenght_red=650e-9, pixel_area = (18e-6*18e-6), illuminance = 10, scale_factor_ = 0.107):
@@ -118,7 +137,7 @@ class aedat3_process:
         u_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
-        [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
         for this_file in range(len(files_in_dir)):
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
@@ -162,7 +181,7 @@ class aedat3_process:
         exposures = []
         for this_file in range(len(files_in_dir)):
             exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
-            [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :
@@ -221,7 +240,46 @@ class aedat3_process:
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
 
-    # create the function we want to fit
+    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [240,180], do_plot = True):
+        '''
+            Pixel Latency
+        '''
+        directory = latency_pixel_dir
+        files_in_dir = os.listdir(directory)
+        files_in_dir.sort()  
+        this_file = 0
+        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[0])
+
+        dx = hist(xaddr,camera_dim[0])
+        dy = hist(yaddr,camera_dim[1])
+        ind_x_max = np.where(dx[0] == np.max(dx[0]))[0]        
+        ind_y_max = np.where(dy[0] == np.max(dy[0]))[0] 
+        #dx[ind_x_max]
+        #dy[ind_y_max]
+
+        if do_plot:
+            plot((np.array(ts)-np.min(ts))*self.time_res,'o')
+            
+            # plot 3d histogram
+            fig = figure()
+            ax = fig.add_subplot(111, projection='3d')
+            x = xaddr
+            y = yaddr
+            histo, xedges, yedges = np.histogram2d(x, y, bins=(np.max(yaddr),np.max(xaddr)))
+            xpos, ypos = np.meshgrid(xedges[:-1]+xedges[1:], yedges[:-1]+yedges[1:])
+            xpos = xpos.flatten()/2.
+            ypos = ypos.flatten()/2.
+            zpos = np.zeros_like (xpos)
+            dx = xedges [1] - xedges [0]
+            dy = yedges [1] - yedges [0]
+            dz = histo.flatten()
+            ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
+            xlabel ("X")
+            ylabel ("Y")
+            # Find maximum point
+        return
+
+    # sine wave to fit
     def my_sin(self, x, freq, amplitude, phase, offset):
         return np.sin( 2*np.pi* x * freq + phase) * amplitude + offset
 
@@ -239,7 +297,7 @@ class aedat3_process:
         this_file = 0
         sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
-        [frame, xaddr, yaddr, pol, ts] = aedat.load_file(directory+files_in_dir[this_file])
+        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
 
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
@@ -320,8 +378,9 @@ if __name__ == "__main__":
     from pylab import *
     ion()
     
-    do_ptc = True
+    do_ptc = False
     do_fpn = False
+    do_latency_pixel = True
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
@@ -343,6 +402,15 @@ if __name__ == "__main__":
 
         aedat = aedat3_process()
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
+
+    if do_latency_pixel:
+        latency_pixel_dir = 'measurements/latency_17_11_15-17_47_51/'
+        # select test pixels areas only two are active
+        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+        frame_y_divisions = [[0,180]]
+
+        aedat = aedat3_process()
+        #latency = aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [240,180])
 
     self = aedat
 
