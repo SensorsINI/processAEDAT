@@ -80,8 +80,15 @@ if do_latency_pixel:
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/latency_' +  current_date
-    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE 50, 4, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt
-    control.get_data_latency( folder = folder, recording_time=3)
+    num_freqs = 10
+    start_freq = 0.5
+    stop_freq = 50
+    recording_time = 1
+    freqs = np.linspace(start_freq,stop_freq,num_freqs)
+    for i in range(10):
+        string = ["APPL:SQUARE "+str(freqs[i])+", 4, 0"]
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
+        control.get_data_latency( folder = folder, recording_time = recording_time, freq = freqs[i])
     control.close_communication_command()    
     print "Data saved in " +  folder
 

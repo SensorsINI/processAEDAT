@@ -250,7 +250,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [190,180], size_led = 2, do_plot = False):
+    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [190,180], size_led = 2, do_plot = True, do_plot_3d = True):
         '''
             Pixel Latency, single pixel signal reconstruction
         '''
@@ -292,12 +292,12 @@ class aedat3_process:
       
         print("stimulus frequency was :", np.mean(1.0/(np.diff(sp_t)*self.time_res*2)))                         
               
-        signal_rec = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
+        #signal_rec = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
         delta_up = np.ones(camera_dim)
         delta_dn = np.ones(camera_dim)  
         delta_up_count = np.zeros(camera_dim)
         delta_dn_count = np.zeros(camera_dim)
-        ts_t = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
+        #ts_t = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
        
         for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
             for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
@@ -308,10 +308,14 @@ class aedat3_process:
                 delta_dn_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 0)
 
         counter_x = 0 
+        counter_tot = 0
+        signal_rec = []
+        ts_t = []
         for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
             counter_y = 0 
             for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
-    
+                tmp_rec = []
+                tmp_t = []
                 this_index_x = xaddr[final_index] == x_
                 this_index_y = yaddr[final_index] == y_
                 index_to_get = this_index_x & this_index_y
@@ -320,49 +324,58 @@ class aedat3_process:
                     delta_dn[x_,y_] = (delta_up_count[x_,y_] / double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
                 else:
                     delta_up[x_,y_] = (delta_dn_count[x_,y_] / double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
-            
-                #up_jmp = pol[final_index[index_to_get]] == 1
-                #dn_jmp = pol[final_index[index_to_get]] == 0
-                #ts_up_jmp = ts[up_jmp]
-                #ts_dn_jmp = ts[dn_jmp]
-               
+                    
+                tmp = 0
                 for this_ev in range(np.sum(index_to_get)):
-                    if( pol[final_index[index_to_get[this_ev]]] == 1):
+                    if( pol[final_index][index_to_get][this_ev] == 1):
                         tmp = tmp+delta_up[x_,y_]
-                        signal_rec[counter_x, counter_y, counter_tot] = tmp
-                        ts_t[counter_x, counter_y, counter_tot] = ts[final_index[index_to_get[this_ev]]]
-                    if( pol[final_index[index_to_get[this_ev]]] == 0):
+                        tmp_rec.append(tmp)
+                        tmp_t.append(ts[final_index][index_to_get][this_ev])
+                    if( pol[final_index][index_to_get][this_ev] == 0):
                         tmp = tmp-delta_dn[x_,y_]
-                        signal_rec[counter_x, counter_y, counter_tot] = tmp
-                        ts_t[counter_x, counter_y, counter_tot] = ts[final_index[index_to_get[this_ev]]]
-                counter_y = counter_y+1
-                counter_tot = counter_tot + 1
-            counter_x = counter_x+1
+                        tmp_rec.append(tmp)
+                        tmp_t.append(ts[final_index][index_to_get][this_ev])
+                signal_rec.append(tmp_rec)
+                ts_t.append(tmp_t)
+                #counter_y = counter_y+1
+                #counter_tot = counter_tot + 1
+            #counter_x = counter_x+1
 
+        
         if do_plot:
-            for x_ in range(pixel_box):
-                for y_ in range(pixel_box):
-                    plot(ts_t[x_,y_,:],signal_rec[x_,y_,:])
+            signal_rec = np.array(signal_rec)
+            original = original - np.mean(original)
+            amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
+            original = original/amplitude_rec
+            figure()
+            plot(ts*self.time_res,original, linewidth=3)
+            for i in range(len(signal_rec)):
+                signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
+                amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
+                norm = signal_rec[i]/amplitude_rec
+                plot(np.array(ts_t[i])*self.time_res,norm)
 
-            plot((np.array(ts)-np.min(ts))*self.time_res,'o')
-            
-            # plot 3d histogram
-            fig = figure()
-            ax = fig.add_subplot(111, projection='3d')
-            x = xaddr
-            y = yaddr
-            histo, xedges, yedges = np.histogram2d(x, y, bins=(np.max(yaddr),np.max(xaddr)))
-            xpos, ypos = np.meshgrid(xedges[:-1]+xedges[1:], yedges[:-1]+yedges[1:])
-            xpos = xpos.flatten()/2.
-            ypos = ypos.flatten()/2.
-            zpos = np.zeros_like (xpos)
-            dx = xedges [1] - xedges [0]
-            dy = yedges [1] - yedges [0]
-            dz = histo.flatten()
-            ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
-            xlabel ("X")
-            ylabel ("Y")
-            # Find maximum point
+            if do_plot_3d:
+
+                plot((np.array(ts)-np.min(ts))*self.time_res,'o')
+                
+                # plot 3d histogram
+                fig = figure()
+                ax = fig.add_subplot(111, projection='3d')
+                x = xaddr
+                y = yaddr
+                histo, xedges, yedges = np.histogram2d(x, y, bins=(20,20))#=(np.max(yaddr),np.max(xaddr)))
+                xpos, ypos = np.meshgrid(xedges[:-1]+xedges[1:], yedges[:-1]+yedges[1:])
+                xpos = xpos.flatten()/2.
+                ypos = ypos.flatten()/2.
+                zpos = np.zeros_like (xpos)
+                dx = xedges [1] - xedges [0]
+                dy = yedges [1] - yedges [0]
+                dz = histo.flatten()
+                ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
+                xlabel ("X")
+                ylabel ("Y")
+                # Find maximum point
         return
 
     # sine wave to fit
@@ -490,7 +503,7 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_18_11_15-16_12_51/'
+        latency_pixel_dir = 'measurements/latency_19_11_15-11_00_38/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
