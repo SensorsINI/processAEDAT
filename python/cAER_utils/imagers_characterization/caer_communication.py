@@ -345,7 +345,7 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_latency(self, folder = 'latency', recording_time = 1, freq = 1):
+    def get_data_latency(self, folder = 'latency', recording_time = 1, freq = 1, coarse = 2, fine = 58):
         '''
            Pixel Latency
         '''
@@ -362,7 +362,7 @@ class caer_communication:
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
-        filename = folder + '/latency_recording_time_'+format(int(recording_time), '07d')+'_freq_stim_'+format(int(freq), '07d')+'.aedat' 
+        filename = folder + '/latency_recording_time_'+format(int(recording_time), '07d')+'_freq_stim_'+format(int(freq), '07d')+'_bias-coarse-_'+format(int(coarse),'01d')+'_bias-fine-_'+format(int(fine),'03d')+'.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
