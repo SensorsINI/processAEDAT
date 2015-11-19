@@ -92,10 +92,10 @@ if do_latency_pixel:
     for this_coarse in range(len(sweep_coarse_value)):
         for this_fine in range(len(sweep_fine_value)):
             for i in range(num_freqs):
-		string_this_coarse = string_bias_coarse + str(sweep_coarse_value[this_coarse])
-		string_this_fine = string_bias_fine + str(sweep_fine_value[this_fine])
+                string_this_coarse = string_bias_coarse + str(sweep_coarse_value[this_coarse])
+                string_this_fine = string_bias_fine + str(sweep_fine_value[this_fine])
                 control.send_command(string_this_coarse)
-		control.send_command(string_this_fine)
+                control.send_command(string_this_fine)
                 string = "APPL:SQUARE "+str(freqs[i])+", 2.1, 2"
                 gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
                 time.sleep(1)

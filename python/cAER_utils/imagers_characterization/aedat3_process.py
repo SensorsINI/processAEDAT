@@ -12,6 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
+import string
 
 class aedat3_process:
     def __init__(self):
@@ -250,118 +251,175 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [190,180], size_led = 2, do_plot = True, do_plot_3d = True):
+    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [190,180], size_led = 2, do_plot = True):
         '''
             Pixel Latency, single pixel signal reconstruction
         '''
+        #get all files in dir
         directory = latency_pixel_dir
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()  
-        this_file = 0
-        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[0])
+    
+        #loop over all recordings
+        for this_file in range(len(files_in_dir)):
 
-        dx = hist(xaddr,camera_dim[0])
-        dy = hist(yaddr,camera_dim[1])
-        ind_x_max = np.where(dx[0] == np.max(dx[0]))[0]        
-        ind_y_max = np.where(dy[0] == np.max(dy[0]))[0] 
-        ts = np.array(ts)
-        pol = np.array(pol)
-        xaddr = np.array(xaddr)
-        yaddr = np.array(yaddr)
-        sp_t = np.array(sp_t)
-        sp_type = np.array(sp_type)
-        pixel_box = size_led*2+1
-        pixel_num = pixel_box**2
+            exp_settings = string.split(files_in_dir[this_file],"_")
+            exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
+            exp_settings_bias_coarse = exp_settings[8]
+            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir))+ " PrBias Fine " +str(exp_settings_bias_fine)+ " PrBias Coarse " +str(exp_settings_bias_coarse) )
 
-        x_to_get = np.linspace(ind_x_max-size_led,ind_x_max+size_led,pixel_box)
-        y_to_get = np.linspace(ind_y_max-size_led,ind_y_max+size_led,pixel_box)
-        
-        index_to_get, un = self.ismember(xaddr,x_to_get)
-        indey_to_get, un = self.ismember(yaddr,y_to_get)
-        final_index = (index_to_get & indey_to_get)
-        
-        original = np.zeros(len(ts))
-        this_index = 0
-        for i in range(len(ts)):
-            if(ts[i] < sp_t[this_index]):
-                original[i] = sp_type[this_index]
-            elif(ts[i] >= sp_t[this_index]):           
-                original[i] = sp_type[this_index] 
-                if(this_index != len(sp_t)-1):
-                    this_index = this_index+1  
-      
-        print("stimulus frequency was :", np.mean(1.0/(np.diff(sp_t)*self.time_res*2)))                         
-              
-        #signal_rec = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
-        delta_up = np.ones(camera_dim)
-        delta_dn = np.ones(camera_dim)  
-        delta_up_count = np.zeros(camera_dim)
-        delta_dn_count = np.zeros(camera_dim)
-        #ts_t = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
-       
-        for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
-            for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
-                this_index_x = xaddr[final_index] == x_
-                this_index_y = yaddr[final_index] == y_
-                index_to_get = this_index_x & this_index_y
-                delta_up_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 1)
-                delta_dn_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 0)
+            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
 
-        counter_x = 0 
-        counter_tot = 0
-        signal_rec = []
-        ts_t = []
-        for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
-            counter_y = 0 
-            for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
-                tmp_rec = []
-                tmp_t = []
-                this_index_x = xaddr[final_index] == x_
-                this_index_y = yaddr[final_index] == y_
-                index_to_get = this_index_x & this_index_y
-                
-                if( delta_up_count[x_,y_] > delta_dn_count[x_,y_]):
-                    delta_dn[x_,y_] = (delta_up_count[x_,y_] / double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
-                else:
-                    delta_up[x_,y_] = (delta_dn_count[x_,y_] / double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
+
+            if do_plot:
+                fig = figure()
+                subplot(3,1,1)
+            dx = hist(xaddr,camera_dim[0])
+            dy = hist(yaddr,camera_dim[1])
+            ind_x_max = np.where(dx[0] == np.max(dx[0]))[0]        
+            ind_y_max = np.where(dy[0] == np.max(dy[0]))[0] 
+            ts = np.array(ts)
+            pol = np.array(pol)
+            xaddr = np.array(xaddr)
+            yaddr = np.array(yaddr)
+            sp_t = np.array(sp_t)
+            sp_type = np.array(sp_type)
+            pixel_box = size_led*2+1
+            pixel_num = pixel_box**2
+
+            x_to_get = np.linspace(ind_x_max-size_led,ind_x_max+size_led,pixel_box)
+            y_to_get = np.linspace(ind_y_max-size_led,ind_y_max+size_led,pixel_box)
+            
+            index_to_get, un = self.ismember(xaddr,x_to_get)
+            indey_to_get, un = self.ismember(yaddr,y_to_get)
+            final_index = (index_to_get & indey_to_get)
+
+            index_up_jump = sp_type == 2
+            index_dn_jump = sp_type == 3
+            
+            original = np.zeros(len(ts))
+            this_index = 0
+            for i in range(len(ts)):
+                if(ts[i] < sp_t[this_index]):
+                    original[i] = sp_type[this_index]
+                elif(ts[i] >= sp_t[this_index]):           
+                    original[i] = sp_type[this_index] 
+                    if(this_index != len(sp_t)-1):
+                        this_index = this_index+1  
+          
+            stim_freq = np.mean(1.0/(np.diff(sp_t)*self.time_res*2))
+            print("stimulus frequency was :"+str(stim_freq))                         
+                  
+            #signal_rec = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
+            delta_up = np.ones(camera_dim)
+            delta_dn = np.ones(camera_dim)  
+            delta_up_count = np.zeros(camera_dim)
+            delta_dn_count = np.zeros(camera_dim)
+            #ts_t = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
+           
+            for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
+                for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
+                    this_index_x = xaddr[final_index] == x_
+                    this_index_y = yaddr[final_index] == y_
+                    index_to_get = this_index_x & this_index_y
+                    delta_up_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 1)
+                    delta_dn_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 0)
+
+            counter_x = 0 
+            counter_tot = 0
+            latency_up_tot = []
+            latency_dn_tot = []
+            signal_rec = []
+            ts_t = []
+            for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
+                counter_y = 0 
+                for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
+                    tmp_rec = []
+                    tmp_t = []
+                    this_index_x = xaddr[final_index] == x_
+                    this_index_y = yaddr[final_index] == y_
+                    index_to_get = this_index_x & this_index_y
                     
-                tmp = 0
-                for this_ev in range(np.sum(index_to_get)):
-                    if( pol[final_index][index_to_get][this_ev] == 1):
-                        tmp = tmp+delta_up[x_,y_]
-                        tmp_rec.append(tmp)
-                        tmp_t.append(ts[final_index][index_to_get][this_ev])
-                    if( pol[final_index][index_to_get][this_ev] == 0):
-                        tmp = tmp-delta_dn[x_,y_]
-                        tmp_rec.append(tmp)
-                        tmp_t.append(ts[final_index][index_to_get][this_ev])
-                signal_rec.append(tmp_rec)
-                ts_t.append(tmp_t)
-                #counter_y = counter_y+1
-                #counter_tot = counter_tot + 1
-            #counter_x = counter_x+1
+                    if( delta_up_count[x_,y_] > delta_dn_count[x_,y_]):
+                        delta_dn[x_,y_] = (delta_up_count[x_,y_] / double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
+                    else:
+                        delta_up[x_,y_] = (delta_dn_count[x_,y_] / double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
+                        
+                    tmp = 0
+                    for this_ev in range(np.sum(index_to_get)):
+                        counter_transitions_up = 0
+                        counter_transitions_dn = 0
+                        if( pol[final_index][index_to_get][this_ev] == 1):
+                            tmp = tmp+delta_up[x_,y_]
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+                            # get firt up transition for this pixel
+                            if( counter_transitions_up < len(sp_t[index_up_jump])):
+                                if( sp_t[index_up_jump][counter_transitions_up]  > ts[final_index][index_to_get][this_ev]):
+                                    counter_transitions_up = counter_transitions_up +1
+                                    this_latency = sp_t[index_up_jump] - ts[final_index][index_to_get][this_ev]
+                                    this_neuron = [xaddr[final_index][index_to_get][this_ev],yaddr[final_index][index_to_get][this_ev]]
+                                    latency_up_tot.append([this_latency, this_neuron])
+                        if( pol[final_index][index_to_get][this_ev] == 0):
+                            tmp = tmp-delta_dn[x_,y_]
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+                            if( (counter_transitions_dn < len(sp_t[index_dn_jump])) and counter_transitions_up > 0):
+                                if( sp_t[index_dn_jump][counter_transitions_dn]  > ts[final_index][index_to_get][this_ev]):
+                                    counter_transitions_dn = counter_transitions_dn +1
+                                    this_latency = sp_t[index_dn_jump] - ts[final_index][index_to_get][this_ev]
+                                    this_neuron = [xaddr[final_index][index_to_get][this_ev],yaddr[final_index][index_to_get][this_ev]]
+                                    latency_dn_tot.append([this_latency, this_neuron])
+                    signal_rec.append(tmp_rec)
+                    ts_t.append(tmp_t)
+                    #counter_y = counter_y+1
+                    #counter_tot = counter_tot + 1
+                #counter_x = counter_x+1
 
-        
-        if do_plot:
-            signal_rec = np.array(signal_rec)
-            original = original - np.mean(original)
-            amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
-            original = original/amplitude_rec
-            figure()
-            plot(ts*self.time_res,original, linewidth=3)
-            for i in range(len(signal_rec)):
-                signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
-                amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
-                norm = signal_rec[i]/amplitude_rec
-                plot(np.array(ts_t[i])*self.time_res,norm)
+            if(len(latency_up_tot) > 0):
+                latencies_up = []
+                for i in range(len(latency_up_tot)):
+                    tmp = latency_up_tot[i][0]
+                    latencies_up.append(tmp)
+                latencies_up = np.array(latencies_up)
+                print("mean latency up: " +str(np.mean(latencies_up)*self.time_res) + " s")
+                print("std latency up: " +str(np.std(latencies_up)*self.time_res)  + " s")
 
-            if do_plot_3d:
+            if(len(latency_dn_tot) > 0):
+                latencies_dn = []
+                for i in range(len(latency_dn_tot)):
+                    tmp = latency_dn_tot[i][0]
+                    latencies_dn.append(tmp)
+                latencies_dn = np.array(latencies_dn)
+                print("mean latency dn: " +str(np.mean(latencies_dn)*self.time_res) + " s")
+                print("std latency dn: " +str(np.std(latencies_dn)*self.time_res)  + " s")
+                            
+            if do_plot:
+                signal_rec = np.array(signal_rec)
+                original = original - np.mean(original)
+                amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
+                original = original/amplitude_rec
 
-                plot((np.array(ts)-np.min(ts))*self.time_res,'o')
+                subplot(3,1,2)
+                title("stimulus frequency is " + str(stim_freq) +" PrBias Fine " +str(exp_settings_bias_fine)+ " PrBias Coarse " +str(exp_settings_bias_coarse) )
+                plot((ts-np.min(ts))*self.time_res,original, linewidth=3)
+                for i in range(len(signal_rec)):
+                    if( len(signal_rec[10]) > 2):
+                        signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
+                        amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
+                        norm = signal_rec[i]/amplitude_rec
+                        plot((np.array(ts_t[i])-np.min(np.array(ts_t[i])))*self.time_res,norm, 'o-')
+                    else:
+                        print("skipping neuron")
+
+
+                #figure()
+                #subplot(3,1,2)
+                #plot((np.array(ts)-np.min(ts))*self.time_res,'o')
                 
                 # plot 3d histogram
-                fig = figure()
-                ax = fig.add_subplot(111, projection='3d')
+                #subplot(3,1,3)
+                ax = fig.add_subplot(3,1,3, projection='3d')
                 x = xaddr
                 y = yaddr
                 histo, xedges, yedges = np.histogram2d(x, y, bins=(20,20))#=(np.max(yaddr),np.max(xaddr)))
@@ -503,13 +561,13 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_19_11_15-11_00_38/'
+        latency_pixel_dir = 'measurements/latency_19_11_15-17_47_24/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        #latency = aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [190,180])
+        aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [190,180], size_led = 2) #pixel size of the led
 
     self = aedat
 
