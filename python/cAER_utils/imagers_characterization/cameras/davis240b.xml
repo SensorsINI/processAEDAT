@@ -161,18 +161,18 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrBp" path="/1/1-DAVISFX2/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">2</attr>
+                        <attr key="coarseValue" type="byte">8</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">58</attr>
+                        <attr key="fineValue" type="byte">255</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrSFBp" path="/1/1-DAVISFX2/bias/PrSFBp/">
-                        <attr key="coarseValue" type="byte">1</attr>
+                        <attr key="coarseValue" type="byte">8</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">16</attr>
+                        <attr key="fineValue" type="byte">255</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>

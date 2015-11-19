@@ -80,15 +80,15 @@ if do_latency_pixel:
     control.open_communication_command()
     control.load_biases()    
     folder = datadir + '/latency_' +  current_date
-    num_freqs = 2 
-    start_freq = 1 
-    stop_freq = 100 
-    recording_time = 1
+    num_freqs = 1 
+    start_freq = 200 
+    stop_freq = 200 
+    recording_time = (1.0/start_freq)*4.0 
     freqs = np.linspace(start_freq,stop_freq,num_freqs)
-    sweep_coarse_value = np.array(np.linspace( 1, 8, 8), dtype=int)
-    sweep_fine_value = np.array(np.linspace(1,200,3),dtype=int)
-    string_bias_coarse = 'put /1/1-DAVISFX2/bias/PrBp/ coarseValue byte '
-    string_bias_fine = 'put /1/1-DAVISFX2/bias/PrBp/ fineValue byte '
+    sweep_coarse_value = np.array(np.linspace( 8, 8, 1), dtype=int)
+    sweep_fine_value = np.array(np.linspace(255,255,1),dtype=int)
+    string_bias_coarse = 'put /1/1-DAVISFX2/bias/PrSFBp/ coarseValue byte '
+    string_bias_fine = 'put /1/1-DAVISFX2/bias/PrSFBp/ fineValue byte '
     for this_coarse in range(len(sweep_coarse_value)):
         for this_fine in range(len(sweep_fine_value)):
             for i in range(num_freqs):
@@ -96,10 +96,10 @@ if do_latency_pixel:
 		string_this_fine = string_bias_fine + str(sweep_fine_value[this_fine])
                 control.send_command(string_this_coarse)
 		control.send_command(string_this_fine)
-                string = "APPL:SQUARE "+str(freqs[i])+", 4, 0"
+                string = "APPL:SQUARE "+str(freqs[i])+", 2.1, 2"
                 gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
                 time.sleep(1)
-                control.get_data_latency( folder = folder, recording_time = recording_time, freq = freqs[i], coarse = this_coarse, fine = this_fine)
+                control.get_data_latency( folder = folder, recording_time = recording_time, freq = freqs[i], coarse = sweep_coarse_value[this_coarse], fine = sweep_fine_value[this_fine])
     control.close_communication_command()    
     print "Data saved in " +  folder
 
