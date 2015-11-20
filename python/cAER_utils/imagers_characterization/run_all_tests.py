@@ -90,14 +90,15 @@ if do_latency_pixel:
     step_level = 0.5
     base_level = [3.6+step_level*i for i in range(num_measurements)]
     contrast_level = 0.3
+    freq_square = 200
     for i in range(num_measurements):
         perc_low = base_level[i]-base_level[i]*contrast_level
         perc_hi = base_level[i]+base_level[i]*contrast_level
-        string = "APPL:SQUARE "+str(freqs[i])+", "+str(perc_hi)+", "+str(perc_low)+""
+        string = "APPL:SQUARE "+str(freq_square)+", "+str(perc_hi)+", "+str(perc_low)+""
         gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
         control.load_biases(xml_file="cameras/davis240c.xml")  
         time.sleep(3)
-        control.get_data_latency( folder = folder, recording_time = recording_time)
+        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i)
     control.close_communication_command()    
     print "Data saved in " +  folder
 

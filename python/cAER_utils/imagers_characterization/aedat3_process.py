@@ -565,7 +565,7 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_20_11_15-18_22_35/'
+        latency_pixel_dir = 'measurements/latency_20_11_15-18_55_25/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
