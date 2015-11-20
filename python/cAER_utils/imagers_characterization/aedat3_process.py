@@ -255,6 +255,9 @@ class aedat3_process:
         '''
             Pixel Latency, single pixel signal reconstruction
         '''
+        #################################################################
+        ############### LATENCY ANALISYS
+        #################################################################
         #get all files in dir
         directory = latency_pixel_dir
         files_in_dir = os.listdir(directory)
@@ -269,7 +272,6 @@ class aedat3_process:
             print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir))+ " PrBias Fine " +str(exp_settings_bias_fine)+ " PrBias Coarse " +str(exp_settings_bias_coarse) )
 
             [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
-
 
             if do_plot:
                 fig = figure()
@@ -312,12 +314,10 @@ class aedat3_process:
             stim_freq = np.mean(1.0/(np.diff(sp_t)*self.time_res*2))
             print("stimulus frequency was :"+str(stim_freq))                         
                   
-            #signal_rec = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
             delta_up = np.ones(camera_dim)
             delta_dn = np.ones(camera_dim)  
             delta_up_count = np.zeros(camera_dim)
             delta_dn_count = np.zeros(camera_dim)
-            #ts_t = np.zeros([pixel_box, pixel_box, len(xaddr[final_index])])
            
             for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
                 for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
@@ -382,9 +382,6 @@ class aedat3_process:
                                         counter_transitions_dn = counter_transitions_dn +1    
                     signal_rec.append(tmp_rec)
                     ts_t.append(tmp_t)
-                    #counter_y = counter_y+1
-                    #counter_tot = counter_tot + 1
-                #counter_x = counter_x+1
 
             if(len(latency_up_tot) > 0):
                 latencies_up = []
@@ -422,17 +419,10 @@ class aedat3_process:
                         signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
                         amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
                         norm = signal_rec[i]/amplitude_rec
-                        plot((np.array(ts_t[i])-np.min(ts[i])),norm, 'o-')
+                        plot((np.array(ts_t[i])-np.min(ts[i])),norm, '-')
                     else:
                         print("skipping neuron")
 
-
-                #figure()
-                #subplot(3,1,2)
-                #plot((np.array(ts)-np.min(ts))*self.time_res,'o')
-                
-                # plot 3d histogram
-                #subplot(3,1,3)
                 ax = fig.add_subplot(4,1,4, projection='3d')
                 x = xaddr
                 y = yaddr
@@ -575,7 +565,7 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_20_11_15-16_01_56/'
+        latency_pixel_dir = 'measurements/latency_20_11_15-18_22_35/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]

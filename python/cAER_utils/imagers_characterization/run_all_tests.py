@@ -84,23 +84,20 @@ if do_latency_pixel:
     start_freq = 200 
     stop_freq = 200 
     recording_time = (1.0/start_freq)*8.0 
-    freqs = np.linspace(start_freq,stop_freq,num_freqs)
-    sweep_coarse_value = np.array(np.linspace( 8, 8, 1), dtype=int)
-    sweep_fine_value = np.array(np.linspace(255,255,1),dtype=int)
-    string_bias_coarse = 'put /1/1-DAVISFX2/bias/PrSFBp/ coarseValue byte '
-    string_bias_fine = 'put /1/1-DAVISFX2/bias/PrSFBp/ fineValue byte '
-    for this_coarse in range(len(sweep_coarse_value)):
-        for this_fine in range(len(sweep_fine_value)):
-            for i in range(num_freqs):
-                string_this_coarse = string_bias_coarse + str(sweep_coarse_value[this_coarse])
-                string_this_fine = string_bias_fine + str(sweep_fine_value[this_fine])
-                control.send_command(string_this_coarse)
-                control.send_command(string_this_fine)
-                string = "APPL:SQUARE "+str(freqs[i])+", 1.9, 2.5"
-                gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
-                control.load_biases(xml_file="cameras/davis240c.xml")  
-                time.sleep(3)
-                control.get_data_latency( folder = folder, recording_time = recording_time, freq = freqs[i], coarse = sweep_coarse_value[this_coarse], fine = sweep_fine_value[this_fine])
+    #for this_coarse in range(len(sweep_coarse_value)):
+    #    for this_fine in range(len(sweep_fine_value)):
+    num_measurements = 5
+    step_level = 0.5
+    base_level = [3.6+step_level*i for i in range(num_measurements)]
+    contrast_level = 0.3
+    for i in range(num_measurements):
+        perc_low = base_level[i]-base_level[i]*contrast_level
+        perc_hi = base_level[i]+base_level[i]*contrast_level
+        string = "APPL:SQUARE "+str(freqs[i])+", "+str(perc_hi)+", "+str(perc_low)+""
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
+        control.load_biases(xml_file="cameras/davis240c.xml")  
+        time.sleep(3)
+        control.get_data_latency( folder = folder, recording_time = recording_time)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
