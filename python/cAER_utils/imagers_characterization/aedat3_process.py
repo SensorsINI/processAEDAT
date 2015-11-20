@@ -263,13 +263,19 @@ class aedat3_process:
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()  
     
+        all_latencies_mean_up = []
+        all_latencies_mean_dn = []
+          
+        all_latencies_std_up = []
+        all_latencies_std_dn = []  
+
         #loop over all recordings
         for this_file in range(len(files_in_dir)):
 
-            exp_settings = string.split(files_in_dir[this_file],"_")
-            exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
-            exp_settings_bias_coarse = exp_settings[8]
-            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir))+ " PrBias Fine " +str(exp_settings_bias_fine)+ " PrBias Coarse " +str(exp_settings_bias_coarse) )
+            #exp_settings = string.split(files_in_dir[this_file],"_")
+            #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
+            #exp_settings_bias_coarse = exp_settings[8]
+            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
 
             [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
 
@@ -278,8 +284,15 @@ class aedat3_process:
                 subplot(4,1,1)
             dx = hist(xaddr,camera_dim[0])
             dy = hist(yaddr,camera_dim[1])
-            ind_x_max = np.where(dx[0] == np.max(dx[0]))[0]        
-            ind_y_max = np.where(dy[0] == np.max(dy[0]))[0] 
+            # ####### AAAAAAAAAAAAAAAA THIS IS NOT ALWAYS THE CASE
+            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]        
+            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0] 
+
+            #if(len(ind_x_max) > 1):
+            #    ind_x_max = np.floor(np.mean(ind_x_max))
+            #if(len(ind_y_max) > 1):
+            #    ind_y_max = np.floor(np.mean(ind_y_max))
+
             ts = np.array(ts)
             pol = np.array(pol)
             xaddr = np.array(xaddr)
@@ -400,7 +413,12 @@ class aedat3_process:
                 latencies_dn = np.array(latencies_dn)
                 print("mean latency dn: " +str(np.mean(latencies_dn)) + " us")
                 print("std latency dn: " +str(np.std(latencies_dn))  + " us")
-                            
+                           
+            all_latencies_mean_up.append(np.mean(latencies_up))
+            all_latencies_mean_dn.append(np.mean(latencies_dn))
+            all_latencies_std_up.append(np.std(latencies_up))
+            all_latencies_std_dn.append(np.std(latencies_dn))
+ 
             if do_plot:
                 signal_rec = np.array(signal_rec)
                 original = original - np.mean(original)
@@ -408,7 +426,6 @@ class aedat3_process:
                 original = original/amplitude_rec
 
                 subplot(4,1,2)
-                title("stimulus frequency is " + str(stim_freq) +" PrBias Fine " +str(exp_settings_bias_fine)+ " PrBias Coarse " +str(exp_settings_bias_coarse) )
                 plot(ts[final_index]-np.min(ts[final_index]),pol[final_index],"o", color='blue')
                 plot(ts-np.min(ts[final_index]),original*2,"x--", color='red')
                 subplot(4,1,3)
@@ -438,6 +455,19 @@ class aedat3_process:
                 xlabel ("X")
                 ylabel ("Y")
                 # Find maximum point
+                
+
+        all_latencies_mean_up = np.array(all_latencies_mean_up)
+        all_latencies_mean_dn = np.array(all_latencies_mean_dn)
+        all_latencies_std_up = np.array(all_latencies_std_up)
+        all_latencies_std_dn = np.array(all_latencies_std_dn)
+
+        if(len(all_latencies_mean_up) > 0):
+            figure()
+            title("final latency plots")
+            errorbar(np.linspace(0,len(all_latencies_mean_up),len(all_latencies_mean_up)), all_latencies_mean_up, yerr=all_latencies_std_up)
+            errorbar(np.linspace(0,len(all_latencies_mean_dn),len(all_latencies_mean_dn)), all_latencies_mean_dn, yerr=all_latencies_std_dn)
+
         return
 
     # sine wave to fit
@@ -565,7 +595,7 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_20_11_15-18_55_25/'
+        latency_pixel_dir = 'measurements/latency_20_11_15-20_12_31/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
