@@ -367,7 +367,7 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
-        self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
+        #self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
         print("APS array is ON")
         return        
 
@@ -437,7 +437,7 @@ class caer_communication:
         print("Done with PTC measurements")
         return   
 
-    def load_biases(self, xml_file = 'cameras/davis240b.xml'):
+    def load_biases(self, xml_file = 'cameras/davis240c.xml'):
         '''
             load default biases as defined in the xml file
         '''

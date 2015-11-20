@@ -78,12 +78,12 @@ if do_latency_pixel:
     print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
     control.open_communication_command()
-    control.load_biases()    
+    control.load_biases(xml_file="cameras/davis240c.xml")    
     folder = datadir + '/latency_' +  current_date
     num_freqs = 1 
     start_freq = 200 
     stop_freq = 200 
-    recording_time = (1.0/start_freq)*4.0 
+    recording_time = (1.0/start_freq)*8.0 
     freqs = np.linspace(start_freq,stop_freq,num_freqs)
     sweep_coarse_value = np.array(np.linspace( 8, 8, 1), dtype=int)
     sweep_fine_value = np.array(np.linspace(255,255,1),dtype=int)
@@ -96,9 +96,10 @@ if do_latency_pixel:
                 string_this_fine = string_bias_fine + str(sweep_fine_value[this_fine])
                 control.send_command(string_this_coarse)
                 control.send_command(string_this_fine)
-                string = "APPL:SQUARE "+str(freqs[i])+", 2.1, 2"
+                string = "APPL:SQUARE "+str(freqs[i])+", 1.9, 2.5"
                 gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
-                time.sleep(1)
+                control.load_biases(xml_file="cameras/davis240c.xml")  
+                time.sleep(3)
                 control.get_data_latency( folder = folder, recording_time = recording_time, freq = freqs[i], coarse = sweep_coarse_value[this_coarse], fine = sweep_fine_value[this_fine])
     control.close_communication_command()    
     print "Data saved in " +  folder

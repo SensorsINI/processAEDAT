@@ -561,13 +561,13 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_19_11_15-17_47_24/'
+        latency_pixel_dir = 'measurements/latency_20_11_15-12_28_40/'
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [190,180], size_led = 2) #pixel size of the led
+        aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [240,180], size_led = 2) #pixel size of the led
 
     self = aedat
 
