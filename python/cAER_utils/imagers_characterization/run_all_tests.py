@@ -86,15 +86,28 @@ if do_latency_pixel:
     recording_time = (1.0/start_freq)*8.0 
     #for this_coarse in range(len(sweep_coarse_value)):
     #    for this_fine in range(len(sweep_fine_value)):
-    num_measurements = 5
-    step_level = 0.5
-    base_level = [3.6+step_level*i for i in range(num_measurements)]
-    contrast_level = 0.3
+    #fit led irradiance
+    #A = np.loadtxt("measurements/setup/red_led_irradiance.txt")
+    #slope, inter = np.polyfit(A[0],A[1],1)
+    #volts = np.array([ 1.5,  2.5,  3. ,  3.5,  4. ,  4.5,  5. ,  5.5]) #led 25 cm away RED with red filter 360 nm
+    slope = 0.03664584777
+    inter = 2.0118686
+    A = np.array([   0. ,    8.7,   21.4,   35.4,   50.4,   66.8,   83.1,  100. ])
+    base_level = A
+
+    num_measurements = len(A) 
+    base_level_v = 3.1
+    #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
+    contrast_level = 0.30
     freq_square = 200
     for i in range(num_measurements):
         perc_low = base_level[i]-base_level[i]*contrast_level
         perc_hi = base_level[i]+base_level[i]*contrast_level
-        string = "APPL:SQUARE "+str(freq_square)+", "+str(perc_hi)+", "+str(perc_low)+""
+        v_hi = perc_hi * slope + inter   
+        v_low= perc_low * slope + inter
+        print("hi :", str(v_hi))
+        print("low :", str(v_low))
+        string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
         gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
         control.load_biases(xml_file="cameras/davis240c.xml")  
         time.sleep(3)
