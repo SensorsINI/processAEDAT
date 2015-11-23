@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib
 from pylab import *
 import time, os
+import shutil
 
 # import caer communication and control gpib/usb instrumentations
 import caer_communication
@@ -30,6 +31,16 @@ try:
     os.stat(datadir)
 except:
     os.mkdir(datadir) 
+
+def copyFile(src, dest):
+    try:
+        shutil.copy(src, dest)
+    # eg. src and dest are the same file
+    except shutil.Error as e:
+        print('Error: %s' % e)
+    # eg. source or destination doesn't exist
+    except IOError as e:
+        print('Error: %s' % e.strerror)
 
 ################################################################################
 ## CONDITION 1 - Homegeneous light source
@@ -80,6 +91,11 @@ if do_latency_pixel:
     control.open_communication_command()
     control.load_biases(xml_file="cameras/davis240c.xml")    
     folder = datadir + '/latency_' +  current_date
+    setting_dir = folder + str("/settings/")
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    bias_file = "cameras/davis240c.xml"
+
     num_freqs = 1 
     start_freq = 200 
     stop_freq = 200 
@@ -92,26 +108,45 @@ if do_latency_pixel:
     #volts = np.array([ 1.5,  2.5,  3. ,  3.5,  4. ,  4.5,  5. ,  5.5]) #led 25 cm away RED with red filter 360 nm
     slope = 0.03664584777
     inter = 2.0118686
-    A = np.array([   0. ,    8.7,   21.4,   35.4,   50.4,   66.8,   83.1,  100. ])
+    #A = np.array([   0. ,    8.7,   21.4,   35.4,   50.4,   66.8,   83.1,  100. ])
+    A = np.array([0.55,0.55])
     base_level = A
 
     num_measurements = len(A) 
-    base_level_v = 3.1
+    base_level_v = 0.1
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
-    contrast_level = 0.30
+    contrast_level = 0.10
     freq_square = 200
     for i in range(num_measurements):
-        perc_low = base_level[i]-base_level[i]*contrast_level
-        perc_hi = base_level[i]+base_level[i]*contrast_level
-        v_hi = perc_hi * slope + inter   
-        v_low= perc_low * slope + inter
-        print("hi :", str(v_hi))
-        print("low :", str(v_low))
-        string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
+        #perc_low = base_level[i]-base_level[i]*contrast_level
+        #perc_hi = base_level[i]+base_level[i]*contrast_level
+        #v_hi = perc_hi * slope + inter   
+        #v_low= perc_low * slope + inter
+        #print("hi :", str(v_hi))
+        #print("low :", str(v_low))
+        #string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
+        string = "APPL:SQUARE "+str(freq_square)+", "+str(3.4)+", "+str(0.9)+""        
         gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
-        control.load_biases(xml_file="cameras/davis240c.xml")  
+        control.load_biases(xml_file=bias_file)  
+        copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
         control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i)
     control.close_communication_command()    
     print "Data saved in " +  folder
+
+    import aedat3_process as process
+    import matplotlib
+    from pylab import *
+
+    latency_pixel_dir = folder+"/"
+    figure_dir = latency_pixel_dir+'/figures/'
+    if(not os.path.exists(figure_dir)):
+        os.makedirs(figure_dir)
+    # select test pixels areas only two are active
+    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[0,180]]
+
+    daje = process.aedat3_process()
+    daje.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
+
 

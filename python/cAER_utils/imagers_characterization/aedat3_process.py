@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 import string
+import matplotlib
+from pylab import *
 
 class aedat3_process:
     def __init__(self):
@@ -138,7 +140,7 @@ class aedat3_process:
         u_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
-        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
+        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
         for this_file in range(len(files_in_dir)):
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
@@ -251,9 +253,13 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def pixel_latency_analysis(self, latency_pixel_dir, camera_dim = [190,180], size_led = 2, do_plot = True):
+    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, do_plot = True):
         '''
             Pixel Latency, single pixel signal reconstruction
+            ----
+            paramenters:
+                 latency_pixel_dir  -> measurements directory
+                 figure_dir         -> figure directory *where to store the figures*
         '''
         #################################################################
         ############### LATENCY ANALISYS
@@ -277,14 +283,18 @@ class aedat3_process:
             #exp_settings_bias_coarse = exp_settings[8]
             print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
 
-            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
 
             if do_plot:
                 fig = figure()
                 subplot(4,1,1)
             dx = hist(xaddr,camera_dim[0])
             dy = hist(yaddr,camera_dim[1])
-            # ####### AAAAAAAAAAAAAAAA THIS IS NOT ALWAYS THE CASE
+            # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
             ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]        
             ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0] 
 
@@ -439,6 +449,7 @@ class aedat3_process:
                         plot((np.array(ts_t[i])-np.min(ts[i])),norm, '-')
                     else:
                         print("skipping neuron")
+                
 
                 ax = fig.add_subplot(4,1,4, projection='3d')
                 x = xaddr
@@ -455,18 +466,21 @@ class aedat3_process:
                 xlabel ("X")
                 ylabel ("Y")
                 # Find maximum point
+                savefig(figure_dir+"combined_latency_"+str(this_file)+".png",  format='png', dpi=300)
                 
 
-        all_latencies_mean_up = np.array(all_latencies_mean_up)
-        all_latencies_mean_dn = np.array(all_latencies_mean_dn)
-        all_latencies_std_up = np.array(all_latencies_std_up)
-        all_latencies_std_dn = np.array(all_latencies_std_dn)
+        if do_plot:
+            all_latencies_mean_up = np.array(all_latencies_mean_up)
+            all_latencies_mean_dn = np.array(all_latencies_mean_dn)
+            all_latencies_std_up = np.array(all_latencies_std_up)
+            all_latencies_std_dn = np.array(all_latencies_std_dn)
 
-        if(len(all_latencies_mean_up) > 0):
-            figure()
-            title("final latency plots")
-            errorbar(np.linspace(0,len(all_latencies_mean_up),len(all_latencies_mean_up)), all_latencies_mean_up, yerr=all_latencies_std_up)
-            errorbar(np.linspace(0,len(all_latencies_mean_dn),len(all_latencies_mean_dn)), all_latencies_mean_dn, yerr=all_latencies_std_dn)
+            if(len(all_latencies_mean_up) > 0):
+                figure()
+                title("final latency plots")
+                errorbar(np.linspace(0,len(all_latencies_mean_up),len(all_latencies_mean_up)), all_latencies_mean_up, yerr=all_latencies_std_up)
+                errorbar(np.linspace(0,len(all_latencies_mean_dn),len(all_latencies_mean_dn)), all_latencies_mean_dn, yerr=all_latencies_std_dn)
+            savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
 
         return
 
@@ -488,7 +502,7 @@ class aedat3_process:
         this_file = 0
         sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
-        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
+        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
 
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
@@ -565,9 +579,6 @@ class aedat3_process:
 if __name__ == "__main__":
     #analyse ptc
 
-    import matplotlib
-    from pylab import *
-    ion()
     
     do_ptc = False
     do_fpn = False
@@ -595,13 +606,16 @@ if __name__ == "__main__":
         delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_20_11_15-20_12_31/'
+        latency_pixel_dir = 'measurements/latency_23_11_15-11_50_19/'
+        figure_dir = latency_pixel_dir+'/figures/'
+        if(not os.path.exists(figure_dir)):
+            os.makedirs(figure_dir)
         # select test pixels areas only two are active
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        aedat.pixel_latency_analysis(latency_pixel_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
+        aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
 
     self = aedat
 
