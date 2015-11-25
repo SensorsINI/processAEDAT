@@ -24,7 +24,7 @@ datadir = 'measurements'
 
 # 0 - INIT control tools
 # init control class and open communication
-control = caer_communication.caer_communication(host='localhost')
+control = caer_communication.caer_communication(host='172.19.11.139')
 gpio_cnt = gpio_usb.gpio_usb()
 print gpio_cnt.query(gpio_cnt.fun_gen,"*IDN?")
 try:
@@ -88,49 +88,57 @@ if do_latency_pixel:
     print "\n"
     print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
+
+
+    sensor = "DAVIS240C"
+    filter_type = 0.0
     control.open_communication_command()
     control.load_biases(xml_file="cameras/davis240c.xml")    
-    folder = datadir + '/latency_' +  current_date
+    folder = datadir + '/'+str(sensor)+'_latency_' +  current_date
     setting_dir = folder + str("/settings/")
+
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
     bias_file = "cameras/davis240c.xml"
-
     num_freqs = 1 
-    start_freq = 200 
-    stop_freq = 200 
-    recording_time = (1.0/start_freq)*8.0 
+
+
     #for this_coarse in range(len(sweep_coarse_value)):
     #    for this_fine in range(len(sweep_fine_value)):
     #fit led irradiance
     #A = np.loadtxt("measurements/setup/red_led_irradiance.txt")
-    #slope, inter = np.polyfit(A[0],A[1],1)
+    ##### IF YOU USE RED LED OF SETUP
     #volts = np.array([ 1.5,  2.5,  3. ,  3.5,  4. ,  4.5,  5. ,  5.5]) #led 25 cm away RED with red filter 360 nm
-    slope = 0.03664584777
-    inter = 2.0118686
+    #slope = 0.03664584777
+    #inter = 2.0118686
     #A = np.array([   0. ,    8.7,   21.4,   35.4,   50.4,   66.8,   83.1,  100. ])
-    A = np.array([0.55,0.55])
-    base_level = A
+    #A = np.array([0.55, 0.55])
+    ##### IF YOU USE POWERFUL WHITE LED LED OF SETUP
+    volt = np.array([0.05, 0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8])
+    lux = np.array([87.59,162,306,444,571,693,811,910,1100])
+    slope, inter = np.polyfit(lux,volt,1)
+    base_level = lux
 
-    num_measurements = len(A) 
-    base_level_v = 0.1
+    num_measurements = len(base_level) 
+    #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
-    contrast_level = 0.10
-    freq_square = 200
+    contrast_level = 0.3
+    freq_square = 100
+    recording_time = (1.0/freq_square)*8.0 
     for i in range(num_measurements):
-        #perc_low = base_level[i]-base_level[i]*contrast_level
-        #perc_hi = base_level[i]+base_level[i]*contrast_level
-        #v_hi = perc_hi * slope + inter   
-        #v_low= perc_low * slope + inter
-        #print("hi :", str(v_hi))
-        #print("low :", str(v_low))
-        #string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
-        string = "APPL:SQUARE "+str(freq_square)+", "+str(3.4)+", "+str(0.9)+""        
+        perc_low = base_level[i]-base_level[i]*contrast_level
+        perc_hi = base_level[i]+base_level[i]*contrast_level
+        v_hi = perc_hi * slope + inter   
+        v_low= perc_low * slope + inter
+        print("hi :", str(v_hi))
+        print("low :", str(v_low))
+        string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
+        #string = "APPL:SQUARE "+str(freq_square)+", "+str(3.4)+", "+str(0.9)+""        
         gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
         control.load_biases(xml_file=bias_file)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
-        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i)
+        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -147,6 +155,6 @@ if do_latency_pixel:
     frame_y_divisions = [[0,180]]
 
     daje = process.aedat3_process()
-    daje.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
+    daje.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 2, confidence_level=0.95) #pixel size of the led
 
 

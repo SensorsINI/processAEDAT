@@ -16,7 +16,7 @@ import numpy as np
 from xml.dom import minidom
 
 class caer_communication:
-    def __init__(self, host = 'localhost',  port_control = 4040, port_data = 7777, inputbuffersize = 8000):
+    def __init__(self, host = '172.19.11.139',  port_control = 4040, port_data = 7777, inputbuffersize = 8000):
 
         if sys.platform=="win32":
             self.USE_MSG_WAITALL = False # it doesn't work reliably on Windows even though it's defined
@@ -345,7 +345,7 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_latency(self, folder = 'latency', recording_time = 1, num_measurement = 1):
+    def get_data_latency(self, folder = 'latency', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1):
         '''
            Pixel Latency
         '''
@@ -362,7 +362,7 @@ class caer_communication:
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
-        filename = folder + '/latency_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'.aedat' 
+        filename = folder + '/latency_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'_lux_'+str(lux)+'_filter-type_'+str(filter_type)+'_.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()

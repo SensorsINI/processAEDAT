@@ -15,6 +15,7 @@ from scipy.optimize import curve_fit
 import string
 import matplotlib
 from pylab import *
+import scipy.stats as st
 
 class aedat3_process:
     def __init__(self):
@@ -29,6 +30,10 @@ class aedat3_process:
         self.y_addr = []
         self.timestamp = []
         self.time_res = 1e-6
+
+    def confIntMean(self, a, conf=0.95):
+      mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
+      return mean - m*sem, mean + m*sem
 
     def load_file(self, filename):
         '''
@@ -253,7 +258,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, do_plot = True):
+    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True):
         '''
             Pixel Latency, single pixel signal reconstruction
             ----
@@ -261,6 +266,7 @@ class aedat3_process:
                  latency_pixel_dir  -> measurements directory
                  figure_dir         -> figure directory *where to store the figures*
         '''
+        import string as stra
         #################################################################
         ############### LATENCY ANALISYS
         #################################################################
@@ -276,15 +282,21 @@ class aedat3_process:
         all_latencies_std_dn = []  
 
         #loop over all recordings
+        all_lux = []
+        all_filters_type = []
         for this_file in range(len(files_in_dir)):
-
             #exp_settings = string.split(files_in_dir[this_file],"_")
             #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
             #exp_settings_bias_coarse = exp_settings[8]
+
             print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
 
             if not os.path.isdir(directory+files_in_dir[this_file]):
                 [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+                current_lux = stra.split(files_in_dir[this_file], "_")[8]
+                filter_type = stra.split(files_in_dir[this_file], "_")[10]
+                all_lux.append(current_lux)
+                all_filters_type.append(filter_type)
             else:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
                 continue
@@ -406,14 +418,24 @@ class aedat3_process:
                     signal_rec.append(tmp_rec)
                     ts_t.append(tmp_t)
 
+
+            #open report file
+            report_file = figure_dir+"Report_results_"+str(this_file)+".txt"
+            out_file = open(report_file,"w")
+            out_file.write("lux: " +str(current_lux) + " filter type" +str(filter_type)+"\n")
             if(len(latency_up_tot) > 0):
                 latencies_up = []
                 for i in range(1,len(latency_up_tot)-1):
                     tmp = latency_up_tot[i][0]
                     latencies_up.append(tmp)
                 latencies_up = np.array(latencies_up)
+                all_latencies_mean_up.append(np.mean(latencies_up))
+                err_up = self.confIntMean(latencies_up,conf=confidence_level)
+                all_latencies_std_up.append(err_up)
                 print("mean latency up: " +str(np.mean(latencies_up)) + " us")
-                print("std latency up: " +str(np.std(latencies_up))  + " us")
+                out_file.write("mean latency up: " +str(np.mean(latencies_up)) + " us\n")
+                print("err latency up: " +str(err_up)  + " us")
+                out_file.write("err latency up: " +str(err_up)  + " us\n")
 
             if(len(latency_dn_tot) > 0):
                 latencies_dn = []
@@ -421,13 +443,15 @@ class aedat3_process:
                     tmp = latency_dn_tot[i][0]
                     latencies_dn.append(tmp)
                 latencies_dn = np.array(latencies_dn)
+                all_latencies_mean_dn.append(np.mean(latencies_dn))
+                err_dn = self.confIntMean(latencies_dn,conf=confidence_level)
+                all_latencies_std_dn.append(err_dn)
                 print("mean latency dn: " +str(np.mean(latencies_dn)) + " us")
-                print("std latency dn: " +str(np.std(latencies_dn))  + " us")
-                           
-            all_latencies_mean_up.append(np.mean(latencies_up))
-            all_latencies_mean_dn.append(np.mean(latencies_dn))
-            all_latencies_std_up.append(np.std(latencies_up))
-            all_latencies_std_dn.append(np.std(latencies_dn))
+                out_file.write("mean latency dn: " +str(np.mean(latencies_dn)) + " us\n")
+                print("err latency dn: " +str(err_dn)  + " us")
+                out_file.write("err latency dn: " +str(err_dn)  + " us\n")           
+            out_file.close()
+
  
             if do_plot:
                 signal_rec = np.array(signal_rec)
@@ -470,6 +494,8 @@ class aedat3_process:
                 
 
         if do_plot:
+            all_lux = np.array(all_lux)
+            all_filters_type = np.array(all_filters_type)
             all_latencies_mean_up = np.array(all_latencies_mean_up)
             all_latencies_mean_dn = np.array(all_latencies_mean_dn)
             all_latencies_std_up = np.array(all_latencies_std_up)
@@ -477,10 +503,14 @@ class aedat3_process:
 
             if(len(all_latencies_mean_up) > 0):
                 figure()
-                title("final latency plots")
-                errorbar(np.linspace(0,len(all_latencies_mean_up),len(all_latencies_mean_up)), all_latencies_mean_up, yerr=all_latencies_std_up)
-                errorbar(np.linspace(0,len(all_latencies_mean_dn),len(all_latencies_mean_dn)), all_latencies_mean_dn, yerr=all_latencies_std_dn)
+                title("final latency plots with filter: " + str(all_filters_type[0]))
+                errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
+                errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
+            xlabel('lux')
+            ylabel('latency [us]')
+            legend(loc='best')
             savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
+            savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
         return
 
