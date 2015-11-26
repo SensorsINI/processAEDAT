@@ -393,7 +393,7 @@ class aedat3_process:
                             tmp = tmp+delta_up[x_,y_]
                             tmp_rec.append(tmp)
                             tmp_t.append(ts[final_index][index_to_get][this_ev])
-                            # get firt up transition for this pixel
+                            # get first up transition for this pixel
                             if( counter_transitions_up < len(sp_t[index_up_jump]) ):
                                 if ( sp_t[index_up_jump][counter_transitions_up] < ts[final_index][index_to_get][this_ev]):
                                     this_latency = ts[final_index][index_to_get][this_ev] - sp_t[index_up_jump][counter_transitions_up]
@@ -502,15 +502,21 @@ class aedat3_process:
             all_latencies_std_dn = np.array(all_latencies_std_dn)
 
             if(len(all_latencies_mean_up) > 0):
-                figure()
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
                 title("final latency plots with filter: " + str(all_filters_type[0]))
                 errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
                 errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
-            xlabel('lux')
-            ylabel('latency [us]')
-            legend(loc='best')
-            savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
-            savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
+                ax.set_xscale("log", nonposx='clip')
+                ax.set_yscale("log", nonposx='clip')
+                ax.grid(True, which="both", ls="--")
+                #xlim([np.min(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0]))), np.max(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])))+10])
+                #ylim([np.min(all_latencies_mean_up)-np.std(all_latencies_mean_up), np.max(all_latencies_mean_up)+10])
+                xlabel('lux')
+                ylabel('latency [us]')
+                legend(loc='best')
+                savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
+                savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
         return
 
@@ -518,7 +524,164 @@ class aedat3_process:
     def my_sin(self, x, freq, amplitude, phase, offset):
         return np.sin( 2*np.pi* x * freq + phase) * amplitude + offset
 
-    def fpn_analysis(self,  fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
+
+    def fpn_analysis_delta(self,  fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3, camera_dim = [240,180]):
+        '''
+            threshold distribution and signal (sine wave) reconstruction
+                - input signal is a sine wave, setup is in homogeneous lighting conditions
+             returns:
+                - delta_up, delta_dn - matrixes of tresholds linearly estimated
+                - signal_reconstruction, ts_t - signals reconstructed with UP/DN spikes as well as ts_t time steps 
+        '''
+        import string as stra
+        #################################################################
+        ############### LATENCY ANALISYS
+        #################################################################
+        #get all files in dir
+        directory = fpn_dir
+        files_in_dir = os.listdir(directory)
+        files_in_dir.sort()  
+   
+        #loop over all recordings
+        for this_file in range(len(files_in_dir)):
+            #exp_settings = string.split(files_in_dir[this_file],"_")
+            #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
+            #exp_settings_bias_coarse = exp_settings[8]
+
+            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
+
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
+
+            ts = np.array(ts)
+            pol = np.array(pol)
+            xaddr = np.array(xaddr)
+            yaddr = np.array(yaddr)
+            sp_t = np.array(sp_t)
+            sp_type = np.array(sp_type)
+
+            delta_up_tot = []
+            delta_dn_tot = []
+            signal_rec_tot = []
+            ts_t_tot = []
+
+            #calculate normalization factor
+            delta_up_count_max = 0
+            delta_dn_count_max = 0
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+                    
+                    x_to_get = np.linspace(frame_x_divisions[this_div_x][0],frame_x_divisions[this_div_x][1]-1,frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0])
+                    y_to_get = np.linspace(frame_y_divisions[this_div_y][0],frame_y_divisions[this_div_y][1]-1,frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]) 
+                    index_to_get, un = self.ismember(xaddr,x_to_get)
+                    indey_to_get, un = self.ismember(yaddr,y_to_get)
+                    final_index = (index_to_get & indey_to_get)   
+                    delta_up = np.ones([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])
+                    delta_dn = np.ones([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])  
+                    delta_up_count = np.zeros([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])
+                    delta_dn_count = np.zeros([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])                
+                    if(np.sum(final_index) > 0):
+                        for x_ in range(frame_x_divisions[this_div_x][0],frame_x_divisions[this_div_x][1]):
+                            for y_ in range(frame_y_divisions[this_div_y][0],frame_y_divisions[this_div_y][1]):
+                                this_index_x = xaddr[final_index] == x_
+                                this_index_y = yaddr[final_index] == y_
+                                index_to_get = this_index_x & this_index_y
+                                x_index = x_ - frame_x_divisions[this_div_x][0]
+                                y_index = y_ - frame_y_divisions[this_div_y][0]
+                                current_delta_up = np.sum(pol[final_index][index_to_get] == 1)
+                                current_delta_dn = np.sum(pol[final_index][index_to_get] == 0)
+                                if( delta_dn_count_max < current_delta_dn):
+                                    delta_dn_count_max = current_delta_dn
+                                if( delta_up_count_max < current_delta_dn):
+                                    delta_up_count_max  = current_delta_up
+
+
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+                    x_to_get = np.linspace(frame_x_divisions[this_div_x][0],frame_x_divisions[this_div_x][1]-1,frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0])
+                    y_to_get = np.linspace(frame_y_divisions[this_div_y][0],frame_y_divisions[this_div_y][1]-1,frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0])
+                    
+                    index_to_get, un = self.ismember(xaddr,x_to_get)
+                    indey_to_get, un = self.ismember(yaddr,y_to_get)
+                    final_index = (index_to_get & indey_to_get)
+                          
+                    delta_up = np.ones([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])
+                    delta_dn = np.ones([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])  
+                    delta_up_count = np.zeros([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])
+                    delta_dn_count = np.zeros([frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0], frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]])
+                   
+                    if(np.sum(final_index) > 0):
+                        for x_ in range(frame_x_divisions[this_div_x][0],frame_x_divisions[this_div_x][1]):
+                            for y_ in range(frame_y_divisions[this_div_y][0],frame_y_divisions[this_div_y][1]):
+                                this_index_x = xaddr[final_index] == x_
+                                this_index_y = yaddr[final_index] == y_
+                                index_to_get = this_index_x & this_index_y
+                                x_index = x_ - frame_x_divisions[this_div_x][0]
+                                y_index = y_ - frame_y_divisions[this_div_y][0]
+                                delta_up_count[x_index,y_index] = np.sum(pol[final_index][index_to_get] == 1)
+                                delta_dn_count[x_index,y_index] = np.sum(pol[final_index][index_to_get] == 0)
+    
+                        counter_x = 0 
+                        counter_tot = 0
+                        signal_rec = []
+                        ts_t = []
+                        for x_ in range(frame_x_divisions[this_div_x][0],frame_x_divisions[this_div_x][1]):
+                            counter_y = 0 
+                            for y_ in range(frame_y_divisions[this_div_y][0],frame_y_divisions[this_div_y][1]):
+                                tmp_rec = []
+                                tmp_t = []
+                                this_index_x = xaddr[final_index] == x_
+                                this_index_y = yaddr[final_index] == y_
+                                index_to_get = this_index_x & this_index_y
+                                
+                                x_index = x_ - frame_x_divisions[this_div_x][0]
+                                y_index = y_ - frame_y_divisions[this_div_y][0]
+
+                                if( np.max(delta_up_count) == 0 and np.max(delta_dn_count) == 0):
+                                    print("skipping pixel x:y "+str(x_)+":"+str(y_)+" because it did not fire")
+                                else:
+                                    if( delta_up_count[x_index,y_index] > delta_dn_count[x_index,y_index]):
+                                        delta_dn[x_index,y_index] = (np.max(delta_up_count) / double(delta_dn_count_max)) * (delta_up[x_index,y_index])
+                                    else:
+                                        delta_up[x_index,y_index] = (np.max(delta_dn_count) / double(delta_up_count_max)) * (delta_dn[x_index,y_index])
+                                        
+                                    tmp = 0
+                                    counter_transitions_up = 0
+                                    counter_transitions_dn = 0
+                                    for this_ev in range(np.sum(index_to_get)):
+                                        if( pol[final_index][index_to_get][this_ev] == 1):
+                                            tmp_rec.append(tmp)
+                                            tmp_t.append(ts[final_index][index_to_get][this_ev]-1)
+                                            tmp = tmp+delta_up[x_index,y_index]
+                                            tmp_rec.append(tmp)
+                                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+                                        if( pol[final_index][index_to_get][this_ev] == 0):
+                                            tmp_rec.append(tmp)
+                                            tmp_t.append(ts[final_index][index_to_get][this_ev]-1)
+                                            tmp = tmp-delta_dn[x_index,y_index]
+                                            tmp_rec.append(tmp)
+                                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+
+                                    signal_rec.append(tmp_rec)
+                                    ts_t.append(tmp_t)
+
+                        #figure()
+                        #for i in range(len(signal_rec)):
+                        #    plot(ts_t[i],signal_rec[i])            
+                    
+                        delta_up_tot.append(delta_up)
+                        delta_dn_tot.append(delta_dn)
+                        signal_rec_tot.append(signal_rec)
+                        ts_t_tot.append(ts_t)
+                    else:
+                        continue
+
+            return delta_up_tot, delta_dn_tot, signal_rec_tot, ts_t_tot
+
+    def fpn_analysis(self,  fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
         '''
             fixed pattern noise
 		        - input signal is a sine wave, setup is in homogeneous lighting conditions
@@ -526,16 +689,23 @@ class aedat3_process:
         #################################################################
         ############### FPN and SIGNAL RECOSTRUCTION
         #################################################################
-        directory = fpn_dir
+        directory = fpn_dir      
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()  
         this_file = 0
         sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
-        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+        for this_file in range(len(files_in_dir)):
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                rec_time = float(files_in_dir[this_file].strip(".aedat").strip("fpn_recording_time_")) # in us
+                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
+
 
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
+
                 signal_rec = []
                 tmp = 0
                 delta_up = 1.0
@@ -596,12 +766,13 @@ class aedat3_process:
                     stringa = "Root Mean Square Error: " + str('{0:.3f}'.format(rms*100))+ "%"
                     plot(tnew, data_fit, label='Target with'+ stringa)
                     plot(tnew, signal_rec, label='Measure')
+                    legend(loc="lower right")
                     xlabel('Time [s]')
                     ylabel('Norm. Amplitude')
                     ylim([-1,1])
-             
-                    title('Measured and fitted curves for the DVS 0.3 Hz sinusoidal stimulation')
-                    legend(loc='best')
+                    title('Measured and fitted curves for the DVS pixels sinusoidal stimulation')
+                    savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".pdf",  format='PDF')
+                    savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".png",  format='PNG')
                     print(stringa)
 
         return delta_up, delta_dn, rms
@@ -611,8 +782,11 @@ if __name__ == "__main__":
 
     
     do_ptc = False
-    do_fpn = False
-    do_latency_pixel = True
+    do_fpn = True
+    do_latency_pixel = False
+    camera_dim = [240,180]
+    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
@@ -628,21 +802,68 @@ if __name__ == "__main__":
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
+        figure_dir = fpn_dir + '/figures/'
+        if(not os.path.exists(figure_dir)):
+            os.makedirs(figure_dir)
         # select test pixels areas only two are active
-        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-        frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
+        delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
+        delta_up_thr, delta_dn_thr, signal_rec_tot, ts_t_tot = aedat.fpn_analysis_delta(fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
+        sensor_up = np.zeros(camera_dim)
+        sensor_dn = np.zeros(camera_dim)
+        counter  = 0
+        current_x = 0
+        current_y = 0
+        for slice_num in range(len(delta_up_thr)):
+            slice_dim_x, slice_dim_y = np.shape(delta_up_thr[slice_num])            
+            sensor_up[current_x:slice_dim_x+current_x,current_y:slice_dim_y+current_y] = delta_up_thr[slice_num]
+            sensor_dn[current_x:slice_dim_x+current_x,current_y:slice_dim_y+current_y] = delta_dn_thr[slice_num]
+            current_x = slice_dim_x+current_x
+            current_y = current_y 
+        figure()
+        subplot(3,2,1)
+        title("UP thresholds")
+        imshow(sensor_up.T)
+        colorbar()
+        subplot(3,2,2)
+        title("DN thresholds")          
+        imshow(sensor_dn.T)
+        colorbar()
+        subplot(3,2,3)
+        plot(np.sum(sensor_up.T,axis=0), label='up dim'+str( len(np.sum(sensor_up.T,axis=0)) ))
+        legend(loc='best')    
+        xlim([0,camera_dim[0]])
+        subplot(3,2,4)
+        plot(np.sum(sensor_dn.T,axis=0), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=0)) ))
+        xlim([0,camera_dim[0]])
+        legend(loc='best')    
+        subplot(3,2,5)
+        plot(np.sum(sensor_up.T,axis=1), label='up dim'+str( len(np.sum(sensor_up.T,axis=1)) ))
+        legend(loc='best')    
+        xlim([0,camera_dim[1]])
+        subplot(3,2,6)
+        plot(np.sum(sensor_dn.T,axis=1), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=1)) ))
+        xlim([0,camera_dim[1]])  
+        legend(loc='best')    
+        savefig(figure_dir+"threshold_mismatch_map.pdf",  format='PDF')
+        savefig(figure_dir+"threshold_mismatch_map.png",  format='PNG')
+        
+
+        for j in range(len(delta_up_thr)):
+            figure()
+            for i in range(len(signal_rec_tot[j])):
+                plot(ts_t_tot[j][i], signal_rec_tot[j][i])
+                xlabel('time us')
+                ylabel('arb units')
+
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/latency_23_11_15-11_50_19/'
+        latency_pixel_dir = 'measurements/Measurements_final/DAVIS240C_latency_25_11_15-16_35_03_FAST_0/'
         figure_dir = latency_pixel_dir+'/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         # select test pixels areas only two are active
-        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-        frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
         aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
