@@ -521,9 +521,8 @@ class aedat3_process:
         return
 
     # sine wave to fit
-    def my_sin(self, x, freq, amplitude, phase, offset):
-        return np.sin( 2*np.pi* x * freq + phase) * amplitude + offset
-
+    def my_sin(self, x, freq, amplitude, phase, offset, offset_a):
+        return np.log(-np.sin( 2*np.pi* x * freq + phase) * amplitude + offset ) + offset_a
 
     def fpn_analysis_delta(self,  fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3, camera_dim = [240,180]):
         '''
@@ -756,11 +755,13 @@ class aedat3_process:
                     amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
                     signal_rec = signal_rec/amplitude_rec
                     guess_amplitude = 1.0
-                    offset = 10
+                    offset_a = 10.0
+                    offset = 1.0
                     p0=[sine_freq, guess_amplitude,
-                            0.0, offset]
+                            0.0, offset, offset_a]
+                    signal_rec = signal_rec + 10
                     tnew = (ts_t-np.min(ts))*1e-6
-                    fit = curve_fit(self.my_sin, tnew, signal_rec+10, p0=p0)
+                    fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
                     data_first_guess = self.my_sin(tnew, *p0)        
                     data_fit = self.my_sin(tnew, *fit[0])
                     rms = self.rms(signal_rec, data_fit)
@@ -770,7 +771,7 @@ class aedat3_process:
                     legend(loc="lower right")
                     xlabel('Time [s]')
                     ylabel('Norm. Amplitude')
-                    ylim([-1,1])
+                    ylim([8,12])
                     title('Measured and fitted curves for the DVS pixels sinusoidal stimulation')
                     savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".pdf",  format='PDF')
                     savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".png",  format='PNG')
