@@ -756,10 +756,11 @@ class aedat3_process:
                     amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
                     signal_rec = signal_rec/amplitude_rec
                     guess_amplitude = 1.0
+                    offset = 10
                     p0=[sine_freq, guess_amplitude,
-                            0.0, 0.0]
+                            0.0, offset]
                     tnew = (ts_t-np.min(ts))*1e-6
-                    fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                    fit = curve_fit(self.my_sin, tnew, signal_rec+10, p0=p0)
                     data_first_guess = self.my_sin(tnew, *p0)        
                     data_fit = self.my_sin(tnew, *fit[0])
                     rms = self.rms(signal_rec, data_fit)
@@ -780,7 +781,6 @@ class aedat3_process:
 if __name__ == "__main__":
     #analyse ptc
 
-    
     do_ptc = False
     do_fpn = True
     do_latency_pixel = False
