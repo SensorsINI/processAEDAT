@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 import string
-import matplotlib
+#import matplotlib
 from pylab import *
 import scipy.stats as st
 
@@ -30,10 +30,131 @@ class aedat3_process:
         self.y_addr = []
         self.timestamp = []
         self.time_res = 1e-6
+	
 
     def confIntMean(self, a, conf=0.95):
       mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
       return mean - m*sem, mean + m*sem
+
+    def load_jaer_file(self, datafile, length=0, version="aedat", debug=1, camera='DAVIS240'):
+        """    
+        load AER data file and parse these properties of AE events:
+        - timestamps (in us), 
+        - x,y-position [0..127]
+        - polarity (0/1)
+
+        @param datafile - path to the file to read
+        @param length - how many bytes(B) should be read; default 0=whole file
+        @param version - which file format version is used: "aedat" = v2, "dat" = v1 (old)
+        @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
+        @param camera='DVS128' or 'DAVIS240'
+        @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+        """
+        # constants
+        aeLen = 8  # 1 AE event takes 8 bytes
+        readMode = '>II'  # struct.unpack(), 2x ulong, 4B+4B
+        td = 0.000001  # timestep is 1us   
+        if(camera == 'DVS128'):
+            xmask = 0x00fe
+            xshift = 1
+            ymask = 0x7f00
+            yshift = 8
+            pmask = 0x1
+            pshift = 0
+        elif(camera == 'DAVIS240'):  # values take from scripts/matlab/getDVS*.m
+            xmask = 0x003ff000
+            xshift = 12
+            ymask = 0x7fc00000
+            yshift = 22
+            pmask = 0x800
+            pshift = 11
+            eventtypeshift = 31
+        else:
+            raise ValueError("Unsupported camera: %s" % (camera))
+
+        if (version == self.V1):
+            print ("using the old .dat format")
+            aeLen = 6
+            readMode = '>HI'  # ushot, ulong = 2B+4B
+
+        aerdatafh = open(datafile, 'rb')
+        k = 0  # line number
+        p = 0  # pointer, position on bytes
+        statinfo = os.stat(datafile)
+        if length == 0:
+            length = statinfo.st_size    
+        print ("file size", length)
+        
+        # header
+        lt = aerdatafh.readline()
+        while lt and lt[0] == "#":
+            p += len(lt)
+            k += 1
+            lt = aerdatafh.readline() 
+            if debug >= 2:
+                print (str(lt))
+            continue
+        
+        # variables to parse
+        timestamps = []
+        xaddr = []
+        yaddr = []
+        pol = []
+        special_ts = []
+        special_types = []
+        counter_edge = 1
+        
+        # read data-part of file
+        aerdatafh.seek(p)
+        s = aerdatafh.read(aeLen)
+        p += aeLen
+        
+        print (xmask, xshift, ymask, yshift, pmask, pshift)    
+        while p < length:
+            addr, ts = struct.unpack(readMode, s)
+            # parse event type
+            if(addr == 1024):
+                special_ts.append(ts)
+                special_types.append(np.mod(counter_edge,2)+2)
+                counter_edge = counter_edge +1 
+            if(camera == 'DAVIS240'):
+                eventtype = (addr >> eventtypeshift)
+            else:  # DVS128
+                eventtype = self.EVT_DVS
+            
+            # parse event's data
+            if(eventtype == self.EVT_DVS):  # this is a DVS event
+                x_addr = (addr & xmask) >> xshift
+                y_addr = (addr & ymask) >> yshift
+                a_pol = (addr & pmask) >> pshift
+
+
+                if debug >= 3: 
+                    print("ts->", ts)  # ok
+                    print("x-> ", x_addr)
+                    print("y-> ", y_addr)
+                    print("pol->", a_pol)
+
+                timestamps.append(ts)
+                xaddr.append(x_addr)
+                yaddr.append(y_addr)
+                pol.append(a_pol)
+
+                      
+            aerdatafh.seek(p)
+            s = aerdatafh.read(aeLen)
+            p += aeLen        
+
+        if debug > 0:
+            try:
+                print ("read %i (~ %.2fM) AE events, duration= %.2fs" % (len(timestamps), len(timestamps) / float(10 ** 6), (timestamps[-1] - timestamps[0]) * td))
+                n = 5
+                print ("showing first %i:" % (n))
+                print ("timestamps: %s \nX-addr: %s\nY-addr: %s\npolarity: %s" % (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
+            except:
+                print ("failed to print statistics")
+
+        return None, xaddr, yaddr, pol, timestamps, special_ts, special_types
 
     def load_file(self, filename):
         '''
@@ -201,49 +322,49 @@ class aedat3_process:
                     for this_frame in range(n_frames):
                         avr_all_frames.append(np.mean(frame_areas[this_frame]))
                     avr_all_frames = np.array(avr_all_frames)    
-                    figure(1)
-                    plot(avr_all_frames)
-                    figure(2)
-                    hist(avr_all_frames, 10, alpha=0.5)     
+                    plt.figure(1)
+                    plt.plot(avr_all_frames)
+                    plt.figure(2)
+                    plt.hist(avr_all_frames, 10, alpha=0.5)     
                     u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
                     sigma_y = np.std(frame_areas)#((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
                     u_y_tot[this_file, this_div, this_div_x] = u_y
                     sigma_tot[this_file, this_div, this_div_x] = sigma_y
             exposures.append(exp)
-        xlabel('frame numbers')
-        ylabel('adc readout')
+        plt.xlabel('frame numbers')
+        plt.ylabel('adc readout')
 
 
         exposures = np.array(exposures)
         u_photon = ((scale_factor_*luminous_flux)*sensor_area*(exposures*exposure_time_scale))/((planck_cost*speed_of_light)/wavelenght_red) 
         u_photon_pixel = u_photon/(xdim*ydim)
         # sensitivity plot 
-        figure()
-        title("Sensitivity APS")
+        plt.figure()
+        plt.title("Sensitivity APS")
         un, y, una = np.shape(u_y_tot)
         colors = cm.rainbow(np.linspace(0, 1, y))
         for i in range(y):
             for j in range(un):
                 if(j == 0):
-                    plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
+                    plt.plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
                 else:
-                    plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i])
-        legend(loc='best')
-        xlabel('irradiation photons/pixel') 
-        ylabel('gray value - <u_d> ')    
+                    plt.plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i])
+        plt.legend(loc='best')
+        plt.xlabel('irradiation photons/pixel') 
+        plt.ylabel('gray value - <u_d> ')    
         # photon transfer curve 
-        figure()
-        title("Standard deviation APS")
+        plt.figure()
+        plt.title("Standard deviation APS")
         un, y, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
         for areas in range(una):
             if(points == 0):
-                plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas], label='pixel area' + str(frame_x_divisions[areas]) )
+                plt.plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas], label='pixel area' + str(frame_x_divisions[areas]) )
             else:
-                plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas])
-        legend(loc='best')
-        xlabel('gray value <u_y>  ') 
-        ylabel('std grey value  <sigma>  ')    
+                plt.plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas])
+        plt.legend(loc='best')
+        plt.xlabel('gray value <u_y>  ') 
+        plt.ylabel('std grey value  <sigma>  ')    
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -258,7 +379,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True):
+    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
         '''
             Pixel Latency, single pixel signal reconstruction
             ----
@@ -272,9 +393,11 @@ class aedat3_process:
         #################################################################
         #get all files in dir
         directory = latency_pixel_dir
-        files_in_dir = os.listdir(directory)
-        files_in_dir.sort()  
-    
+        #files_in_dir = os.listdir(directory)
+        #files_in_dir.sort()  
+        files_in_dir = [f for f in os.listdir(directory) if not f.startswith('.')] #no hidden file
+        files_in_dir.sort()      
+
         all_latencies_mean_up = []
         all_latencies_mean_dn = []
           
@@ -292,23 +415,30 @@ class aedat3_process:
             print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
 
             if not os.path.isdir(directory+files_in_dir[this_file]):
-                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
-                current_lux = stra.split(files_in_dir[this_file], "_")[8]
-                filter_type = stra.split(files_in_dir[this_file], "_")[10]
-                all_lux.append(current_lux)
-                all_filters_type.append(filter_type)
+                if( file_type == "cAER"):
+                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+                    current_lux = stra.split(files_in_dir[this_file], "_")[8]
+                    filter_type = stra.split(files_in_dir[this_file], "_")[10]
+                    all_lux.append(current_lux)
+                    all_filters_type.append(filter_type)
+                elif( file_type == "jAER" ):
+                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_jaer_file(directory+files_in_dir[this_file])
+                    current_lux = 10
+                    filter_type = 0.0
+                    all_lux.append(current_lux)
+                    all_filters_type.append(filter_type)
             else:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
                 continue
 
             if do_plot:
-                fig = figure()
-                subplot(4,1,1)
-            dx = hist(xaddr,camera_dim[0])
-            dy = hist(yaddr,camera_dim[1])
+                fig = plt.figure()
+                plt.subplot(4,1,1)
+            dx = plt.hist(xaddr,camera_dim[0])
+            dy = plt.hist(yaddr,camera_dim[1])
             # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
-            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]        
-            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0] 
+            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
 
             #if(len(ind_x_max) > 1):
             #    ind_x_max = np.floor(np.mean(ind_x_max))
@@ -378,9 +508,9 @@ class aedat3_process:
                     index_to_get = this_index_x & this_index_y
                     
                     if( delta_up_count[x_,y_] > delta_dn_count[x_,y_]):
-                        delta_dn[x_,y_] = (delta_up_count[x_,y_] / double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
+                        delta_dn[x_,y_] = (delta_up_count[x_,y_] / np.double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
                     else:
-                        delta_up[x_,y_] = (delta_dn_count[x_,y_] / double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
+                        delta_up[x_,y_] = (delta_dn_count[x_,y_] / np.double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
                         
                     tmp = 0
                     counter_transitions_up = 0
@@ -459,18 +589,18 @@ class aedat3_process:
                 amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
                 original = original/amplitude_rec
 
-                subplot(4,1,2)
-                plot(ts[final_index]-np.min(ts[final_index]),pol[final_index],"o", color='blue')
-                plot(ts-np.min(ts[final_index]),original*2,"x--", color='red')
-                subplot(4,1,3)
-                plot((ts-np.min(ts)),original, linewidth=3)
-                xlim([0, np.max(ts)-np.min(ts)])
+                plt.subplot(4,1,2)
+                plt.plot(ts[final_index]-np.min(ts[final_index]),pol[final_index],"o", color='blue')
+                plt.plot(ts-np.min(ts[final_index]),original*2,"x--", color='red')
+                plt.subplot(4,1,3)
+                plt.plot((ts-np.min(ts)),original, linewidth=3)
+                plt.xlim([0, np.max(ts)-np.min(ts)])
                 for i in range(len(signal_rec)):
                     if( len(signal_rec[i]) > 2):
                         signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
                         amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
                         norm = signal_rec[i]/amplitude_rec
-                        plot((np.array(ts_t[i])-np.min(ts[i])),norm, '-')
+                        plt.plot((np.array(ts_t[i])-np.min(ts[i])),norm, '-')
                     else:
                         print("skipping neuron")
                 
@@ -487,10 +617,10 @@ class aedat3_process:
                 dy = yedges [1] - yedges [0]
                 dz = histo.flatten()
                 ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
-                xlabel ("X")
-                ylabel ("Y")
+                plt.xlabel ("X")
+                plt.ylabel ("Y")
                 # Find maximum point
-                savefig(figure_dir+"combined_latency_"+str(this_file)+".png",  format='png', dpi=300)
+                plt.savefig(figure_dir+"combined_latency_"+str(this_file)+".png",  format='png', dpi=300)
                 
 
         if do_plot:
@@ -504,21 +634,21 @@ class aedat3_process:
             if(len(all_latencies_mean_up) > 0):
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                title("final latency plots with filter: " + str(all_filters_type[0]))
-                errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
-                errorbar(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
+                plt.title("final latency plots with filter: " + str(all_filters_type[0]))
+                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
+                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
                 ax.set_xscale("log", nonposx='clip')
                 ax.set_yscale("log", nonposx='clip')
                 ax.grid(True, which="both", ls="--")
                 #xlim([np.min(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0]))), np.max(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])))+10])
                 #ylim([np.min(all_latencies_mean_up)-np.std(all_latencies_mean_up), np.max(all_latencies_mean_up)+10])
-                xlabel('lux')
-                ylabel('latency [us]')
-                legend(loc='best')
-                savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
-                savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
+                plt.xlabel('lux')
+                plt.ylabel('latency [us]')
+                plt.legend(loc='best')
+                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
+                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
-        return
+        return all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up.T, all_latencies_std_dn.T
 
     # sine wave to fit
     def my_sin(self, x, freq, amplitude, phase, offset, offset_a):
@@ -748,7 +878,7 @@ class aedat3_process:
                                 ts_t.append(ts[this_ev])
 
 
-                    figure()
+                    plt.figure()
                     ts = np.array(ts)
                     signal_rec = np.array(signal_rec)
                     signal_rec = signal_rec - np.mean(signal_rec)
@@ -783,8 +913,8 @@ if __name__ == "__main__":
     #analyse ptc
 
     do_ptc = False
-    do_fpn = True
-    do_latency_pixel = False
+    do_fpn = False
+    do_latency_pixel = True
     camera_dim = [240,180]
     frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     frame_y_divisions = [[0,180]]
@@ -822,54 +952,55 @@ if __name__ == "__main__":
             sensor_dn[current_x:slice_dim_x+current_x,current_y:slice_dim_y+current_y] = delta_dn_thr[slice_num]
             current_x = slice_dim_x+current_x
             current_y = current_y 
-        figure()
-        subplot(3,2,1)
-        title("UP thresholds")
-        imshow(sensor_up.T)
-        colorbar()
-        subplot(3,2,2)
-        title("DN thresholds")          
-        imshow(sensor_dn.T)
-        colorbar()
-        subplot(3,2,3)
-        plot(np.sum(sensor_up.T,axis=0), label='up dim'+str( len(np.sum(sensor_up.T,axis=0)) ))
-        legend(loc='best')    
-        xlim([0,camera_dim[0]])
-        subplot(3,2,4)
-        plot(np.sum(sensor_dn.T,axis=0), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=0)) ))
-        xlim([0,camera_dim[0]])
-        legend(loc='best')    
-        subplot(3,2,5)
-        plot(np.sum(sensor_up.T,axis=1), label='up dim'+str( len(np.sum(sensor_up.T,axis=1)) ))
-        legend(loc='best')    
-        xlim([0,camera_dim[1]])
-        subplot(3,2,6)
-        plot(np.sum(sensor_dn.T,axis=1), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=1)) ))
-        xlim([0,camera_dim[1]])  
-        legend(loc='best')    
-        savefig(figure_dir+"threshold_mismatch_map.pdf",  format='PDF')
-        savefig(figure_dir+"threshold_mismatch_map.png",  format='PNG')
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.title("UP thresholds")
+        plt.imshow(sensor_up.T)
+        plt.colorbar()
+        plt.subplot(3,2,2)
+        plt.title("DN thresholds")          
+        plt.imshow(sensor_dn.T)
+        plt.colorbar()
+        plt.subplot(3,2,3)
+        plt.plot(np.sum(sensor_up.T,axis=0), label='up dim'+str( len(np.sum(sensor_up.T,axis=0)) ))
+        plt.legend(loc='best')    
+        plt.xlim([0,camera_dim[0]])
+        plt.subplot(3,2,4)
+        plt.plot(np.sum(sensor_dn.T,axis=0), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=0)) ))
+        plt.xlim([0,camera_dim[0]])
+        plt.legend(loc='best')    
+        plt.subplot(3,2,5)
+        plt.plot(np.sum(sensor_up.T,axis=1), label='up dim'+str( len(np.sum(sensor_up.T,axis=1)) ))
+        plt.legend(loc='best')    
+        plt.xlim([0,camera_dim[1]])
+        plt.subplot(3,2,6)
+        plt.plot(np.sum(sensor_dn.T,axis=1), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=1)) ))
+        plt.xlim([0,camera_dim[1]])  
+        plt.legend(loc='best')    
+        plt.savefig(figure_dir+"threshold_mismatch_map.pdf",  format='PDF')
+        plt.savefig(figure_dir+"threshold_mismatch_map.png",  format='PNG')
         
 
         for j in range(len(delta_up_thr)):
-            figure()
+            plt.figure()
             for i in range(len(signal_rec_tot[j])):
-                plot(ts_t_tot[j][i], signal_rec_tot[j][i])
-                xlabel('time us')
-                ylabel('arb units')
+                plt.plot(ts_t_tot[j][i], signal_rec_tot[j][i])
+                plt.xlabel('time us')
+                plt.ylabel('arb units')
 
 
     if do_latency_pixel:
-        latency_pixel_dir = 'measurements/Measurements_final/DAVIS240C_latency_25_11_15-16_35_03_FAST_0/'
+        #latency_pixel_dir = 'measurements/Measurements_final/DAVIS240C_latency_25_11_15-16_35_03_FAST_0/'
+        latency_pixel_dir = 'measurements/CB/'
         figure_dir = latency_pixel_dir+'/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         # select test pixels areas only two are active
 
         aedat = aedat3_process()
-        aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 3) #pixel size of the led
+        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 1, file_type="jAER") #pixel size of the led
 
-    self = aedat
+    #self = aedat
 
 
 
