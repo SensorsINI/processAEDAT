@@ -17,7 +17,7 @@
                     <attr key="ResetRead" type="bool">true</attr>
                     <attr key="ResetSettle" type="short">10</attr>
                     <attr key="RowSettle" type="short">10</attr>
-                    <attr key="Run" type="bool">true</attr>
+                    <attr key="Run" type="bool">false</attr>
                     <attr key="StartColumn0" type="short">0</attr>
                     <attr key="StartRow0" type="short">0</attr>
                     <attr key="TakeSnapShot" type="bool">false</attr>
@@ -33,7 +33,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="AEPuXBp" path="/1/1-DAVISFX2/bias/AEPuXBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">80</attr>
@@ -81,10 +81,10 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="DiffBn" path="/1/1-DAVISFX2/bias/DiffBn/">
-                        <attr key="coarseValue" type="byte">3</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">138</attr>
+                        <attr key="fineValue" type="byte">1</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -132,12 +132,12 @@
                         <attr key="coarseValue" type="byte">3</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">18</attr>
+                        <attr key="fineValue" type="byte">3</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="OnBn" path="/1/1-DAVISFX2/bias/OnBn/">
-                        <attr key="coarseValue" type="byte">6</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">255</attr>
@@ -153,7 +153,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PixInvBn" path="/1/1-DAVISFX2/bias/PixInvBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">129</attr>
@@ -161,7 +161,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrBp" path="/1/1-DAVISFX2/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">2</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">58</attr>
@@ -169,7 +169,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrSFBp" path="/1/1-DAVISFX2/bias/PrSFBp/">
-                        <attr key="coarseValue" type="byte">1</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">16</attr>
@@ -177,7 +177,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="RefrBp" path="/1/1-DAVISFX2/bias/RefrBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
+                        <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="byte">25</attr>

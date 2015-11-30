@@ -399,7 +399,7 @@ class caer_communication:
 
         return
 
-    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5)):
+    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
@@ -418,11 +418,17 @@ class caer_communication:
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:
-                self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true') 
+                if global_shutter :
+                    self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true')
+                    shutter_type = 'global' 
+                else:
+                    self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool false')
+                    shutter_type = 'rolling'
+                self.send_command('put /1/1-DAVISFX2/dvs/ Run bool false')
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
                 string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
-                filename = folder + '/ptc_'+format(int(exp_time), '07d')+'.aedat' 
+                filename = folder + '/ptc_shutter_'+str(shutter_type)+'_'+format(int(exp_time), '07d')+'.aedat' 
                 #set exposure
                 self.send_command(string_control)    
                 self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            
@@ -432,6 +438,7 @@ class caer_communication:
                 self.start_logging(filename)    
                 time.sleep(recording_time)
                 self.stop_logging()
+                self.send_command('put /1/1-DAVISFX2/dvs/ Run bool true')
                 self.close_communication_data()
 
         print("Done with PTC measurements")

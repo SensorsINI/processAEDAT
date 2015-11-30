@@ -16,9 +16,9 @@ import aedat3_process
 
 # TEST SELECTION
 do_ptc_dark = False
-do_ptc = False
+do_ptc = True
 do_fpn = False
-do_latency_pixel = True
+do_latency_pixel = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
@@ -54,9 +54,14 @@ if do_ptc_dark:
     print "we are doing dark current, please remove all lights.\n"
     raw_input("Press Enter to continue...")
     control.open_communication_command()
-    control.load_biases()    
     folder = datadir + '/ptc_dark_' +  current_date
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(500,50000,6))
+    setting_dir = folder + str("/settings/")
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    bias_file = "cameras/davis240c.xml"
+    control.load_biases(xml_file=bias_file)
+    copyFile(bias_file, setting_dir+str("biases_ptc_dark.xml") )
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,50000,15))
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -65,9 +70,14 @@ if do_ptc:
     print "we are doing ptc measurements, please put homogeneous light source (integrating sphere)."
     raw_input("Press Enter to continue...")
     control.open_communication_command()
-    control.load_biases()    
     folder = datadir + '/ptc_' +  current_date
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(50,65000,20))
+    setting_dir = folder + str("/settings/")
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    bias_file = "cameras/davis240c.xml"
+    control.load_biases(xml_file=bias_file)
+    copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,1800,15), global_shutter=False)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -76,8 +86,10 @@ if do_ptc:
 # + we slowly generate a sine wave 
 if do_fpn:
     control.open_communication_command()
-    control.load_biases()    
     folder = datadir + '/fpn_' +  current_date
+    setting_dir = folder + str("/settings/")
+    bias_file = "cameras/davis240c.xml"
+    control.load_biases(xml_file=bias_file)
     print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
     raw_input("Press Enter to continue...")
@@ -123,7 +135,7 @@ if do_latency_pixel:
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
     contrast_level = 0.3
-    freq_square = 100
+    freq_square = 200
     recording_time = (1.0/freq_square)*8.0 
     for i in range(num_measurements):
         perc_low = base_level[i]-base_level[i]*contrast_level
