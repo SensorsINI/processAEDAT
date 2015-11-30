@@ -15,8 +15,8 @@ import gpio_usb
 import aedat3_process
 
 # TEST SELECTION
-do_ptc_dark = False
-do_ptc = True
+do_ptc_dark = True
+do_ptc = False
 do_fpn = False
 do_latency_pixel = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
@@ -61,7 +61,7 @@ if do_ptc_dark:
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_dark.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,50000,15))
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,500,3), global_shutter=True)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -77,7 +77,7 @@ if do_ptc:
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,1800,15), global_shutter=False)
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,18000,25), global_shutter=False)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
