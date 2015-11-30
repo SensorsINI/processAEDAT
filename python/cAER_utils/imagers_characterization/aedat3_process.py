@@ -252,10 +252,13 @@ class aedat3_process:
                                # http://donklipstein.com/photopic.html    
 
         '''    
-        figure(1)
-        title("Mean ADC values")
-        figure(2)
-        title("Histogram ADC values")
+        figure_dir = ptc_dir_dark+'/figures/'
+        if(not os.path.exists(figure_dir)):
+            os.makedirs(figure_dir)
+        plt.figure(1)
+        plt.title("Mean ADC values")
+        plt.figure(2)
+        plt.title("Histogram ADC values")
         #################################################################
         ############### PTC DARK CURRENT
         #################################################################
@@ -265,9 +268,16 @@ class aedat3_process:
         this_file = 0
         u_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
+        while( not files_in_dir[this_file].endswith(".aedat")):
+            print("not a valid data file ", str(files_in_dir[this_file]))
+            this_file  = this_file + 1
+            if(this_file == len(files_in_dir)):
+                continue
+        shutter_type, exp = files_in_dir[this_file].strip(".aedat").strip("ptc_").strip("shutter_").split("_") # in us
+        exp = float(exp)
         [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
         for this_file in range(len(files_in_dir)):
+            print("processing dark current from file ", str(files_in_dir[this_file]))
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
                     frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
@@ -279,14 +289,17 @@ class aedat3_process:
                     for this_frame in range(n_frames):
                         avr_all_frames.append(np.mean(frame_areas[this_frame]))
                     avr_all_frames = np.array(avr_all_frames)  
-                    figure(1)  
-                    plot(avr_all_frames)
-                    figure(2)
-                    hist(avr_all_frames, 10, alpha=0.5)
+                    plt.figure()  
+                    plt.plot(avr_all_frames)
+                    plt.figure()
+                    plt.hist(avr_all_frames, 10, alpha=0.5)
                     u_y_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    simga_dark = np.std(frame_areas)#(1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)
+                    simga_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)
                     u_dark_tot[this_file, this_div, this_div_x] = u_y_dark
                     sigma_dark_tot[this_file, this_div, this_div_x] = simga_dark
+                    plt.savefig(figure_dir+"dark_current_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
+                    plt.savefig(figure_dir+"dark_current_"+str(files_in_dir[this_file])+".png",  format='png')
+                    plt.close('all')
 
         #################################################################
         ############### PTC measurements
@@ -308,8 +321,19 @@ class aedat3_process:
         u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = []
+        done = False
         for this_file in range(len(files_in_dir)):
-            exp = float(files_in_dir[this_file].strip(".aedat").strip("ptc_")) # in us
+            print("processing gray values from file ", str(files_in_dir[this_file]))
+            while( not files_in_dir[this_file].endswith(".aedat")):
+                print("not a valid data file ", str(files_in_dir[this_file]))
+                this_file  = this_file + 1
+                if(this_file == len(files_in_dir)):
+                    done = True
+                    break
+            if(done == True):
+                break
+            shutter_type, exp = files_in_dir[this_file].strip(".aedat").strip("ptc_").strip("shutter_").split("_") # in us
+            exp = float(exp)
             [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
@@ -322,17 +346,19 @@ class aedat3_process:
                     for this_frame in range(n_frames):
                         avr_all_frames.append(np.mean(frame_areas[this_frame]))
                     avr_all_frames = np.array(avr_all_frames)    
-                    plt.figure(1)
+                    plt.figure()
                     plt.plot(avr_all_frames)
-                    plt.figure(2)
+                    plt.figure()
                     plt.hist(avr_all_frames, 10, alpha=0.5)     
                     u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    sigma_y = np.std(frame_areas)#((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
+                    sigma_y = ((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
                     u_y_tot[this_file, this_div, this_div_x] = u_y
                     sigma_tot[this_file, this_div, this_div_x] = sigma_y
+                    plt.xlabel('frame numbers')
+                    plt.ylabel('adc readout')
+                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
+                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".png",  format='png')
             exposures.append(exp)
-        plt.xlabel('frame numbers')
-        plt.ylabel('adc readout')
 
 
         exposures = np.array(exposures)
@@ -342,29 +368,51 @@ class aedat3_process:
         plt.figure()
         plt.title("Sensitivity APS")
         un, y, una = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, y))
-        for i in range(y):
-            for j in range(un):
-                if(j == 0):
-                    plt.plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i], label='pixel area' + str(frame_y_divisions[i]) )
-                else:
-                    plt.plot( u_photon_pixel, u_y_tot[:,i], 'o--', color=colors[i])
+        colors = cm.rainbow(np.linspace(0, 1, una))
+        #raise Exception
+        for this_area in range(una):
+            plt.plot( exposures, u_y_tot.reshape([un,una,y])[0:len(exposures),this_area], 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]))
         plt.legend(loc='best')
-        plt.xlabel('irradiation photons/pixel') 
-        plt.ylabel('gray value - <u_d> ')    
+        plt.xlabel('exposure time [us]') 
+        plt.ylabel('Mean[DN]') 
+        plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf') 
+        plt.savefig(figure_dir+"sensitivity.png",  format='png')      
         # photon transfer curve 
         plt.figure()
-        plt.title("Standard deviation APS")
+        plt.title("Photon Transfer Curve")
         un, y, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
-        for areas in range(una):
-            if(points == 0):
-                plt.plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas], label='pixel area' + str(frame_x_divisions[areas]) )
-            else:
-                plt.plot( u_y_tot[:,:,areas], sigma_tot[:,:,areas], 'o--', color=colors[areas])
+        for this_area in range(una):
+            plt.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[0:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
         plt.legend(loc='best')
-        plt.xlabel('gray value <u_y>  ') 
-        plt.ylabel('std grey value  <sigma>  ')    
+        plt.xlabel('Mean[DN] ') 
+        plt.ylabel('Var[DN] ')    
+        plt.savefig(figure_dir+"ptc.pdf",  format='pdf') 
+        plt.savefig(figure_dir+"ptc.png",  format='png')
+
+        print("do linear fit")
+        un, y, una = np.shape(u_y_tot)
+        slope_tot = []
+        inter_tot = []
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.title("PTC linear fit")
+        for this_area in range(una):
+            sigma_fit = sigma_tot.reshape([un,una,y])[0:len(exposures),this_area]
+            max_var = np.max(sigma_fit)
+            max_ind_var , unused = np.where(sigma_fit  == max_var)
+            this_mean_values = u_y_tot.reshape([un,una,y])[0:len(exposures),this_area]
+            this_mean_values_lin = this_mean_values[0:max_ind_var]
+            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+            fit_fn = np.poly1d([slope, inter]) 
+            ax.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[0:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
+            ax.text( u_y_tot.reshape([un,una,y])[max_ind_var,this_area],sigma_tot.reshape([un,una,y])[max_ind_var,this_area]-np.random.randint(6),  r'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
+        ax.legend(loc='best')   
+        plt.xlabel('Mean[DN]') 
+        plt.ylabel('Var[DN]  ')     
+        plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
+        plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -912,24 +960,24 @@ class aedat3_process:
 if __name__ == "__main__":
     #analyse ptc
 
-    do_ptc = False
+    do_ptc = True
     do_fpn = False
-    do_latency_pixel = True
+    do_latency_pixel = False
     camera_dim = [240,180]
     frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     frame_y_divisions = [[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir_dark = 'measurements/ptc_dark_29_10_15-14_59_46/'
-        ptc_dir = 'measurements/ptc_30_10_15-16_44_43/'
+        ptc_dir_dark = 'measurements/ptc_dark_30_11_15-17_47_45_global_shutter/'
+        ptc_dir = 'measurements/ptc_30_11_15-19_13_11_global_shutter/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        #aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
+        aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
