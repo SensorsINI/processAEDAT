@@ -244,62 +244,14 @@ class aedat3_process:
             return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot, special_ts, special_types
 
     
-    def ptc_analysis(self, ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions, wavelenght_red=650e-9, pixel_area = (18e-6*18e-6), illuminance = 10, scale_factor_ = 0.107):
+    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions, wavelenght_red=650e-9, pixel_area = (18e-6*18e-6), illuminance = 10, scale_factor_ = 0.107):
         '''
             Photon transfer curve and sensitivity plot
-            --  scale_factor_ = 0.107  # RED light 650 nm
-                               # ******** 1988 C.I.E. Photopic Luminous Efficiency Function ********
-                               # http://donklipstein.com/photopic.html    
-
+         
         '''    
-        figure_dir = ptc_dir_dark+'/figures/'
+        figure_dir = ptc_dir+'/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
-        plt.figure(1)
-        plt.title("Mean ADC values")
-        plt.figure(2)
-        plt.title("Histogram ADC values")
-        #################################################################
-        ############### PTC DARK CURRENT
-        #################################################################
-        directory = ptc_dir_dark
-        files_in_dir = os.listdir(directory)
-        files_in_dir.sort()  
-        this_file = 0
-        u_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        sigma_dark_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        while( not files_in_dir[this_file].endswith(".aedat")):
-            print("not a valid data file ", str(files_in_dir[this_file]))
-            this_file  = this_file + 1
-            if(this_file == len(files_in_dir)):
-                continue
-        shutter_type, exp = files_in_dir[this_file].strip(".aedat").strip("ptc_").strip("shutter_").split("_") # in us
-        exp = float(exp)
-        [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
-        for this_file in range(len(files_in_dir)):
-            print("processing dark current from file ", str(files_in_dir[this_file]))
-            for this_div_x in range(len(frame_x_divisions)) :
-                for this_div in range(len(frame_y_divisions)):            
-                    frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
-                    frame_areas = np.right_shift(frame_areas,6)
-                    n_frames, ydim, xdim = np.shape(frame_areas)        
-                    #u_y_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    #simga_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,0)**2)  # 
-                    avr_all_frames = []
-                    for this_frame in range(n_frames):
-                        avr_all_frames.append(np.mean(frame_areas[this_frame]))
-                    avr_all_frames = np.array(avr_all_frames)  
-                    plt.figure()  
-                    plt.plot(avr_all_frames)
-                    plt.figure()
-                    plt.hist(avr_all_frames, 10, alpha=0.5)
-                    u_y_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    simga_dark = (1.0/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)
-                    u_dark_tot[this_file, this_div, this_div_x] = u_y_dark
-                    sigma_dark_tot[this_file, this_div, this_div_x] = simga_dark
-                    plt.savefig(figure_dir+"dark_current_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
-                    plt.savefig(figure_dir+"dark_current_"+str(files_in_dir[this_file])+".png",  format='png')
-                    plt.close('all')
 
         #################################################################
         ############### PTC measurements
@@ -307,20 +259,13 @@ class aedat3_process:
         #illuminance = 10       # measured with photometer
         #pixel_area = (18e-6*18e-6)
         exposure_time_scale = 10e-6
-        planck_cost = 6.62607004e-34
-        speed_of_light = 299792458
-        #wavelenght_red = 650e-9
-        sensor_area = xdim*ydim*pixel_area
-        luminous_flux = 0.09290304 * illuminance * (sensor_area * 10.764)
-        #scale_factor_ = 0.107  # RED light 650 nm
-                               # ******** 1988 C.I.E. Photopic Luminous Efficiency Function ********
-                               # http://donklipstein.com/photopic.html    
         directory = ptc_dir
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()
         u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = []
+        u_y_mean_frames = []
         done = False
         for this_file in range(len(files_in_dir)):
             print("processing gray values from file ", str(files_in_dir[this_file]))
@@ -348,28 +293,30 @@ class aedat3_process:
                     avr_all_frames = np.array(avr_all_frames)    
                     plt.figure()
                     plt.plot(avr_all_frames)
+                    plt.xlabel("Frame Num")
+                    plt.ylabel("Mean DN")
+                    plt.savefig(figure_dir+"averages_DN_values_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
+                    plt.savefig(figure_dir+"averages_DN_values_"+str(files_in_dir[this_file])+".png",  format='png') 
                     plt.figure()
                     plt.hist(avr_all_frames, 10, alpha=0.5)     
                     u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
                     sigma_y = ((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
                     u_y_tot[this_file, this_div, this_div_x] = u_y
                     sigma_tot[this_file, this_div, this_div_x] = sigma_y
+                    u_y_mean_frames.append(np.mean(np.mean(frame_areas,0),0)) #average DN over time
                     plt.xlabel('frame numbers')
                     plt.ylabel('adc readout')
                     plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
-                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".png",  format='png')
+                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".png",  format='png') 
             exposures.append(exp)
 
 
         exposures = np.array(exposures)
-        u_photon = ((scale_factor_*luminous_flux)*sensor_area*(exposures*exposure_time_scale))/((planck_cost*speed_of_light)/wavelenght_red) 
-        u_photon_pixel = u_photon/(xdim*ydim)
         # sensitivity plot 
         plt.figure()
         plt.title("Sensitivity APS")
         un, y, una = np.shape(u_y_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
-        #raise Exception
         for this_area in range(una):
             plt.plot( exposures, u_y_tot.reshape([un,una,y])[0:len(exposures),this_area], 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]))
         plt.legend(loc='best')
@@ -383,7 +330,7 @@ class aedat3_process:
         un, y, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
         for this_area in range(una):
-            plt.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[0:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            plt.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[1:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
         plt.legend(loc='best')
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN] ')    
@@ -405,7 +352,7 @@ class aedat3_process:
             this_mean_values_lin = this_mean_values[0:max_ind_var]
             slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
             fit_fn = np.poly1d([slope, inter]) 
-            ax.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[0:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            ax.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[1:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
             ax.text( u_y_tot.reshape([un,una,y])[max_ind_var,this_area],sigma_tot.reshape([un,una,y])[max_ind_var,this_area]-np.random.randint(6),  r'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
         ax.legend(loc='best')   
@@ -969,15 +916,14 @@ if __name__ == "__main__":
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir_dark = 'measurements/ptc_dark_30_11_15-17_47_45_global_shutter/'
-        ptc_dir = 'measurements/ptc_30_11_15-19_13_11_global_shutter/'
+        ptc_dir = 'measurements/ptc_02_12_15-19_01_17/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
         frame_y_divisions = [[0,180]]
 
         aedat = aedat3_process()
-        aedat.ptc_analysis(ptc_dir_dark, ptc_dir, frame_y_divisions, frame_x_divisions)
+        aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'

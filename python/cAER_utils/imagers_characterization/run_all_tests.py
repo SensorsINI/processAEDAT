@@ -15,8 +15,7 @@ import gpio_usb
 import aedat3_process
 
 # TEST SELECTION
-do_ptc_dark = True
-do_ptc = False
+do_ptc = True
 do_fpn = False
 do_latency_pixel = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
@@ -50,21 +49,6 @@ def copyFile(src, dest):
 
 # 1 - Photon Transfer Curve - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
-if do_ptc_dark:
-    print "we are doing dark current, please remove all lights.\n"
-    raw_input("Press Enter to continue...")
-    control.open_communication_command()
-    folder = datadir + '/ptc_dark_' +  current_date
-    setting_dir = folder + str("/settings/")
-    if(not os.path.exists(setting_dir)):
-        os.makedirs(setting_dir)
-    bias_file = "cameras/davis240c.xml"
-    control.load_biases(xml_file=bias_file)
-    copyFile(bias_file, setting_dir+str("biases_ptc_dark.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,500,3), global_shutter=True)
-    control.close_communication_command()    
-    print "Data saved in " +  folder
-
 if do_ptc:
     print "\n"
     print "we are doing ptc measurements, please put homogeneous light source (integrating sphere)."
@@ -77,7 +61,7 @@ if do_ptc:
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(10,18000,25), global_shutter=False)
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,200,15), global_shutter=True)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
