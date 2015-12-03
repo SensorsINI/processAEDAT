@@ -244,7 +244,7 @@ class aedat3_process:
             return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot, special_ts, special_types
 
     
-    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions, wavelenght_red=650e-9, pixel_area = (18e-6*18e-6), illuminance = 10, scale_factor_ = 0.107):
+    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions):
         '''
             Photon transfer curve and sensitivity plot
          
@@ -264,7 +264,8 @@ class aedat3_process:
         files_in_dir.sort()
         u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        exposures = []
+        std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         u_y_mean_frames = []
         done = False
         for this_file in range(len(files_in_dir)):
@@ -290,47 +291,53 @@ class aedat3_process:
                     avr_all_frames = []
                     for this_frame in range(n_frames):
                         avr_all_frames.append(np.mean(frame_areas[this_frame]))
-                    avr_all_frames = np.array(avr_all_frames)    
-                    plt.figure()
-                    plt.plot(avr_all_frames)
-                    plt.xlabel("Frame Num")
-                    plt.ylabel("Mean DN")
-                    plt.savefig(figure_dir+"averages_DN_values_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
-                    plt.savefig(figure_dir+"averages_DN_values_"+str(files_in_dir[this_file])+".png",  format='png') 
-                    plt.figure()
-                    plt.hist(avr_all_frames, 10, alpha=0.5)     
+                    avr_all_frames = np.array(avr_all_frames)       
                     u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    sigma_y = ((1.0)/(n_frames*ydim*xdim)) * np.sum(np.diff(frame_areas,axis=0)**2)  # 
+                    xdim_f , ydim_f = np.shape(frame_areas[0])
+                    temporal_mean = np.zeros([xdim_f, ydim_f])
+                    temporal_variation = np.zeros([xdim_f, ydim_f])
+                    for tx in range(xdim_f):
+                        for ty in range(ydim_f):
+                            temporal_mean[tx,ty] = np.mean(frame_areas[:,tx,ty])
+                            temporal_variation[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/len(frame_areas)
+                    sigma_y = np.mean(temporal_variation)
+
                     u_y_tot[this_file, this_div, this_div_x] = u_y
                     sigma_tot[this_file, this_div, this_div_x] = sigma_y
+                    exposures[this_file, this_div, this_div_x] = exp
                     u_y_mean_frames.append(np.mean(np.mean(frame_areas,0),0)) #average DN over time
-                    plt.xlabel('frame numbers')
-                    plt.ylabel('adc readout')
-                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".pdf",  format='pdf') 
-                    plt.savefig(figure_dir+"gray_values_"+str(files_in_dir[this_file])+".png",  format='png') 
-            exposures.append(exp)
 
-
-        exposures = np.array(exposures)
+        #just remove entry that corresponds to files that are not measurements
+        files_num, y_div, x_div = np.shape(exposures)
+        to_remove = len(np.unique(np.where(exposures == 0)[0]))
+        exposures_real = exposures[exposures != 0]
+        exposures = np.reshape(exposures_real, [files_num-to_remove, y_div*x_div])
+        u_y_tot_real = u_y_tot[u_y_tot != 0]
+        u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div*x_div])
+        sigma_tot_real = sigma_tot[sigma_tot != 0]
+        sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div*x_div])   
+        exposures = exposures[:,0]
+    
         # sensitivity plot 
         plt.figure()
         plt.title("Sensitivity APS")
-        un, y, una = np.shape(u_y_tot)
+        un, una = np.shape(u_y_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
         for this_area in range(una):
-            plt.plot( exposures, u_y_tot.reshape([un,una,y])[0:len(exposures),this_area], 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]))
+            plt.plot( exposures, u_y_tot.reshape([un,una])[:,this_area], 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]))
         plt.legend(loc='best')
         plt.xlabel('exposure time [us]') 
         plt.ylabel('Mean[DN]') 
         plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf') 
-        plt.savefig(figure_dir+"sensitivity.png",  format='png')      
+        plt.savefig(figure_dir+"sensitivity.png",  format='png')  
+    
         # photon transfer curve 
         plt.figure()
         plt.title("Photon Transfer Curve")
-        un, y, una = np.shape(sigma_tot)
+        un, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
         for this_area in range(una):
-            plt.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[1:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            plt.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
         plt.legend(loc='best')
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN] ')    
@@ -338,28 +345,29 @@ class aedat3_process:
         plt.savefig(figure_dir+"ptc.png",  format='png')
 
         print("do linear fit")
-        un, y, una = np.shape(u_y_tot)
+        un, una = np.shape(u_y_tot)
         slope_tot = []
         inter_tot = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.title("PTC linear fit")
         for this_area in range(una):
-            sigma_fit = sigma_tot.reshape([un,una,y])[0:len(exposures),this_area]
+            sigma_fit = sigma_tot.reshape([un,una])[:,this_area]
             max_var = np.max(sigma_fit)
-            max_ind_var , unused = np.where(sigma_fit  == max_var)
-            this_mean_values = u_y_tot.reshape([un,una,y])[0:len(exposures),this_area]
+            max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+            this_mean_values = u_y_tot.reshape([un,una])[:,this_area]
             this_mean_values_lin = this_mean_values[0:max_ind_var]
             slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
             fit_fn = np.poly1d([slope, inter]) 
-            ax.plot( u_y_tot.reshape([un,una,y])[0:len(exposures),this_area] , sigma_tot.reshape([un,una,y])[1:len(exposures),this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
-            ax.text( u_y_tot.reshape([un,una,y])[max_ind_var,this_area],sigma_tot.reshape([un,una,y])[max_ind_var,this_area]-np.random.randint(6),  r'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
+            ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  r'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
         ax.legend(loc='best')   
         plt.xlabel('Mean[DN]') 
         plt.ylabel('Var[DN]  ')     
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
+        plt.close()
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -911,17 +919,14 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     camera_dim = [240,180]
-    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,180]]
+    frame_x_divisions = [[50,100]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[50,100]]#[[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/ptc_02_12_15-19_01_17/'
+        ptc_dir = 'measurements/ptc_03_12_15-12_31_40/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
-        frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-        frame_y_divisions = [[0,180]]
-
         aedat = aedat3_process()
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
