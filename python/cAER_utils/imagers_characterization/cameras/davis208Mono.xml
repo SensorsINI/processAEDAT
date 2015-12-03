@@ -98,7 +98,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="BiasBuffer" path="/1/1-DAVISFX3/bias/BiasBuffer/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="short">254</attr>
