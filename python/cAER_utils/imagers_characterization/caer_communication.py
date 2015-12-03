@@ -371,7 +371,7 @@ class caer_communication:
         print("APS array is ON")
         return        
 
-    def get_data_fpn(self, folder = 'fpn', recording_time = 15):
+    def get_data_fpn(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2"):
         '''
            Fixed Pattern Noise
             - global shutter is off
@@ -382,7 +382,7 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #loop over exposures and save data
-        self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
         print("APS array is OFF")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
@@ -394,12 +394,12 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
-        self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
         print("APS array is ON")
 
         return
 
-    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True):
+    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2"):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
@@ -419,26 +419,26 @@ class caer_communication:
                 print "exposure == 0 is not valid, skipping this step..."
             else:
                 if global_shutter :
-                    self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool true')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool true')
                     shutter_type = 'global' 
                 else:
-                    self.send_command('put /1/1-DAVISFX2/aps/ GlobalShutter bool false')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool false')
                     shutter_type = 'rolling'
-                self.send_command('put /1/1-DAVISFX2/dvs/ Run bool false')
-                self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
-                string_control = 'put /1/1-DAVISFX2/aps/ Exposure int '+str(exp_time)
+                string_control = 'put /1/1-'+str(sensor_type)+'/aps/ Exposure int '+str(exp_time)
                 filename = folder + '/ptc_shutter_'+str(shutter_type)+'_'+format(int(exp_time), '07d')+'.aedat' 
                 #set exposure
                 self.send_command(string_control)    
-                self.send_command('put /1/1-DAVISFX2/aps/ Run bool true')            
+                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true')            
                 print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
                 time.sleep(0.5)
                 self.open_communication_data()
                 self.start_logging(filename)    
                 time.sleep(recording_time)
                 self.stop_logging()
-                self.send_command('put /1/1-DAVISFX2/dvs/ Run bool true')
+                #self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true')
                 self.close_communication_data()
 
         print("Done with PTC measurements")

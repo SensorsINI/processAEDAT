@@ -344,7 +344,7 @@ class aedat3_process:
         plt.savefig(figure_dir+"ptc.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc.png",  format='png')
 
-        print("do linear fit")
+        print("Linear fit...")
         un, una = np.shape(u_y_tot)
         slope_tot = []
         inter_tot = []
@@ -367,7 +367,7 @@ class aedat3_process:
         plt.ylabel('Var[DN]  ')     
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
-        plt.close()
+        #plt.close()
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -924,7 +924,7 @@ if __name__ == "__main__":
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/ptc_03_12_15-12_31_40/'
+        ptc_dir = 'measurements/ptc_03_12_15-18_16_17/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()

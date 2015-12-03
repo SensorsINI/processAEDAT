@@ -14,12 +14,21 @@ import caer_communication
 import gpio_usb
 import aedat3_process
 
-# TEST SELECTION
+###############################################################################
+# TEST SELECTIONS
+###############################################################################
 do_ptc = True
 do_fpn = False
 do_latency_pixel = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
+
+###############################################################################
+# CAMERA SELECTION and PARAMETERS
+###############################################################################
+sensor = "Davis208Mono"
+sensor_type = "DAVISFX3"
+bias_file = "cameras/davis208Mono.xml"
 
 # 0 - INIT control tools
 # init control class and open communication
@@ -58,10 +67,9 @@ if do_ptc:
     setting_dir = folder + str("/settings/")
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
-    bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,200,15), global_shutter=True)
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,300,30), global_shutter=True, sensor_type = sensor_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -85,8 +93,6 @@ if do_latency_pixel:
     print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
 
-
-    sensor = "DAVIS240C"
     filter_type = 0.0
     control.open_communication_command()
     control.load_biases(xml_file="cameras/davis240c.xml")    
