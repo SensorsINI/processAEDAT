@@ -915,12 +915,13 @@ class aedat3_process:
 if __name__ == "__main__":
     #analyse ptc
 
-    do_ptc = True
-    do_fpn = False
+    do_ptc = False
+    do_fpn = True
     do_latency_pixel = False
-    camera_dim = [208,192]
-    frame_x_divisions = [[50,100]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[50,100]]#[[0,180]]
+    do_contrast_sensitivity = True
+    camera_dim = [240,180]
+    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
@@ -929,6 +930,9 @@ if __name__ == "__main__":
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
+
+    if do_contrast_sensitivity:
+        print("bella")    
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
