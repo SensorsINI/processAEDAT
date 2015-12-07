@@ -66,16 +66,16 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="AdcCompBp" path="/1/1-DAVISFX3/bias/AdcCompBp/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">20</attr>
+                        <attr key="fineValue" type="short">50</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="AdcRefHigh" path="/1/1-DAVISFX3/bias/AdcRefHigh/">
                         <attr key="currentValue" type="byte">7</attr>
-                        <attr key="voltageValue" type="byte">30</attr>
+                        <attr key="voltageValue" type="byte">35</attr>
                     </node>
                     <node name="AdcRefLow" path="/1/1-DAVISFX3/bias/AdcRefLow/">
                         <attr key="currentValue" type="byte">7</attr>
@@ -93,7 +93,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">219</attr>
+                        <attr key="fineValue" type="short">10</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -308,7 +308,7 @@
                     <attr key="FilterPixel7Column" type="short">208</attr>
                     <attr key="FilterPixel7Row" type="short">192</attr>
                     <attr key="FilterRowOnlyEvents" type="bool">true</attr>
-                    <attr key="Run" type="bool">false</attr>
+                    <attr key="Run" type="bool">true</attr>
                     <attr key="WaitOnTransferStall" type="bool">false</attr>
                 </node>
                 <node name="externalInput" path="/1/1-DAVISFX3/externalInput/">
@@ -336,7 +336,7 @@
                     <attr key="GyroZStandby" type="bool">false</attr>
                     <attr key="LowPowerCycle" type="bool">false</attr>
                     <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
-                    <attr key="Run" type="bool">false</attr>
+                    <attr key="Run" type="bool">true</attr>
                     <attr key="SampleRateDivider" type="short">0</attr>
                     <attr key="TempStandby" type="bool">false</attr>
                 </node>
@@ -408,7 +408,7 @@
             </node>
         </node>
         <node name="logger" path="/logger/">
-            <attr key="logFile" type="string">/home/inilabs/inilabs/cAER/caer.log</attr>
+            <attr key="logFile" type="string">caer.log</attr>
             <attr key="logLevel" type="byte">5</attr>
         </node>
         <node name="server" path="/server/">

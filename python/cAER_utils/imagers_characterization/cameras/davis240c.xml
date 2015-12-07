@@ -3,21 +3,21 @@
         <node name="1" path="/1/">
             <node name="1-DAVISFX2" path="/1/1-DAVISFX2/">
                 <attr key="Auto-Restart" type="bool">true</attr>
-                <attr key="BusNumber" type="byte">0</attr>
-                <attr key="DevAddress" type="byte">0</attr>
+                <attr key="BusNumber" type="short">0</attr>
+                <attr key="DevAddress" type="short">0</attr>
                 <attr key="SerialNumber" type="string"></attr>
                 <node name="aps" path="/1/1-DAVISFX2/aps/">
                     <attr key="ColumnSettle" type="short">30</attr>
                     <attr key="EndColumn0" type="short">239</attr>
                     <attr key="EndRow0" type="short">179</attr>
-                    <attr key="Exposure" type="int">50000</attr>
+                    <attr key="Exposure" type="int">4000</attr>
                     <attr key="FrameDelay" type="int">1000</attr>
                     <attr key="GlobalShutter" type="bool">true</attr>
                     <attr key="NullSettle" type="short">3</attr>
                     <attr key="ResetRead" type="bool">true</attr>
                     <attr key="ResetSettle" type="short">10</attr>
                     <attr key="RowSettle" type="short">10</attr>
-                    <attr key="Run" type="bool">false</attr>
+                    <attr key="Run" type="bool">true</attr>
                     <attr key="StartColumn0" type="short">0</attr>
                     <attr key="StartRow0" type="short">0</attr>
                     <attr key="TakeSnapShot" type="bool">false</attr>
@@ -28,15 +28,15 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">91</attr>
+                        <attr key="fineValue" type="short">91</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="AEPuXBp" path="/1/1-DAVISFX2/bias/AEPuXBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">80</attr>
+                        <attr key="fineValue" type="short">80</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -44,7 +44,7 @@
                         <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">152</attr>
+                        <attr key="fineValue" type="short">152</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -52,7 +52,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">185</attr>
+                        <attr key="fineValue" type="short">185</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Cascode</attr>
                     </node>
@@ -60,7 +60,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">253</attr>
+                        <attr key="fineValue" type="short">253</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -68,15 +68,15 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">219</attr>
+                        <attr key="fineValue" type="short">219</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="BiasBuffer" path="/1/1-DAVISFX2/bias/BiasBuffer/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">254</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -84,7 +84,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">1</attr>
+                        <attr key="fineValue" type="short">39</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -92,7 +92,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">115</attr>
+                        <attr key="fineValue" type="short">115</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Cascode</attr>
                     </node>
@@ -100,7 +100,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -108,7 +108,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -116,7 +116,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">49</attr>
+                        <attr key="fineValue" type="short">49</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -124,23 +124,23 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">164</attr>
+                        <attr key="fineValue" type="short">164</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="OffBn" path="/1/1-DAVISFX2/bias/OffBn/">
-                        <attr key="coarseValue" type="byte">3</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">3</attr>
+                        <attr key="fineValue" type="short">3</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="OnBn" path="/1/1-DAVISFX2/bias/OnBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
+                        <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -148,39 +148,39 @@
                         <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">215</attr>
+                        <attr key="fineValue" type="short">215</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PixInvBn" path="/1/1-DAVISFX2/bias/PixInvBn/">
-                        <attr key="coarseValue" type="byte">7</attr>
+                        <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">129</attr>
+                        <attr key="fineValue" type="short">129</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrBp" path="/1/1-DAVISFX2/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
+                        <attr key="coarseValue" type="byte">2</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">58</attr>
+                        <attr key="fineValue" type="short">58</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrSFBp" path="/1/1-DAVISFX2/bias/PrSFBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
+                        <attr key="coarseValue" type="byte">1</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">16</attr>
+                        <attr key="fineValue" type="short">16</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="RefrBp" path="/1/1-DAVISFX2/bias/RefrBp/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">25</attr>
+                        <attr key="fineValue" type="short">25</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -209,7 +209,6 @@
                     <attr key="DigitalMux3" type="byte">0</attr>
                     <attr key="ResetCalibNeuron" type="bool">true</attr>
                     <attr key="ResetTestPixel" type="bool">true</attr>
-                    <attr key="SpecialPixelControl" type="bool">false</attr>
                     <attr key="TypeNCalibNeuron" type="bool">false</attr>
                     <attr key="UseAOut" type="bool">false</attr>
                 </node>
@@ -243,8 +242,8 @@
                     <attr key="GyroZStandby" type="bool">false</attr>
                     <attr key="LowPowerCycle" type="bool">false</attr>
                     <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
-                    <attr key="Run" type="bool">false</attr>
-                    <attr key="SampleRateDivider" type="byte">0</attr>
+                    <attr key="Run" type="bool">true</attr>
+                    <attr key="SampleRateDivider" type="short">0</attr>
                     <attr key="TempStandby" type="bool">false</attr>
                 </node>
                 <node name="multiplexer" path="/1/1-DAVISFX2/multiplexer/">
@@ -302,33 +301,27 @@
             <node name="4-Visualizer" path="/1/4-Visualizer/">
                 <attr key="showEvents" type="bool">true</attr>
                 <attr key="showFrames" type="bool">true</attr>
+                <attr key="subsampleRendering" type="short">1</attr>
             </node>
             <node name="5-NetTCPServerOutput" path="/1/5-NetTCPServerOutput/">
                 <attr key="backlogSize" type="short">5</attr>
                 <attr key="concurrentConnections" type="short">5</attr>
                 <attr key="excludeHeader" type="bool">false</attr>
-                <attr key="ipAddress" type="string">127.0.0.1</attr>
+                <attr key="ipAddress" type="string">172.19.11.139</attr>
                 <attr key="maxBytesPerPacket" type="int">0</attr>
                 <attr key="portNumber" type="short">7777</attr>
                 <attr key="validEventsOnly" type="bool">false</attr>
             </node>
-            <node name="6-NetUDPOutput" path="/1/6-NetUDPOutput/">
-                <attr key="excludeHeader" type="bool">false</attr>
-                <attr key="ipAddress" type="string">127.0.0.1</attr>
-                <attr key="maxBytesPerPacket" type="int">0</attr>
-                <attr key="portNumber" type="short">8888</attr>
-                <attr key="validEventsOnly" type="bool">false</attr>
-            </node>
         </node>
         <node name="logger" path="/logger/">
-            <attr key="logFile" type="string">/home/federico/iniLabs/code_new/cAER/trunk/caer.log</attr>
+            <attr key="logFile" type="string">caer.log</attr>
             <attr key="logLevel" type="byte">5</attr>
         </node>
         <node name="server" path="/server/">
             <attr key="backlogSize" type="short">5</attr>
             <attr key="concurrentConnections" type="short">5</attr>
-            <attr key="ipAddress" type="string">127.0.0.1</attr>
-            <attr key="portNumber" type="short">4040</attr>
+            <attr key="ipAddress" type="string">172.19.11.139</attr>
+            <attr key="portNumber" type="int">4040</attr>
         </node>
     </node>
 </sshs>

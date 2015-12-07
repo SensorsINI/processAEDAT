@@ -21,12 +21,20 @@ do_ptc = False
 do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = True
-contrast_level = np.linspace(0.1,0.5,5)
-base_level = 1000 #  1 klux
-frequency = 0.3
+contrast_level = np.linspace(0.4,0.5,5)
+base_level = 600 #  1 klux
+frequency = 10
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
+
+
+###############################################################################
+# CAMERA SELECTION and PARAMETERS
+###############################################################################
+sensor = "DAVIS240C"
+sensor_type = "DAVISFX2"
+bias_file = "cameras/davis240c.xml"
 
 
 #####################################
@@ -46,12 +54,6 @@ slope, inter = np.polyfit(volt[index_linear],lux[index_linear],1)
 #plot(volt, volt*slope+inter, 'k-', label='fit linear')
 #legend(loc='best')
 
-###############################################################################
-# CAMERA SELECTION and PARAMETERS
-###############################################################################
-sensor = "Davis208Mono"
-sensor_type = "DAVISFX3"
-bias_file = "cameras/davis208Mono.xml"
 
 # 0 - INIT control tools
 # init control class and open communication
@@ -92,7 +94,7 @@ if do_ptc:
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,300,30), global_shutter=True, sensor_type = sensor_type)
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,1200,20), global_shutter=True, sensor_type = sensor_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -101,7 +103,7 @@ if do_ptc:
 # + we slowly generate a sine wave 
 if do_fpn:
     control.open_communication_command()
-    folder = datadir + '/fpn_' +  current_date
+    folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
     setting_dir = folder + str("/settings/")
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
@@ -113,22 +115,24 @@ if do_fpn:
 
 if do_contrast_sensitivity:
     control.open_communication_command()
-    folder = datadir + '/fpn_' +  current_date
+    folder = datadir + '/'+ sensor + '_fpn_' +  current_date
     setting_dir = folder + str("/settings/")
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
-
-    for i in range(len(constrast_level)):
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    for i in range(len(contrast_level)):
         perc_low = base_level-(contrast_level[i]/2.0)*base_level
         perc_hi = base_level+(contrast_level[i]/2.0)*base_level
         v_hi = (perc_hi - inter) / slope
         v_low = (perc_low - inter) / slope 
         offset = np.mean([v_hi,v_low])
         amplitude = v_hi - np.mean([v_hi,v_low])
-
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+", "+str(offset)+"") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
-        raw_input("Press Enter to continue...")
+        print("offset is "+str(offset*50)+ " amplitude " +str(amplitude) + " . ")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(format(int(offset*50),'03d'))) #voltage output
+        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
         control.get_data_contrast_sensitivity(folder = folder, recording_time = recording_time, contrast_level = contrast_level[i])
 
     control.close_communication_command()        
@@ -141,7 +145,7 @@ if do_latency_pixel:
     filter_type = 0.0
     control.open_communication_command()
     control.load_biases(xml_file="cameras/davis240c.xml")    
-    folder = datadir + '/'+str(sensor)+'_latency_' +  current_date
+    folder = datadir + '/'+ sensor + '_latency_' +  current_date
     setting_dir = folder + str("/settings/")
 
     if(not os.path.exists(setting_dir)):

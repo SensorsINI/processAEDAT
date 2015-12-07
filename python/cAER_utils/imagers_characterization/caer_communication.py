@@ -389,7 +389,7 @@ class caer_communication:
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
-        filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d'+'_contrast_level_'+format(int(contrast_level),'03f')+'.aedat' 
+        filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+'_contrast_level_'+format(int(contrast_level*100),'03d')+'.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
