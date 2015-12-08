@@ -267,6 +267,7 @@ class aedat3_process:
         std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         u_y_mean_frames = []
+        all_frames = []
         done = False
         for this_file in range(len(files_in_dir)):
             print("processing gray values from file ", str(files_in_dir[this_file]))
@@ -286,6 +287,7 @@ class aedat3_process:
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div in range(len(frame_y_divisions)):            
                     frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
+                    all_frames.append(frame_areas)
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)   
                     avr_all_frames = []
@@ -317,6 +319,20 @@ class aedat3_process:
         sigma_tot_real = sigma_tot[sigma_tot != -1]
         sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div*x_div])   
         exposures = exposures[:,0]
+
+        all_frames = np.array(all_frames)
+        plt.figure()
+        plt.title("all frames values")
+        for i in range(len(all_frames)):
+            this_ff = np.reshape(all_frames[i], len(all_frames[i]))
+            this_dn_f = np.right_shift(this_ff,6)
+            plot(this_dn_f) 
+        plt.xlabel("frame number")   
+        plt.legend(loc='best')
+        plt.xlabel('frame number') 
+        plt.ylabel('DN value single pixel') 
+        plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
+        plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
     
         # sensitivity plot 
         plt.figure()
@@ -368,6 +384,9 @@ class aedat3_process:
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
         #plt.close()
+        
+        
+
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -914,21 +933,25 @@ class aedat3_process:
 
 if __name__ == "__main__":
     #analyse ptc
+    ##############################################################################
+    # WHAT SHOULD WE DO?
+    ##############################################################################
 
     do_ptc = True
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
     camera_dim = [640,480]
-    frame_x_divisions = [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[121,122]]#[[0,180]]
+    frame_x_divisions = [[19,20]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[121,122]]#[[121,122]]#[[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/ptc_08_12_15-15_09_58/'
+        ptc_dir = 'measurements/Measurements_final/CDAVIS4640RGBW/ptc_08_12_15-18_55_38/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
+        self = aedat
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_contrast_sensitivity:
