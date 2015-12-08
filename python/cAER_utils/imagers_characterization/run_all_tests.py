@@ -17,24 +17,26 @@ import aedat3_process
 ###############################################################################
 # TEST SELECTIONS
 ###############################################################################
-do_ptc = False
+do_ptc = True
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = True
-contrast_level = np.linspace(0.4,0.5,5)
+do_contrast_sensitivity = False
+contrast_level = np.linspace(0.1,0.5,5)
 base_level = 600 #  1 klux
 frequency = 10
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
+useinternaladc = False
+global_shutter = True
 
 
 ###############################################################################
 # CAMERA SELECTION and PARAMETERS
 ###############################################################################
-sensor = "DAVIS240C"
-sensor_type = "DAVISFX2"
-bias_file = "cameras/davis240c.xml"
+sensor = "DAVIS346"
+sensor_type = "DAVISFX3"
+bias_file = "cameras/davis346.xml"
 
 
 #####################################
@@ -47,12 +49,12 @@ voltage_divider = 40.0
 volt = volt*voltage_divider
 index_linear = np.where(lux < saturation_level)[0]
 slope, inter = np.polyfit(volt[index_linear],lux[index_linear],1)
-#figure()
-#plot(volt,lux, 'o', label='measurements')
-#xlabel("volt")
-#ylabel("lux")
-#plot(volt, volt*slope+inter, 'k-', label='fit linear')
-#legend(loc='best')
+figure()
+plot(volt,lux, 'o', label='measurements')
+xlabel("volt")
+ylabel("lux")
+plot(volt, volt*slope+inter, 'k-', label='fit linear')
+legend(loc='best')
 
 
 # 0 - INIT control tools
@@ -94,7 +96,7 @@ if do_ptc:
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,1200,20), global_shutter=True, sensor_type = sensor_type)
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,1200,20), global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = False )
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -129,11 +131,11 @@ if do_contrast_sensitivity:
         v_low = (perc_low - inter) / slope 
         offset = np.mean([v_hi,v_low])
         amplitude = v_hi - np.mean([v_hi,v_low])
-        print("offset is "+str(offset*50)+ " amplitude " +str(amplitude) + " . ")
+        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
-        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(format(int(offset*50),'03d'))) #voltage output
+        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.get_data_contrast_sensitivity(folder = folder, recording_time = recording_time, contrast_level = contrast_level[i])
+        control.get_data_contrast_sensitivity(folder = folder, recording_time = recording_time, contrast_level = contrast_level[i], base_level = base_level)
 
     control.close_communication_command()        
 

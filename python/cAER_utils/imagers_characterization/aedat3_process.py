@@ -915,17 +915,17 @@ class aedat3_process:
 if __name__ == "__main__":
     #analyse ptc
 
-    do_ptc = False
-    do_fpn = True
+    do_ptc = True
+    do_fpn = False
     do_latency_pixel = False
-    do_contrast_sensitivity = True
+    do_contrast_sensitivity = False
     camera_dim = [240,180]
     frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     frame_y_divisions = [[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/ptc_03_12_15-18_28_18/'
+        ptc_dir = 'measurements/ptc_08_12_15-13_17_50/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()

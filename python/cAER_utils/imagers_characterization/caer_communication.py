@@ -371,7 +371,7 @@ class caer_communication:
         print("APS array is ON")
         return        
 
-    def get_data_contrast_sensitivity(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2", contrast_level = 1.0):
+    def get_data_contrast_sensitivity(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2", contrast_level = 1.0, base_level = 100):
         '''
            Contrast Sensitivity
             - aps is off
@@ -389,7 +389,7 @@ class caer_communication:
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
-        filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+'_contrast_level_'+format(int(contrast_level*100),'03d')+'.aedat' 
+        filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+'_contrast_level_'+format(int(contrast_level*100),'03d')+'_base_level_'+str(format(int(base_level),'03d'))+'.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
@@ -427,7 +427,7 @@ class caer_communication:
 
         return
 
-    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2"):
+    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = False):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
@@ -443,6 +443,7 @@ class caer_communication:
             os.mkdir(folder) 
         #loop over exposures and save data
         for this_exp in range(len(exposures)):
+            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool '+str(useinternaladc))
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:
