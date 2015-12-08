@@ -25,7 +25,7 @@
                     <attr key="ResetRead" type="bool">true</attr>
                     <attr key="ResetSettle" type="short">20</attr>
                     <attr key="RowSettle" type="short">20</attr>
-                    <attr key="Run" type="bool">true</attr>
+                    <attr key="Run" type="bool">off</attr>
                     <attr key="SampleEnable" type="bool">true</attr>
                     <attr key="SampleSettle" type="short">60</attr>
                     <attr key="StartColumn0" type="short">0</attr>
@@ -125,7 +125,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">39</attr>
+                        <attr key="fineValue" type="short">35</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -165,7 +165,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">1</attr>
+                        <attr key="fineValue" type="short">4</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -173,7 +173,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">255</attr>
+                        <attr key="fineValue" type="short">150</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -194,7 +194,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrBp" path="/1/1-DAVISFX3/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">2</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="short">58</attr>
@@ -222,10 +222,10 @@
                         <attr key="voltageValue" type="byte">11</attr>
                     </node>
                     <node name="RefSSBn" path="/1/1-DAVISFX3/bias/RefSSBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">3</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">20</attr>
+                        <attr key="fineValue" type="short">200</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>

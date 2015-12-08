@@ -3,8 +3,8 @@
         <node name="1" path="/1/">
             <node name="1-DAVISFX3" path="/1/1-DAVISFX3/">
                 <attr key="Auto-Restart" type="bool">true</attr>
-                <attr key="BusNumber" type="byte">0</attr>
-                <attr key="DevAddress" type="byte">0</attr>
+                <attr key="BusNumber" type="short">0</attr>
+                <attr key="DevAddress" type="short">0</attr>
                 <attr key="SerialNumber" type="string"></attr>
                 <node name="aps" path="/1/1-DAVISFX3/aps/">
                     <attr key="EndColumn0" type="short">639</attr>
@@ -48,7 +48,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">91</attr>
+                        <attr key="fineValue" type="short">91</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -56,7 +56,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">80</attr>
+                        <attr key="fineValue" type="short">80</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -64,7 +64,7 @@
                         <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">152</attr>
+                        <attr key="fineValue" type="short">152</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -72,7 +72,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">20</attr>
+                        <attr key="fineValue" type="short">20</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -96,7 +96,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">128</attr>
+                        <attr key="fineValue" type="short">128</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -104,7 +104,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -112,7 +112,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -120,7 +120,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">251</attr>
+                        <attr key="fineValue" type="short">251</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -128,7 +128,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">194</attr>
+                        <attr key="fineValue" type="short">194</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -136,7 +136,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">54</attr>
+                        <attr key="fineValue" type="short">54</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -144,7 +144,7 @@
                         <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">41</attr>
+                        <attr key="fineValue" type="short">41</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -156,7 +156,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -164,7 +164,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="byte">255</attr>
+                        <attr key="fineValue" type="short">255</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -172,7 +172,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">49</attr>
+                        <attr key="fineValue" type="short">49</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -180,7 +180,7 @@
                         <attr key="coarseValue" type="byte">5</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="byte">164</attr>
+                        <attr key="fineValue" type="short">164</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -196,7 +196,7 @@
                         <attr key="coarseValue" type="byte">2</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">138</attr>
+                        <attr key="fineValue" type="short">138</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -204,7 +204,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">63</attr>
+                        <attr key="fineValue" type="short">63</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -212,7 +212,7 @@
                         <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="byte">209</attr>
+                        <attr key="fineValue" type="short">209</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -220,7 +220,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">164</attr>
+                        <attr key="fineValue" type="short">164</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -228,7 +228,7 @@
                         <attr key="coarseValue" type="byte">1</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">108</attr>
+                        <attr key="fineValue" type="short">108</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -236,7 +236,7 @@
                         <attr key="coarseValue" type="byte">1</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">108</attr>
+                        <attr key="fineValue" type="short">108</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -244,7 +244,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="byte">20</attr>
+                        <attr key="fineValue" type="short">20</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -252,7 +252,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">28</attr>
+                        <attr key="fineValue" type="short">28</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -260,7 +260,7 @@
                         <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="byte">162</attr>
+                        <attr key="fineValue" type="short">162</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -354,8 +354,8 @@
                     <attr key="GyroZStandby" type="bool">false</attr>
                     <attr key="LowPowerCycle" type="bool">false</attr>
                     <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
-                    <attr key="Run" type="bool">false</attr>
-                    <attr key="SampleRateDivider" type="byte">0</attr>
+                    <attr key="Run" type="bool">true</attr>
+                    <attr key="SampleRateDivider" type="short">0</attr>
                     <attr key="TempStandby" type="bool">false</attr>
                 </node>
                 <node name="multiplexer" path="/1/1-DAVISFX3/multiplexer/">
@@ -393,9 +393,9 @@
                     <attr key="IMU6PacketMaxInterval" type="int">5000</attr>
                     <attr key="IMU6PacketMaxSize" type="int">8</attr>
                     <attr key="PacketContainerMaxInterval" type="int">5000</attr>
-                    <attr key="PacketContainerMaxSize" type="int">42360</attr>
+                    <attr key="PacketContainerMaxSize" type="int">4236</attr>
                     <attr key="PolarityPacketMaxInterval" type="int">5000</attr>
-                    <attr key="PolarityPacketMaxSize" type="int">40960</attr>
+                    <attr key="PolarityPacketMaxSize" type="int">4096</attr>
                     <attr key="SpecialPacketMaxInterval" type="int">1000</attr>
                     <attr key="SpecialPacketMaxSize" type="int">128</attr>
                 </node>
@@ -426,14 +426,14 @@
             </node>
         </node>
         <node name="logger" path="/logger/">
-            <attr key="logFile" type="string">/home/inilabs/inilabs/cAER/caer.log</attr>
+            <attr key="logFile" type="string">caer.log</attr>
             <attr key="logLevel" type="byte">5</attr>
         </node>
         <node name="server" path="/server/">
             <attr key="backlogSize" type="short">5</attr>
             <attr key="concurrentConnections" type="short">5</attr>
             <attr key="ipAddress" type="string">172.19.11.139</attr>
-            <attr key="portNumber" type="short">4040</attr>
+            <attr key="portNumber" type="int">4040</attr>
         </node>
     </node>
 </sshs>

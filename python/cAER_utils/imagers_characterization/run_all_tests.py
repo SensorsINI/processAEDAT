@@ -17,26 +17,27 @@ import aedat3_process
 ###############################################################################
 # TEST SELECTIONS
 ###############################################################################
-do_ptc = True
+do_ptc = False
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = False
-contrast_level = np.linspace(0.1,0.5,5)
-base_level = 600 #  1 klux
-frequency = 10
+do_contrast_sensitivity = True
+contrast_level = np.linspace(0.1,0.8,20)
+base_level = 1000 #  1 klux
+frequency = 1
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = False
 global_shutter = True
+exposures = np.linspace(1,2000,25)
 
 
 ###############################################################################
 # CAMERA SELECTION and PARAMETERS
 ###############################################################################
-sensor = "DAVIS346"
+sensor = "DAVIS208Mono"
 sensor_type = "DAVISFX3"
-bias_file = "cameras/davis346.xml"
+bias_file = "cameras/davis208Mono.xml"
 
 
 #####################################
@@ -45,16 +46,16 @@ bias_file = "cameras/davis346.xml"
 saturation_level = 3500 # setup saturates at 3.5 klux
 volt =np.array([0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.010,0.011,0.012,0.013,0.014,0.015,0.016,0.017,0.018,0.019,0.020,0.040,0.08,0.100,0.2,0.15,0.120,0.180,0.17,0.500,0.400,0.3,0.25,0.28,0.2,0.15,0.27,0.26,0.22,0.21,0.215,0.22,0.217,0.218,0.03,0.05,0.06,0.14,0.0225,0.225,0.235])
 lux = np.array([2.29,17.78,34.460,52.870,71.280,90.740,109.400,128.900,148.000,167.600,186.100,205.600,225.100,244.200,263.300,283.800,302.400,323.400,341.900,361.100,740.900,1467.000,1815.000,3399.000,2633,2152,3105,2950,3861,3861,3861,3861,3861,3378,2627,3861,3861,3663,3531,3597,3663,3601,3634,549.5,917.4,1102,2467,407.9,3729,3795])
-voltage_divider = 40.0
+voltage_divider = 0.99 #voltage divider DC
 volt = volt*voltage_divider
 index_linear = np.where(lux < saturation_level)[0]
 slope, inter = np.polyfit(volt[index_linear],lux[index_linear],1)
-figure()
-plot(volt,lux, 'o', label='measurements')
-xlabel("volt")
-ylabel("lux")
-plot(volt, volt*slope+inter, 'k-', label='fit linear')
-legend(loc='best')
+#figure()
+#plot(volt,lux, 'o', label='measurements')
+#xlabel("volt")
+#ylabel("lux")
+#plot(volt, volt*slope+inter, 'k-', label='fit linear')
+#legend(loc='best')
 
 
 # 0 - INIT control tools
@@ -96,7 +97,7 @@ if do_ptc:
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=np.linspace(1,1200,20), global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = False )
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = False )
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -130,7 +131,7 @@ if do_contrast_sensitivity:
         v_hi = (perc_hi - inter) / slope
         v_low = (perc_low - inter) / slope 
         offset = np.mean([v_hi,v_low])
-        amplitude = v_hi - np.mean([v_hi,v_low])
+        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
         print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output

@@ -262,8 +262,8 @@ class aedat3_process:
         directory = ptc_dir
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()
-        u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
+        sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         u_y_mean_frames = []
@@ -312,9 +312,9 @@ class aedat3_process:
         to_remove = len(np.unique(np.where(exposures == 0)[0]))
         exposures_real = exposures[exposures != 0]
         exposures = np.reshape(exposures_real, [files_num-to_remove, y_div*x_div])
-        u_y_tot_real = u_y_tot[u_y_tot != 0]
+        u_y_tot_real = u_y_tot[u_y_tot != -1]
         u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div*x_div])
-        sigma_tot_real = sigma_tot[sigma_tot != 0]
+        sigma_tot_real = sigma_tot[sigma_tot != -1]
         sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div*x_div])   
         exposures = exposures[:,0]
     
@@ -919,13 +919,13 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    camera_dim = [240,180]
-    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,180]]
+    camera_dim = [640,480]
+    frame_x_divisions = [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[121,122]]#[[0,180]]
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/ptc_08_12_15-13_17_50/'
+        ptc_dir = 'measurements/ptc_08_12_15-15_09_58/'
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
