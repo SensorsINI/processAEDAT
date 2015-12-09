@@ -853,82 +853,211 @@ class aedat3_process:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
                 continue
 
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
 
-        for this_div_x in range(len(frame_x_divisions)) :
-            for this_div_y in range(len(frame_y_divisions)):
-
-                signal_rec = []
-                tmp = 0
-                delta_up = 1.0
-                delta_dn = 1.0
-                delta_up_count = 0.0
-                delta_dn_count = 0.0
-                ts_t = []  
-                
-                #print(np.max(frame_y_divisions[0]))
-                for this_ev in range(len(ts)):
-                    if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
-                        xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
-                        yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
-                        yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
-                        if( pol[this_ev] == 1):
-                          delta_up_count = delta_up_count+1        
-                        if( pol[this_ev] == 0):
-                          delta_dn_count = delta_dn_count+1
-
-                if(delta_dn_count == 0 or delta_up_count == 0):
-                    print("Not even a single event up or down")
-                    print("we are skipping this section of the sensor")
-                else:
-                    if( delta_up_count > delta_dn_count):
-                        delta_dn = (delta_up_count / double(delta_dn_count)) * (delta_up)
-                    else:
-                        delta_up = (delta_dn_count / double(delta_up_count)) * (delta_dn)
-
+                    signal_rec = []
+                    tmp = 0
+                    delta_up = 1.0
+                    delta_dn = 1.0
+                    delta_up_count = 0.0
+                    delta_dn_count = 0.0
+                    ts_t = []  
+                    
+                    #print(np.max(frame_y_divisions[0]))
                     for this_ev in range(len(ts)):
                         if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
                             xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
                             yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
                             yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
                             if( pol[this_ev] == 1):
-                                tmp = tmp+delta_up
-                                signal_rec.append(tmp)
-                                ts_t.append(ts[this_ev])
+                              delta_up_count = delta_up_count+1        
                             if( pol[this_ev] == 0):
-                                tmp = tmp-delta_dn
-                                signal_rec.append(tmp)
-                                ts_t.append(ts[this_ev])
+                              delta_dn_count = delta_dn_count+1
+
+                    if(delta_dn_count == 0 or delta_up_count == 0):
+                        print("Not even a single event up or down")
+                        print("we are skipping this section of the sensor")
+                    else:
+                        if( delta_up_count > delta_dn_count):
+                            delta_dn = (delta_up_count / double(delta_dn_count)) * (delta_up)
+                        else:
+                            delta_up = (delta_dn_count / double(delta_up_count)) * (delta_dn)
+
+                        for this_ev in range(len(ts)):
+                            if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                                xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                                yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                                yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                                if( pol[this_ev] == 1):
+                                    tmp = tmp+delta_up
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
+                                if( pol[this_ev] == 0):
+                                    tmp = tmp-delta_dn
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
 
 
-                    plt.figure()
-                    ts = np.array(ts)
-                    signal_rec = np.array(signal_rec)
-                    signal_rec = signal_rec - np.mean(signal_rec)
-                    amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
-                    signal_rec = signal_rec/amplitude_rec
-                    guess_amplitude = 1.0
-                    offset_a = 10.0
-                    offset = 1.0
-                    p0=[sine_freq, guess_amplitude,
-                            0.0, offset, offset_a]
-                    signal_rec = signal_rec + 10
-                    tnew = (ts_t-np.min(ts))*1e-6
-                    fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
-                    data_first_guess = self.my_sin(tnew, *p0)        
-                    data_fit = self.my_sin(tnew, *fit[0])
-                    rms = self.rms(signal_rec, data_fit)
-                    stringa = "Root Mean Square Error: " + str('{0:.3f}'.format(rms*100))+ "%"
-                    plot(tnew, data_fit, label='Target with'+ stringa)
-                    plot(tnew, signal_rec, label='Measure')
-                    legend(loc="lower right")
-                    xlabel('Time [s]')
-                    ylabel('Norm. Amplitude')
-                    ylim([8,12])
-                    title('Measured and fitted curves for the DVS pixels sinusoidal stimulation')
-                    savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".pdf",  format='PDF')
-                    savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+".png",  format='PNG')
-                    print(stringa)
+                        plt.figure()
+                        ts = np.array(ts)
+                        signal_rec = np.array(signal_rec)
+                        signal_rec = signal_rec - np.mean(signal_rec)
+                        amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
+                        signal_rec = signal_rec/amplitude_rec
+                        guess_amplitude = 1.0
+                        offset_a = 10.0
+                        offset = 1.0
+                        p0=[sine_freq, guess_amplitude,
+                                0.0, offset, offset_a]
+                        signal_rec = signal_rec + 10
+                        tnew = (ts_t-np.min(ts))*1e-6
+                        fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                        data_first_guess = self.my_sin(tnew, *p0)        
+                        data_fit = self.my_sin(tnew, *fit[0])
+                        rms = self.rms(signal_rec, data_fit)
+                        stringa = "RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                        plot(tnew, data_fit, label='- FIT - '+ stringa)
+                        plot(tnew, signal_rec, label='Measure')
+                        legend(loc="lower right")
+                        xlabel('Time [s]')
+                        ylabel('Norm. Amplitude')
+                        ylim([8,12])
+                        title('Measured and fitted curves for the DVS pixels sinusoidal stimulation')
+                        savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        print(stringa)
 
+        return delta_up, delta_dn, rms
+
+    def cs_analysis(self,  cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
+        '''
+            contrast sensitivity analisys
+		        - input signal is a sine wave, setup is in homogeneous lighting conditions
+        '''
+        #################################################################
+        ############### CS and SIGNAL RECOSTRUCTION
+        #################################################################
+        directory = cs_dir      
+        files_in_dir = os.listdir(directory)
+        files_in_dir.sort()  
+        this_file = 0
+        sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        rmse_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        contrast_level = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        for this_file in range(len(files_in_dir)):
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                rec_time = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[0]) # in us
+                this_contrast = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[3])/100
+                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
+
+            fit_done = False
+
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+
+                    contrast_level[this_file,this_div_y,this_div_x] = this_contrast
+
+                    signal_rec = []
+                    tmp = 0
+                    delta_up = 1.0
+                    delta_dn = 1.0
+                    delta_up_count = 0.0
+                    delta_dn_count = 0.0
+                    ts_t = []  
+                    
+                    #print(np.max(frame_y_divisions[0]))
+                    for this_ev in range(len(ts)):
+                        if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                            xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                            yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                            yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                            if( pol[this_ev] == 1):
+                              delta_up_count = delta_up_count+1        
+                            if( pol[this_ev] == 0):
+                              delta_dn_count = delta_dn_count+1
+
+                    if(delta_dn_count == 0 or delta_up_count == 0):
+                        print("Not even a single event up or down")
+                        print("we are skipping this section of the sensor")
+                    else:
+                        if( delta_up_count > delta_dn_count):
+                            delta_dn = (delta_up_count / double(delta_dn_count)) * (delta_up)
+                        else:
+                            delta_up = (delta_dn_count / double(delta_up_count)) * (delta_dn)
+
+                        for this_ev in range(len(ts)):
+                            if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                                xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                                yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                                yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                                if( pol[this_ev] == 1):
+                                    tmp = tmp+delta_up
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
+                                if( pol[this_ev] == 0):
+                                    tmp = tmp-delta_dn
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
+
+
+                        plt.figure()
+                        ts = np.array(ts)
+                        signal_rec = np.array(signal_rec)
+                        signal_rec = signal_rec - np.mean(signal_rec)
+                        amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
+                        signal_rec = signal_rec/amplitude_rec
+                        guess_amplitude = 1.0
+                        offset_a = 10.0
+                        offset = 1.0
+                        p0=[sine_freq, guess_amplitude,
+                                0.0, offset, offset_a]
+                        signal_rec = signal_rec + 10
+                        tnew = (ts_t-np.min(ts))*1e-6
+                        try:
+                            fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                            fit_done = True
+                        except RuntimeError:
+                            fit_done = False
+                            print("Not possible to fit")
+
+                        data_first_guess = self.my_sin(tnew, *p0)    
+                        if fit_done:
+                            data_fit = self.my_sin(tnew, *fit[0])
+                            rms = self.rms(signal_rec, data_fit)                        
+                            stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                            plt.plot(tnew, data_fit, label= stringa)
+                        else:
+                            rms = self.rms(signal_rec, data_first_guess)          
+                            stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                            plt.plot(tnew, data_first_guess, label=stringa)
+
+
+                        rmse_tot[this_file,this_div_y, this_div_x] = rms
+                        plt.plot(tnew, signal_rec, label='Measured signal')
+                        plt.legend(loc="lower right")
+                        plt.xlabel('Time [s]')
+                        plt.ylabel('Norm. Amplitude')
+                        plt.ylim([8,12])
+                        if fit_done:
+                            plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
+                        else:
+                            plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
+                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        print(stringa)
+
+        rmse_tot = np.reshape(rmse_tot,len(rmse_tot))
+        contrast_level = np.reshape(contrast_level,len(contrast_level))
+        plt.figure()
+        plt.plot(contrast_level,rmse_tot , 'o')
+        plt.xlabel("contrast level")
+        plt.ylabel(" RMSE ")
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF')
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG')
         return delta_up, delta_dn, rms
 
 if __name__ == "__main__":
@@ -937,13 +1066,14 @@ if __name__ == "__main__":
     # WHAT SHOULD WE DO?
     ##############################################################################
 
-    do_ptc = True
+    do_ptc = False
     do_fpn = False
     do_latency_pixel = False
-    do_contrast_sensitivity = False
-    camera_dim = [640,480]
-    frame_x_divisions = [[19,20]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[121,122]]#[[121,122]]#[[0,180]]
+    do_contrast_sensitivity = True
+    camera_dim = [208,180]
+    frame_x_divisions = [[30,60]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[30,60]]#[[121,122]]#[[0,180]]
+    inverted = True # up dn events are inverted only in the Davis208Mono
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
@@ -955,7 +1085,14 @@ if __name__ == "__main__":
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_contrast_sensitivity:
-        print("bella")    
+        cs_dir = 'measurements/Measurements_final/DAVIS208Mono_constrast_sensitivity_08_12_15-16_31_16/'
+        figure_dir = cs_dir + '/figures/'
+        if(not os.path.exists(figure_dir)):
+            os.makedirs(figure_dir)
+        # select test pixels areas only two are active
+        aedat = aedat3_process()
+        delta_up, delta_dn, rms = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=1.0)
+   
 
     if do_fpn:
         fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'

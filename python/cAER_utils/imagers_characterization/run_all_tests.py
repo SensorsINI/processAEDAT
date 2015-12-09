@@ -39,7 +39,6 @@ sensor = "DAVIS208Mono"
 sensor_type = "DAVISFX3"
 bias_file = "cameras/davis208Mono.xml"
 
-
 #####################################
 # SETUP LIGHT CONDITIONS
 #####################################
@@ -118,7 +117,7 @@ if do_fpn:
 
 if do_contrast_sensitivity:
     control.open_communication_command()
-    folder = datadir + '/'+ sensor + '_fpn_' +  current_date
+    folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
     setting_dir = folder + str("/settings/")
     bias_file = "cameras/davis240c.xml"
     control.load_biases(xml_file=bias_file)
