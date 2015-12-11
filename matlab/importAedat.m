@@ -20,16 +20,18 @@ This function supports incremental readout, through these methods:
 		start and exposure end is included in the time window. 
 	
 This function expects a single input, which is a structure with the following fields:
-	- file (optional) - a string containing the full path to the file, 
+	- filePath (optional) - a string containing the full path to the file, 
 		including its name. If this field is not present, the function will
 		try to open the first file in the current directory.
-	- class (optional) - a string containing the name of the chip class from
+	- source (optional) - a string containing the name of the chip class from
 		which the data came. Options are (upper case, spaces, hyphens, underscores
 		are eliminated if used):
+		- file
+		- network
 		- dvs128 (tmpdiff128 accepted as equivalent)
 		- davis - a generic label for any davis sensor
 		- davis240a (sbret10 accepted as equivalent)
-		- davis240b (sbret20 accepted as equivalent)
+		- davis240b (sbret20, seebetter20 accepted as equivalent)
 		- davis240c (sbret21 accepted as equivalent)
 		- davis128mono 
 		- davis128rgb (davis128 accepted as equivalent)
@@ -40,8 +42,9 @@ This function expects a single input, which is a structure with the following fi
 		- davis346bsi 
 		- davis640rgb (davis640 accepted as equivalent)
 		- davis640mono 
-		- hdavis640 (cdavis640 accepted as equivalent)
-		- das1 (cochleaams1c accepted as equivalent)
+		- hdavis640mono 
+		- hdavis640rgbw (davis640rgbw, cdavis640 accepted as equivalent)
+		- cochleaams1c (das1 accepted as equivalent)
 		If class is not provided and the file does not specify the class, dvs128 is assumed.
 		If the file specifies the class then this input is ignored. 
 	- startTime (optional) - if provided, any data with a timeStamp lower
@@ -59,11 +62,16 @@ This function expects a single input, which is a structure with the following fi
 	- endPacket (optional) Only accepted for fileformat 3.0. If
 		provided, any packets with a higher count that this will not be returned.
 		
-
 The output is a structure with the following fields:
-	- info - structure containing informational fields. This includes:
+	- info - structure containing informational fields. This starts life as the 
+		input structure (as defined above), and when output includes:
 		- file, as defined in the input structure.
-		- class, as derived either from the file or from input.class.
+		- fileFormat, as defined above, (double). 
+		- source, as derived either from the file or from input.class. In
+			the case of multiple sources, this is a horizonal cell array of
+			classes of each source in order. 
+		- dateTime, a string representing the date and time at which the
+			recording started.
 		- endEvent - (for file format 1.0-2.1 only) The count of the last event 
 			included in the readout.
 		- endPacket - (for file format 3.0 only) The count of the last packet
@@ -71,11 +79,11 @@ The output is a structure with the following fields:
 			Packets partially read out are not included in the count - this
 			is necessary to implement incremental readout by blocks of
 			time.
-		- prefs (optional) any preferences included in either the header of the file
+		- xml (optional) any xml-encoded preferences included in either the header of the file
 		or in an associated prefs file found next to the .aedat file. 
-	- data - for fileformats 1.0-2.1, and for fileformat 3.0 where only a single 
-		source is defined, this contains one structure for each type of
-		data present. These structres are named according to the type of
+	- data - where only a single source is defined (always the case for 
+		fileformats 1.0-2.1) this contains one structure for each type of
+		data present. These structures are named according to the type of
 		data; the options are:
 		- special
 		- polarity
@@ -149,59 +157,41 @@ The output is a structure with the following fields:
 			where each cell is a structure as defined above. 
 %}
 
-% If the input variable doesn't exist, create a dummy one.
+dbstop if error
 
+% Create the output structure
+output = struct;
+
+% If the input variable doesn't exist, create a dummy one.
 if nargin==0
-	input = struct;
+	output.info = struct;
 else
-	input = varargin{1};
+	output.info = varargin{1};
 end
 
-% open file
-
-if ~isfield(input, 'file')
-	[filename path ~] = uigetfile('*.aedat','Select aedat file');
-    if filename==0
+% Open the file
+if ~isfield(output.info, 'filePath')
+	[fileName path ~] = uigetfile('*.aedat','Select aedat file');
+    if fileName==0
 		disp('File to import not specified')
 		return
 	end
-	input.file = [path filename];
+	output.info.filePath = [path fileName];
 end
 
-file = fopen(input.file, 'r');
+output.info.fileHandle = fopen(output.info.filePath, 'r');
 
-% create output structure
+% Process the headers
+output.info = importAedat_processHeaders(output.info);
 
-output = struct;
-
-% read the first line to determine file format
-bof = ftell(file);
-line = native2unicode(fgets(file));
-tok = '#!AER-DAT';
-format = 1;
-    if strncmp(line,tok, length(tok))==1,
-        version=sscanf(line(length(tok)+1:end),'%f');
-    end
-
-while line(1)=='#',
-    fprintf('%s\n',line(1:end-2)); % print line using \n for newline, discarding CRLF written by java under windows
-    bof=ftell(file);
-    line=native2unicode(fgets(file)); % gets the line including line ending chars
+% Process the data - different subfunctions handle fileFormat 2 vs 3
+if output.info.fileFormat < 3
+	output.data = importAedat_processDataFormat1or2(output.info);
+else
+	output.data = importAedat_processDataFormat3(output.info);	
 end
 
-switch version,
-    case 0
-        fprintf('No #!AER-DAT version header found, assuming 16 bit addresses\n');
-        version=1;
-    case 1
-        fprintf('Addresses are 16 bit\n');
-    case 2
-        fprintf('Addresses are 32 bit\n');
-    otherwise
-        fprintf('Unknown file version %g',version);
-end
+fclose(output.info.fileHandle);
 
 
-
-end
 
