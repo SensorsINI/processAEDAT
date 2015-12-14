@@ -16,6 +16,7 @@ import string
 #import matplotlib
 from pylab import *
 import scipy.stats as st
+import math
 
 class aedat3_process:
     def __init__(self):
@@ -1010,24 +1011,31 @@ class aedat3_process:
                         signal_rec = signal_rec - np.mean(signal_rec)
                         amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
                         signal_rec = signal_rec/amplitude_rec
-                        guess_amplitude = 1.0
+                        guess_amplitude = np.max(signal_rec) - np.min(signal_rec)
                         offset_a = 10.0
                         offset = 1.0
+                        #raise Exception
                         p0=[sine_freq, guess_amplitude,
                                 0.0, offset, offset_a]
+                        print("guessed: "+ str(p0))
                         signal_rec = signal_rec + 10
                         tnew = (ts_t-np.min(ts))*1e-6
                         try:
                             fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                            data_fit = self.my_sin(tnew, *fit[0])
+                            rms = self.rms(signal_rec, data_fit) 
                             fit_done = True
                         except RuntimeError:
                             fit_done = False
-                            print("Not possible to fit")
+                            #print("Not possible to fit")
+                        if(fit_done and (math.isnan(rms) or math.isinf(rms))):
+                            fit_done = False
+                            #we do not accept fit with nan rmse
 
                         data_first_guess = self.my_sin(tnew, *p0)    
                         if fit_done:
-                            data_fit = self.my_sin(tnew, *fit[0])
-                            rms = self.rms(signal_rec, data_fit)                        
+                            #data_fit = self.my_sin(tnew, *fit[0])
+                            #rms = self.rms(signal_rec, data_fit)                        
                             stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
                             plt.plot(tnew, data_fit, label= stringa)
                         else:
@@ -1061,23 +1069,28 @@ class aedat3_process:
         return delta_up, delta_dn, rms
 
 if __name__ == "__main__":
-    #analyse ptc
     ##############################################################################
     # WHAT SHOULD WE DO?
     ##############################################################################
 
+    ################### 
+    # PARAMETERS
+    ###################
     do_ptc = False
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = True
+    directory_meas = 'measurements/Measurements_final/DAVIS208Mono_constrast_sensitivity_08_12_15-16_31_16/'
     camera_dim = [208,180]
     frame_x_divisions = [[30,60]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     frame_y_divisions = [[30,60]]#[[121,122]]#[[0,180]]
-    inverted = True # up dn events are inverted only in the Davis208Mono
+    ################### 
+    # END PARAMETERS
+    ###################
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = 'measurements/Measurements_final/CDAVIS4640RGBW/ptc_08_12_15-18_55_38/'
+        ptc_dir = directory_mea
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
@@ -1085,7 +1098,7 @@ if __name__ == "__main__":
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_contrast_sensitivity:
-        cs_dir = 'measurements/Measurements_final/DAVIS208Mono_constrast_sensitivity_08_12_15-16_31_16/'
+        cs_dir = directory_meas
         figure_dir = cs_dir + '/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
@@ -1095,7 +1108,7 @@ if __name__ == "__main__":
    
 
     if do_fpn:
-        fpn_dir = 'measurements/fpn_02_11_15-13_14_57/'
+        fpn_dir = directory_meas
         figure_dir = fpn_dir + '/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
@@ -1154,16 +1167,15 @@ if __name__ == "__main__":
 
     if do_latency_pixel:
         #latency_pixel_dir = 'measurements/Measurements_final/DAVIS240C_latency_25_11_15-16_35_03_FAST_0/'
-        latency_pixel_dir = 'measurements/CB/'
+        latency_pixel_dir = directory_meas
         figure_dir = latency_pixel_dir+'/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         # select test pixels areas only two are active
 
         aedat = aedat3_process()
-        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 1, file_type="jAER") #pixel size of the led
+        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
 
-    #self = aedat
 
 
 
