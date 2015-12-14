@@ -23,6 +23,9 @@ function [u, v] = HS_Framebased(im1, im2, alpha, ite, uInitial, vInitial, displa
 %
 % October 2008
 % Rev: Jan 2009
+%
+% December 2015, Changed by Min Liu
+
 %% Default parameters
 if nargin<1 || nargin<2
     im1=imread('yos9.tif');
@@ -86,6 +89,7 @@ end
 
 u(isnan(u))=0;
 v(isnan(v))=0;
+
 
 %% Plotting
 if displayFlow==1

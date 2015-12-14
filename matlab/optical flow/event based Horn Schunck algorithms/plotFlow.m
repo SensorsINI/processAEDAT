@@ -19,13 +19,17 @@ function plotFlow(u, v, imgOriginal, rSize, scale)
 %
 % October 2008
 % Rev: Jan 2009
+%
+%
+% December 2015, Changed by Min Liu
 
-figure();
+
+% figure();
 
 if nargin>2
     if sum(sum(imgOriginal))~=0
-        imshow(imgOriginal,[0 255]);
-        hold on;
+        % imshow(imgOriginal,[0 255]);
+        % hold on;
     end
 end
 if nargin<4
@@ -44,5 +48,11 @@ for i=1:size(u,1)
         end
     end
 end
+
 quiver(u, v, scale, 'color', 'b', 'linewidth', 2);
-set(gca,'YDir','normal');
+set(gcf, 'Position', [1920 150 1280 960]);
+
+% set(gcf,'Unit','normalized','Position',[1,1,0,0])
+% set(gca,'YDir','normal');   % y axis display normal, it doesn't make sense, can be directly uncomment
+% set(gcf, 'outerposition', get(0, 'screensize'));  % full screen to display
+% set(gcf, 'outerposition', [1 1 1280 1024]); 

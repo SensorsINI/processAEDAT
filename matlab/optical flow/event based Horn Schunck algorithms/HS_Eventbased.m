@@ -21,7 +21,8 @@
 % 4. Tobias Brosch, Stephan Tschechne, et al., On event-based optical flow detection
 % 5. Ryad Benosman, Charles Clercq, et al., Event-Based Visual Flow
 % 6. The matlab source code of frame-based HS by Mohd Kharbat at Cranfield Defence and Security
-% December 2015
+% 
+% December 2015 by Min Liu
 %
 % Notice:  This version is still under test, it may not be stable. If you
 % have any questions, please don't hesitate to contact the author.
@@ -32,33 +33,28 @@ clear all
 clear
 
 load('dataset.mat')   % The dataset will be test, from Bodo
-load mri
 
-t = rot_bars_real(:,4);
-x = rot_bars_real(:,1);
-y = rot_bars_real(:,2);
+t = trans_square(:,4);
+x = trans_square(:,1);
+y = trans_square(:,2);
 
 %% calcuate the optical flow
 t_tmp = t(1);
 im1 = im2uint16(zeros(240, 180));    % get the first image
 im2 = im2uint16(zeros(240, 180));    % get the second image
-movie = im2uint8(zeros(180,240,1,100));
 frame_count = 1;
 
-for i=1:1000
+for i=1:10000
     if t(i) - t_tmp < 1000           % set the update interval to 1000us, i.e. 1ms
-        im2(x(i), y(i)) = im2(x(i), y(i)) + 1;    
+        % because the value of x(i) and y(i) can't be 0, here we calculate
+        % the event numbers in this time interval to estimate the intensity
+        im2(x(i)+1, y(i)+1) = im2(x(i)+1, y(i)+1) + 1;    
     else
-        im2(x(i), y(i)) = im2(x(i), y(i)) + 1;  
+        im2(x(i)+1, y(i)+1) = im2(x(i)+1, y(i)+1) + 1;  
         t_tmp = t(i);
         HS_Framebased(im1', im2');
-        %movie(:,:,1,frame_count) = im2uint8(HS(im1', im2'));
-
+        m(i) = getframe(gcf);
         frame_count = frame_count + 1;
         im1 = im2;
     end
 end
-
-%%  play the video
-%mov = immovie(movie,map);
-%implay(mov);
