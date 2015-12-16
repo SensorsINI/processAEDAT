@@ -17,10 +17,10 @@ import aedat3_process
 ###############################################################################
 # TEST SELECTIONS
 ###############################################################################
-do_ptc = False
+do_ptc = True
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = True
+do_contrast_sensitivity = False
 oscillations = 8.0 #number of complete oscillations
 contrast_level = np.linspace(0.1,0.8,20)
 base_level = 1000 #  1 klux
@@ -28,16 +28,16 @@ frequency = 1
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
-useinternaladc = False
+useinternaladc = True
 global_shutter = True
-exposures = np.linspace(1,2000,25)
+exposures = np.linspace(1,100,25)
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS208Mono"
+sensor = "DAVIS240C"
 sensor_type = "DAVISFX3"
-bias_file = "cameras/davis208Mono.xml"
+bias_file = "cameras/davis240c_standards.xml"
 host_ip = '172.19.11.139'
 
 ##############################################################################

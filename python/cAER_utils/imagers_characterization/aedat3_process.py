@@ -321,19 +321,19 @@ class aedat3_process:
         sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div*x_div])   
         exposures = exposures[:,0]
 
-        all_frames = np.array(all_frames)
-        plt.figure()
-        plt.title("all frames values")
-        for i in range(len(all_frames)):
-            this_ff = np.reshape(all_frames[i], len(all_frames[i]))
-            this_dn_f = np.right_shift(this_ff,6)
-            plot(this_dn_f) 
-        plt.xlabel("frame number")   
-        plt.legend(loc='best')
-        plt.xlabel('frame number') 
-        plt.ylabel('DN value single pixel') 
-        plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
-        plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
+        #all_frames = np.array(all_frames)
+        #plt.figure()
+        #plt.title("all frames values")
+        #for i in range(len(all_frames)):
+        #    this_ff = np.reshape(all_frames[i], len(all_frames[i]))
+        #    this_dn_f = np.right_shift(this_ff,6)
+        #    plot(this_dn_f) 
+        #plt.xlabel("frame number")   
+        #plt.legend(loc='best')
+        #plt.xlabel('frame number') 
+        #plt.ylabel('DN value single pixel') 
+        #plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
+        #plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
     
         # sensitivity plot 
         plt.figure()
@@ -378,12 +378,13 @@ class aedat3_process:
             fit_fn = np.poly1d([slope, inter]) 
             ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
-            ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  r'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
+            ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
         ax.legend(loc='best')   
         plt.xlabel('Mean[DN]') 
         plt.ylabel('Var[DN]  ')     
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
+	print("Slope: "+str(format(slope, '.5f'))+" Intercept: "+str(format(inter, '.3f'))  )
         #plt.close()
         
         
@@ -1076,21 +1077,21 @@ if __name__ == "__main__":
     ################### 
     # PARAMETERS
     ###################
-    do_ptc = False
+    do_ptc = True
     do_fpn = False
     do_latency_pixel = False
-    do_contrast_sensitivity = True
-    directory_meas = 'measurements/Measurements_final/DAVIS208Mono_constrast_sensitivity_08_12_15-16_31_16/'
-    camera_dim = [208,180]
-    frame_x_divisions = [[30,60]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[30,60]]#[[121,122]]#[[0,180]]
+    do_contrast_sensitivity = False
+    directory_meas = 'measurements/DAVIS240C_ptc_16_12_15-15_56_33/'
+    camera_dim = [240,180]
+    frame_x_divisions = [[50,100]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[50,100]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
-        ptc_dir = directory_mea
+        ptc_dir = directory_meas
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()

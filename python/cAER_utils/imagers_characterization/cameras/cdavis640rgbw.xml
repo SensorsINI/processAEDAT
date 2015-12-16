@@ -78,11 +78,11 @@
                     </node>
                     <node name="AdcRefHigh" path="/1/1-DAVISFX3/bias/AdcRefHigh/">
                         <attr key="currentValue" type="byte">7</attr>
-                        <attr key="voltageValue" type="byte">63</attr>
+                        <attr key="voltageValue" type="byte">46</attr>
                     </node>
                     <node name="AdcRefLow" path="/1/1-DAVISFX3/bias/AdcRefLow/">
                         <attr key="currentValue" type="byte">7</attr>
-                        <attr key="voltageValue" type="byte">0</attr>
+                        <attr key="voltageValue" type="byte">6</attr>
                     </node>
                     <node name="AdcTestVoltage" path="/1/1-DAVISFX3/bias/AdcTestVoltage/">
                         <attr key="currentValue" type="byte">0</attr>
@@ -93,10 +93,10 @@
                         <attr key="voltageValue" type="byte">21</attr>
                     </node>
                     <node name="ApsROSFBn" path="/1/1-DAVISFX3/bias/ApsROSFBn/">
-                        <attr key="coarseValue" type="byte">6</attr>
+                        <attr key="coarseValue" type="byte">7</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">128</attr>
+                        <attr key="fineValue" type="short">49</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
