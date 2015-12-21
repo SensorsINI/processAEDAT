@@ -443,16 +443,21 @@ class caer_communication:
             os.mkdir(folder) 
         #loop over exposures and save data
         for this_exp in range(len(exposures)):
-            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool '+str(useinternaladc))
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:
+                if useinternaladc :
+                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool true')
+                else:
+                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool false')
+
                 if global_shutter :
                     self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool true')
                     shutter_type = 'global' 
                 else:
                     self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool false')
                     shutter_type = 'rolling'
+                    
                 self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
                 self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
