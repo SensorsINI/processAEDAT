@@ -1,6 +1,7 @@
 # ############################################################
 # python class that runs experiments and save data
 # author  Federico Corradi - federico.corradi@inilabs.com
+# author  Diederik Paul Moeys - diederikmoeys@live.com
 # ############################################################
 from __future__ import division
 import numpy as np
@@ -30,14 +31,14 @@ current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = True
 global_shutter = True
-exposures = np.linspace(1,100,25)
+exposures = np.linspace(1,1000,25)
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS240C"
+sensor = "DAVIS208"
 sensor_type = "DAVISFX3"
-bias_file = "cameras/davis240c_standards.xml"
+bias_file = "cameras/davis208Mono.xml"
 host_ip = '172.19.11.139'
 
 ##############################################################################
@@ -59,13 +60,19 @@ if plot_setup_characterization:
     plot(volt, volt*slope+inter, 'k-', label='fit linear')
     legend(loc='best')
 
-#####################################################################
+##############################################################################
 # 0 - INIT control tools
 # init control class and open communication
-#####################################################################
+##############################################################################
 control = caer_communication.caer_communication(host=host_ip)
 gpio_cnt = gpio_usb.gpio_usb()
 print gpio_cnt.query(gpio_cnt.fun_gen,"*IDN?")
+
+gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(0)) #voltage output
+gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+
 try:
     os.stat(datadir)
 except:
@@ -81,11 +88,11 @@ def copyFile(src, dest):
     except IOError as e:
         print('Error: %s' % e.strerror)
 
-################################################################################
+##############################################################################
 ## CONDITION 1 - Homegeneous light source
 ## Homegeneous light source (integrating sphere, need to measure the luminosity)
 ## also use the hp33120 to generate sine wave at .1 Hz for FPN measurements
-#################################################################################
+##############################################################################
 
 # 1 - Photon Transfer Curve - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
@@ -94,13 +101,21 @@ if do_ptc:
     print "we are doing ptc measurements, please put homogeneous light source (integrating sphere)."
     raw_input("Press Enter to continue...")
     control.open_communication_command()
+    # Zero the Function Generator
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
+    # Set the K230 to the chosen luminosity
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    v_base_level = (base_level - inter) / slope
+    gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(v_base_level)) #voltage output
+    gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
     folder = datadir + '/'+ sensor + '_ptc_' +  current_date
     setting_dir = folder + str("/settings/")
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = False )
+    control.get_data_ptc( folder = folder, recording_time=3, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -178,5 +193,9 @@ if do_latency_pixel:
     control.close_communication_command()    
     print "Data saved in " +  folder
 
+gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(0)) #voltage output
+gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
 
 

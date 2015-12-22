@@ -25,7 +25,7 @@
                     <attr key="ResetRead" type="bool">true</attr>
                     <attr key="ResetSettle" type="short">20</attr>
                     <attr key="RowSettle" type="short">20</attr>
-                    <attr key="Run" type="bool">off</attr>
+                    <attr key="Run" type="bool">true</attr>
                     <attr key="SampleEnable" type="bool">true</attr>
                     <attr key="SampleSettle" type="short">60</attr>
                     <attr key="StartColumn0" type="short">0</attr>

@@ -427,7 +427,7 @@ class caer_communication:
 
         return
 
-    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = False):
+    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
@@ -443,6 +443,7 @@ class caer_communication:
             os.mkdir(folder) 
         #loop over exposures and save data
         for this_exp in range(len(exposures)):
+            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool '+str.lower(str(useinternaladc)))
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:

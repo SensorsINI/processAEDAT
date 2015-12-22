@@ -1,6 +1,7 @@
 # ############################################################
 # python class that deals with cAER aedat3 file format
 # author  Federico Corradi - federico.corradi@inilabs.com
+# author  Diederik Paul Moeys - diederikmoeys@live.com
 # ############################################################
 from __future__ import division
 import os
@@ -375,6 +376,8 @@ class aedat3_process:
             this_mean_values = u_y_tot.reshape([un,una])[:,this_area]
             this_mean_values_lin = this_mean_values[0:max_ind_var]
             slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+            print("sl"+str(slope))
+            print("Gain: "+str(format(((ADC_range*slope)/ADC_values)*1000000, '.1f'))+"uV/e for area: "+ str(frame_x_divisions[this_area]) )
             fit_fn = np.poly1d([slope, inter]) 
             ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
@@ -384,7 +387,6 @@ class aedat3_process:
         plt.ylabel('Var[DN]  ')     
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
-	print("Slope: "+str(format(slope, '.5f'))+" Intercept: "+str(format(inter, '.3f'))  )
         #plt.close()
         
         
@@ -1081,10 +1083,14 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/DAVIS240C_ptc_16_12_15-15_56_33/'
-    camera_dim = [240,180]
-    frame_x_divisions = [[50,100]]#[[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[50,100]]#[[121,122]]#[[0,180]]
+    directory_meas = 'measurements/DAVIS208_ptc_22_12_15-15_50_29/'
+    camera_dim = [208, 192] #Pixelparade 208Mono 
+	#[240,180] #DAVSI240C
+    ADC_range = 1.520 # For PixelParade 208Mono measure the voltage between E1 and F2
+    ADC_values = 1024
+    frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] # Pixelparade 208Mono since it is flipped sideways
+# DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[0,191]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
