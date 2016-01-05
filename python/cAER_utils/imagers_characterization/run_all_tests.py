@@ -31,7 +31,7 @@ current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = True
 global_shutter = True
-exposures = np.linspace(1,1000,25)
+exposures = np.logspace(0,2,num=25)
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS

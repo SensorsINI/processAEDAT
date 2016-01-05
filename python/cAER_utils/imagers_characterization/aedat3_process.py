@@ -377,9 +377,10 @@ class aedat3_process:
             this_mean_values_lin = this_mean_values[0:max_ind_var]
             slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
             print("sl"+str(slope))
-            print("Gain: "+str(format(((ADC_range*slope)/ADC_values)*1000000, '.1f'))+"uV/e for area: "+ str(frame_x_divisions[this_area]) )
+            Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
+            print("Gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for area: "+ str(frame_x_divisions[this_area]) )
             fit_fn = np.poly1d([slope, inter]) 
-            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area: ' + str(frame_x_divisions[this_area]) + ' with gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
             ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
         ax.legend(loc='best')   
@@ -1083,7 +1084,7 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/DAVIS208_ptc_22_12_15-15_50_29/'
+    directory_meas = 'measurements/DAVIS208_ptc_04_01_16-17_09_53/'
     camera_dim = [208, 192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
     ADC_range = 1.520 # For PixelParade 208Mono measure the voltage between E1 and F2
