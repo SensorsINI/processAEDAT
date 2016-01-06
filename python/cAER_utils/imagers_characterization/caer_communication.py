@@ -443,7 +443,6 @@ class caer_communication:
             os.mkdir(folder) 
         #loop over exposures and save data
         for this_exp in range(len(exposures)):
-            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool '+str.lower(str(useinternaladc)))
             if(np.round(exposures[this_exp]) == 0):
                 print "exposure == 0 is not valid, skipping this step..."
             else:

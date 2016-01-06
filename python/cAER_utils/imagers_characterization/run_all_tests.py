@@ -26,17 +26,17 @@ oscillations = 8.0 #number of complete oscillations
 contrast_level = np.linspace(0.1,0.8,20)
 base_level = 1000 #  1 klux
 frequency = 1
-recording_time = 5
+recording_time = 10
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = True
 global_shutter = True
-exposures = np.logspace(0,2,num=25)
+exposures = np.logspace(0,2,num=10)
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS208"
+sensor = "DAVIS208Mono_int"
 sensor_type = "DAVISFX3"
 bias_file = "cameras/davis208Mono.xml"
 host_ip = '172.19.11.139'

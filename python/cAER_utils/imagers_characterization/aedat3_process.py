@@ -355,7 +355,7 @@ class aedat3_process:
         un, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
         for this_area in range(una):
-            plt.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]) )
+            plt.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='X: ' + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions) )
         plt.legend(loc='best')
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN] ')    
@@ -376,11 +376,11 @@ class aedat3_process:
             this_mean_values = u_y_tot.reshape([un,una])[:,this_area]
             this_mean_values_lin = this_mean_values[0:max_ind_var]
             slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-            print("sl"+str(slope))
+            print("slope: "+str(slope))
             Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
-            print("Gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for area: "+ str(frame_x_divisions[this_area]) )
+            print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions))
             fit_fn = np.poly1d([slope, inter]) 
-            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='pixel area: ' + str(frame_x_divisions[this_area]) + ' with gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='X: ' + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
             ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
         ax.legend(loc='best')   
@@ -1084,14 +1084,18 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/DAVIS208_ptc_04_01_16-17_09_53/'
+    directory_meas = 'measurements/Measurements_final/208Mono/DAVIS208Mono_ext_ptc_06_01_16-15_07_08/'
     camera_dim = [208, 192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
-    ADC_range = 1.520 # For PixelParade 208Mono measure the voltage between E1 and F2
+    # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
+    # 0.596 internal adcs 346B
+    # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
+    # 0.648 external adcs reference is the same for all chips
+    ADC_range = 0.648
     ADC_values = 1024
     frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] # Pixelparade 208Mono since it is flipped sideways
 # DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,191]]#[[121,122]]#[[0,180]]
+    frame_y_divisions = [[0,96]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
