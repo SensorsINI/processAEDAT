@@ -1,0 +1,80 @@
+n the struct {\tt Mesh} and returns a handle to the figure. The functions \ttindex{get\_MeshWidth} and \ttindex{shape\_W1F} are called within the program. The transformation on the reference element is done and there the shape functions and velocity field are computed at its barycenter. Finally, the \MATLAB command {\tt quiver} plots the velocity vectors as arrows. \\
+
+ Note that as usual for the Whitney 1-forms the {\tt Mesh}-fields \ttindex{Edges} and \linebreak 
+ \ttindex{Vert2Edge} are needed.
+
+
+%% hpFEM %%
+
+\subsection{$hp$ Finite Elements} \index{hpFEM@$hp$FEM!plot solution}
+
+\subsubsection{.. in 1D}
+
+ The function \ttitindex{plot\_hp\_1D} generates a plot of the $hp$DG solution {\tt U} on the mesh specified by the $M$-by-$1$ matrix {\tt Coordinates} using the polynomial degrees specified by {\tt p} and the shape functions provided by the function handle {\tt Shap} (cf. \ttindex{shap\_Leg\_1D}, p. \pageref{ssect:shap_Leg}) on each element. It is called by \\
+
+\noindent {\tt >> H = plot\_hpDG\_1D(Coordinates,p,u,Shap);} \\
+
+ The built-in \MATLAB command {\tt plot} is used for the illustration.
+
+\subsubsection{.. in 2D}
+
+ By \ttitindex{plot\_hp} a plot of the piecewise polynomial function of maximum polynomial degree {\tt p} given by {\tt U} on the struct {\tt Mesh} is generated. \\
+
+ In order to split the reference element according to the maximum polynomial degree the function \ttitindex{split\_RefElem} is called. It splits the reference triangle into smaller elements according to the resolution {\tt res} by \\
+
+\noindent {\tt >> [RefCoord,RefElem] = split\_RefElem(res);} \\
+
+ In {\tt plot\_hp} the choosen resolution {\tt res} is {\tt 1/(2*p)}. The \MATLAB command {\tt delaunay} is used to generate the set of triangles such that no data points are contained in any triangle's circumcircle. For details on the output {\tt [RefCoord,RefElem]} of {\tt split\_RefElem} see table \ref{tab:res_out} ($A$ and $B$ depend on the choosen {\tt res}).
+
+ \begin{table}[htb]
+  \begin{tabular}{p{2cm}p{9cm}}
+    \ttitindex{RefCoord} & {\small $A$-by-$2$ matrix specifying all vertex coordinates} \\
+    \ttitindex{RefElem} & {\small $B$-by-$3$ matrix connecting vertices into triangular elements}
+  \end{tabular}
+  \caption{Output of the function \ttindex{split\_RefElem}}
+  \label{tab:res_out}
+\end{table}
+
+ On the refined element, the ouput of the shape functions \ttindex{shap\_hp} is computed at the vertices {\tt RefCoord}. Finally, the function values on the elements are computed and then plotted. \\
+
+ The {\tt plot}-function for the $hp$FEM is called by \\
+
+\noindent {\tt >> H = plot\_hp(U,Mesh,Elem2Dof,p);} \\
+
+ The field \ttindex{Elem2Dof} is explained on p. \pageref{elem2dof}.
+
+\index{plot!solution|)}
+
+
+%%%%%%%%%%%%%%%
+%% Plot line %%
+%%%%%%%%%%%%%%%
+
+\section{Plot Line} \label{sect:plot_line} \index{plot!line|(}
+
+ The {\tt plotLine}-functions in {\tt /Lib/Plots} generate a plot of the finite element solution {\tt U} on a certain line of the mesh. Again, the solution {\tt U} and the {\tt Mesh} are needed, see table \ref{tab:plot_in}. To specify the line the additional input arguments {\tt x\_start} and {\tt x\_end} are required, see table \ref{tab:plotline_in}.
+
+\begin{table}[htb]
+  \centering
+  \begin{tabular}{p{1cm}p{10cm}}
+    {\tt x\_start} & {\small $1$-by-$2$ matrix specifying the starting point of the section} \\
+    {\tt x\_end} & {\small $1$-by-$2$ matrix specifying the end point of the section}
+  \end{tabular}
+  \caption{Input for {\tt plotLine}-routines}
+  \label{tab:plotline_in}
+\end{table}
+
+ So far these section plots are implemented for linear and quadratic finite element solutions. The functions are e.g. called by \\
+
+\noindent {\tt >> L = plotLine\_LFE(U,Mesh,x\_start,x\_end);} \\
+
+ Figure \ref{fig:plot_line_sol} shows the output for the Laplacian solved with linear finite elements in \ttindex{main\_LFE} in {\tt /Examples/QFE\_LFE}, cf. figure \ref{fig:plot_sol}. The starting point of the section is $(0,0)$, the end point is $(1,1)$. \\
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.5\textwidth]{main_LFE_fig2.eps}
+  \caption{Plot section of {\tt LFE} solution in {\tt main\_LFE}}
+  \label{fig:plot_line_sol}
+\end{figure}
+
+ The element contributions are computed using the specific shape functions, cf. section \ref{sect:shap}. The figures are generat

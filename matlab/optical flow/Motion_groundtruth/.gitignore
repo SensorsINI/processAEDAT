@@ -1,0 +1,2 @@
+# ignore autosave files from Matlab
+*.asv
