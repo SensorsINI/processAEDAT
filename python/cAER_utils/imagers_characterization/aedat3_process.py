@@ -379,7 +379,7 @@ class aedat3_process:
                 this_mean_values = u_y_tot.reshape([un,una])[:,this_area_x+this_area_y]
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
                 slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                print("slope: "+str(slope))
+                #print("slope: "+str(slope))
                 Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
@@ -1091,14 +1091,14 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/Measurements_final/208Mono/DAVIS208Mono_ext_ptc_06_01_16-15_07_08/'
+    directory_meas = 'measurements/Measurements_final/208Mono/DAVIS208Mono_int_ptc_06_01_16-15_10_42/'
     camera_dim = [208, 192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
     # 0.596 internal adcs 346B
     # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
     # 0.648 external adcs reference is the same for all chips
-    ADC_range = 0.648
+    ADC_range = 1.29
     ADC_values = 1024
     frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] # Pixelparade 208Mono since it is flipped sideways
 # DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
