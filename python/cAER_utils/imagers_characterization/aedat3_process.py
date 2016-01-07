@@ -258,7 +258,7 @@ class aedat3_process:
         #################################################################
         ############### PTC measurements
         #################################################################
-        #illuminance = 10       # measured with photometer
+        #illuminance = 1000 lux       # measured with photometer
         #pixel_area = (18e-6*18e-6)
         exposure_time_scale = 10e-6
         directory = ptc_dir
@@ -283,12 +283,12 @@ class aedat3_process:
                 break
             shutter_type, exp = files_in_dir[this_file].strip(".aedat").strip("ptc_").strip("shutter_").split("_") # in us
             exp = float(exp)
-            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = aedat.load_file(directory+files_in_dir[this_file])
+            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :
-                for this_div in range(len(frame_y_divisions)):            
-                    frame_areas = [frame[this_frame][frame_y_divisions[this_div][0]:frame_y_divisions[this_div][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
+                for this_div_y in range(len(frame_y_divisions)):            
+                    frame_areas = [frame[this_frame][frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
                     all_frames.append(frame_areas)
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)   
@@ -306,9 +306,9 @@ class aedat3_process:
                             temporal_variation[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/len(frame_areas)
                     sigma_y = np.mean(temporal_variation)
 
-                    u_y_tot[this_file, this_div, this_div_x] = u_y
-                    sigma_tot[this_file, this_div, this_div_x] = sigma_y
-                    exposures[this_file, this_div, this_div_x] = exp
+                    u_y_tot[this_file, this_div_y, this_div_x] = u_y
+                    sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
+                    exposures[this_file, this_div_y, this_div_x] = exp
                     u_y_mean_frames.append(np.mean(np.mean(frame_areas,0),0)) #average DN over time
 
         #just remove entry that corresponds to files that are not measurements
@@ -341,26 +341,28 @@ class aedat3_process:
         plt.title("Sensitivity APS")
         un, una = np.shape(u_y_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
-        for this_area in range(una):
-            plt.plot( exposures, u_y_tot.reshape([un,una])[:,this_area], 'o--', color=colors[this_area], label='pixel area' + str(frame_x_divisions[this_area]))
-        plt.legend(loc='best')
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+                plt.plot( exposures, u_y_tot.reshape([un,una])[:,this_area_x+this_area_y], 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('exposure time [us]') 
         plt.ylabel('Mean[DN]') 
-        plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf') 
-        plt.savefig(figure_dir+"sensitivity.png",  format='png')  
+        plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight') 
     
         # photon transfer curve 
         plt.figure()
         plt.title("Photon Transfer Curve")
         un, una = np.shape(sigma_tot)
         colors = cm.rainbow(np.linspace(0, 1, una))
-        for this_area in range(una):
-            plt.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='X: ' + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions) )
-        plt.legend(loc='best')
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+               plt.plot( u_y_tot.reshape([un,una])[:,this_area_x+this_area_y] , sigma_tot.reshape([un,una])[:,this_area_x+this_area_y] , 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN] ')    
-        plt.savefig(figure_dir+"ptc.pdf",  format='pdf') 
-        plt.savefig(figure_dir+"ptc.png",  format='png')
+        plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         print("Linear fit...")
         un, una = np.shape(u_y_tot)
@@ -368,26 +370,31 @@ class aedat3_process:
         inter_tot = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        plt.title("PTC linear fit")
-        for this_area in range(una):
-            sigma_fit = sigma_tot.reshape([un,una])[:,this_area]
-            max_var = np.max(sigma_fit)
-            max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-            this_mean_values = u_y_tot.reshape([un,una])[:,this_area]
-            this_mean_values_lin = this_mean_values[0:max_ind_var]
-            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-            print("slope: "+str(slope))
-            Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
-            print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions))
-            fit_fn = np.poly1d([slope, inter]) 
-            ax.plot( u_y_tot.reshape([un,una])[:,this_area] , sigma_tot.reshape([un,una])[:,this_area] , 'o--', color=colors[this_area], label='X: ' + str(frame_x_divisions[this_area]) + ', Y: ' + str(frame_y_divisions) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
-            ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area])
-            ax.text( u_y_tot.reshape([un,una])[max_ind_var,this_area],sigma_tot.reshape([un,una])[max_ind_var,this_area]-np.random.randint(6),  'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area])
-        ax.legend(loc='best')   
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+                sigma_fit = sigma_tot.reshape([un,una])[:,this_area_x+this_area_y]
+                max_var = np.max(sigma_fit)
+                max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+                this_mean_values = u_y_tot.reshape([un,una])[:,this_area_x+this_area_y]
+                this_mean_values_lin = this_mean_values[0:max_ind_var]
+                slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+                print("slope: "+str(slope))
+                Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
+                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                fit_fn = np.poly1d([slope, inter]) 
+                ax.plot( u_y_tot.reshape([un,una])[:,this_area_x+this_area_y] , sigma_tot.reshape([un,una])[:,this_area_x+this_area_y] , 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area_x+this_area_y])
+                bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                t = ax.text(0, 0, "Direction", ha="center", va="center", size=15, bbox=bbox_props)
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area_x+this_area_y], bbox=bbox_props)
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
         plt.xlabel('Mean[DN]') 
         plt.ylabel('Var[DN]  ')     
-        plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf') 
-        plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png')
+        plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
         #plt.close()
         
         
@@ -1095,7 +1102,7 @@ if __name__ == "__main__":
     ADC_values = 1024
     frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] # Pixelparade 208Mono since it is flipped sideways
 # DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,96]]#[[121,122]]#[[0,180]]
+    frame_y_divisions = [[0,95], [96,191]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
@@ -1106,7 +1113,6 @@ if __name__ == "__main__":
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
-        self = aedat
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_contrast_sensitivity:
