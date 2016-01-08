@@ -360,7 +360,7 @@ class aedat3_process:
                plt.plot( u_y_tot.reshape([un,una])[:,this_area_x+this_area_y] , sigma_tot.reshape([un,una])[:,this_area_x+this_area_y] , 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('Mean[DN] ') 
-        plt.ylabel('Var[DN] ')    
+        plt.ylabel('Var[DN^2] ')
         plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
@@ -392,7 +392,7 @@ class aedat3_process:
                 ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area_x+this_area_y], bbox=bbox_props)
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
         plt.xlabel('Mean[DN]') 
-        plt.ylabel('Var[DN]  ')     
+        plt.ylabel('Var[DN^2]  ')
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
         #plt.close()
