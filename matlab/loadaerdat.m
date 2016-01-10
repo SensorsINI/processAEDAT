@@ -1,6 +1,7 @@
 function [allAddr,allTs]=loadaerdat(file, maxEvents, startEvent)
 %function [allAddr,allTs]=loadaerdat(file, maxEvents, startEvent);
-% loads events from a .dat file.
+% loads events from an .aedat file of format #!AEDAT-1.0 or #!AEDAT-2.0 format.
+% (for #!AEDAT-3.x files see importAedat.m)
 %
 % allAddr are uint32 (or uint16 for legacy recordings) raw addresses.
 % allTs are uint32 timestamps (1 us tick).
