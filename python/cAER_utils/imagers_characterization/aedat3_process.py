@@ -410,7 +410,6 @@ class aedat3_process:
                 ax.plot( u_y_tot[:,this_area_y, this_area_x] , sigma_tot[:,this_area_y, this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
                 ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
-                t = ax.text(0, 0, "Direction", ha="center", va="center", size=15, bbox=bbox_props)
                 color_tmp = color_tmp+1
         color_tmp = 0;
         for this_area_x in range(len(frame_x_divisions)):
