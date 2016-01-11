@@ -427,14 +427,14 @@ class caer_communication:
 
         return
 
-    def get_data_ptc(self, folder = 'ptc', recording_time = 5,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
+    def get_data_ptc(self, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
             - setup is homogenously illuminated and we vary the exposure time
             inputs:
                 recording_time - int - in seconds
-                exposures      - vector - exposures ms (it has to be grather than 0)
+                exposures      - vector - exposures us (it has to be grather than 0)
         '''
         #make ptc directory
         try:
@@ -465,7 +465,8 @@ class caer_communication:
                 filename = folder + '/ptc_shutter_'+str(shutter_type)+'_'+format(int(exp_time), '07d')+'.aedat' 
                 #set exposure
                 self.send_command(string_control)    
-                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true')            
+                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true')  
+                recording_time = (frame_number*(exp_time + 10000))/(10.0**6)          
                 print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
                 time.sleep(0.5)
                 self.open_communication_data()

@@ -310,18 +310,17 @@ class aedat3_process:
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
                     u_y_mean_frames.append(np.mean(np.mean(frame_areas,0),0)) #average DN over time
-
+        
         #just remove entry that corresponds to files that are not measurements
         files_num, y_div, x_div = np.shape(exposures)
         to_remove = len(np.unique(np.where(exposures == 0)[0]))
         exposures_real = exposures[exposures != 0]
-        exposures = np.reshape(exposures_real, [files_num-to_remove, y_div*x_div])
+        exposures = np.reshape(exposures_real, [files_num-to_remove, y_div, x_div])
         u_y_tot_real = u_y_tot[u_y_tot != -1]
-        u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div*x_div])
+        u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div, x_div])
         sigma_tot_real = sigma_tot[sigma_tot != -1]
-        sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div*x_div])   
+        sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])   
         exposures = exposures[:,0]
-
         #all_frames = np.array(all_frames)
         #plt.figure()
         #plt.title("all frames values")
@@ -339,11 +338,13 @@ class aedat3_process:
         # sensitivity plot 
         plt.figure()
         plt.title("Sensitivity APS")
-        un, una = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, una))
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-                plt.plot( exposures, u_y_tot.reshape([un,una])[:,this_area_x+this_area_y], 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                plt.plot( exposures[:,0], u_y_tot[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('exposure time [us]') 
         plt.ylabel('Mean[DN]') 
@@ -353,43 +354,68 @@ class aedat3_process:
         # photon transfer curve 
         plt.figure()
         plt.title("Photon Transfer Curve")
-        un, una = np.shape(sigma_tot)
-        colors = cm.rainbow(np.linspace(0, 1, una))
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-               plt.plot( u_y_tot.reshape([un,una])[:,this_area_x+this_area_y] , sigma_tot.reshape([un,una])[:,this_area_x+this_area_y] , 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN^2] ')
         plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+        # photon transfer curve log 
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.title("Photon Transfer Curve")
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                color_tmp = color_tmp+1
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
+        plt.xlabel('Mean[DN] ') 
+        plt.ylabel('Var[DN^2] ')
+        plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+
         print("Linear fit...")
-        un, una = np.shape(u_y_tot)
         slope_tot = []
         inter_tot = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-                sigma_fit = sigma_tot.reshape([un,una])[:,this_area_x+this_area_y]
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
                 max_var = np.max(sigma_fit)
                 max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                this_mean_values = u_y_tot.reshape([un,una])[:,this_area_x+this_area_y]
+                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
                 slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
                 #print("slope: "+str(slope))
                 Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
-                ax.plot( u_y_tot.reshape([un,una])[:,this_area_x+this_area_y] , sigma_tot.reshape([un,una])[:,this_area_x+this_area_y] , 'o--', color=colors[this_area_x+this_area_y], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
-                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[this_area_x+this_area_y])
+                ax.plot( u_y_tot[:,this_area_y, this_area_x] , sigma_tot[:,this_area_y, this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
-                t = ax.text(0, 0, "Direction", ha="center", va="center", size=15, bbox=bbox_props)
+                color_tmp = color_tmp+1
+        color_tmp = 0;
         for this_area_x in range(len(frame_x_divisions)):
             for this_area_y in range(len(frame_y_divisions)):
-                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[this_area_x+this_area_y], bbox=bbox_props)
+                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
         plt.xlabel('Mean[DN]') 
         plt.ylabel('Var[DN^2]  ')
@@ -397,8 +423,46 @@ class aedat3_process:
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
         #plt.close()
         
+        print("Log fit...")
+        slope_tot = []
+        inter_tot = []
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                max_var = np.max(sigma_fit)
+                max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
+                this_mean_values_lin = this_mean_values[0:max_ind_var]	
+                [a,b], covar = curve_fit(self.fit_ptc, sigma_fit.reshape(len(sigma_fit))[0:max_ind_var], this_mean_values_lin.reshape(len(this_mean_values_lin)))
+                Gain_uVe = a;
+                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                fit_fn = self.fit_ptc(this_mean_values_lin.reshape(len(this_mean_values_lin)), *[a,b])
+                ax.plot( u_y_tot[:,this_area_y, this_area_x] , sigma_tot[:,this_area_y, this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn, '-*', markersize=4, color=colors[color_tmp])
+                bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                color_tmp = color_tmp+1
+        color_tmp = 0;
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                color_tmp = color_tmp+1
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
+        plt.xlabel('Mean[DN]') 
+        plt.ylabel('Var[DN^2]  ')
+        plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        #plt.close()
         
-
+    def fit_ptc(self, x, a,b):
+        return b+10.0**(a+np.log10(x)*(0.5))
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -1091,7 +1155,7 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'E:\CDAVIS4640RGBW\ptc_08_12_15-18_55_38'
+    directory_meas = 'measurements/Measurements_final/CDAVIS4640RGBW/CDAVIS640rgbw_ADCext_ptc_08_01_16-17_11_19/'
     camera_dim = [640, 480] #Pixelparade 208Mono
 	#[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
@@ -1100,9 +1164,9 @@ if __name__ == "__main__":
     # 0.648 external adcs reference is the same for all chips
     ADC_range = 1.85
     ADC_values = 1024
-    frame_x_divisions = [200] # Pixelparade 208Mono since it is flipped sideways
+    frame_x_divisions = [[317,318]]#, [318,319], [320,321], [322,323]] # Pixelparade 208Mono since it is flipped sideways
 # DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[100,200]]#[[121,122]]#[[0,180]]
+    frame_y_divisions = [[240,241], [241,242]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################

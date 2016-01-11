@@ -26,20 +26,21 @@ oscillations = 8.0 #number of complete oscillations
 contrast_level = np.linspace(0.1,0.8,20)
 base_level = 1000 #  1 klux
 frequency = 1
-recording_time = 10
+frame_number = 100
+recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = True
 global_shutter = True
-exposures = np.logspace(0,2,num=10)
+exposures = np.logspace(0,2,num=200)#np.linspace(200,2000,32)#
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS208Mono_int"
-sensor_type = "DAVISFX3"
-bias_file = "cameras/davis208Mono.xml"
-host_ip = '172.19.11.139'
+sensor = "DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX3" #"DAVISFX2"
+bias_file = "cameras/davis208Mono.xml"#cdavis640rgbw.xml"
+host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################
 # SETUP LIGHT CONDITIONS -- MEASURED --
@@ -109,15 +110,26 @@ if do_ptc:
     v_base_level = (base_level - inter) / slope
     gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(v_base_level)) #voltage output
     gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-    folder = datadir + '/'+ sensor + '_ptc_' +  current_date
+    if(useinternaladc):
+        ADCtype = "_ADCint"
+    else:
+        ADCtype = "_ADCext"
+    folder = datadir + '/'+ sensor + ADCtype +'_ptc_' +  current_date
     setting_dir = folder + str("/settings/")
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, recording_time=3, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
+    control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
     print "Data saved in " +  folder
+    # To be changed, made separately on another file!
+    #import aedat3_process
+    #reload(aedat3_process)
+    #aedatp = aedat3_process.aedat3_process()
+    #frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] 
+    #frame_y_divisions = [[0,95], [96,191]]#[[121,122]]#[[0,180]] 
+    #aedatp.ptc_analysis(folder + '/', frame_y_divisions, frame_x_divisions)
 
 # 2 - Fixed Pattern Noise - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
