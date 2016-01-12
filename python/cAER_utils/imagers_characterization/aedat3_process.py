@@ -376,16 +376,52 @@ class aedat3_process:
         color_tmp = 0;
         for this_area_x in range(x_div):
             for this_area_y in range(y_div):
-                plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                plt.plot( u_y_tot[:,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                 color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
         plt.xlabel('Mean[DN] ') 
-        plt.ylabel('Var[DN^2] ')
+        plt.ylabel('STD[DN] ')
         plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+        print("Log fit...")
+        slope_tot = []
+        inter_tot = []
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        un, y_div, x_div = np.shape(u_y_tot)
+        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+        color_tmp = 0;
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                max_var = np.max(sigma_fit)
+                max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
+                this_mean_values_lin = this_mean_values[0:max_ind_var]
+                slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[0:max_ind_var])),1)
+                #print("slope: "+str(slope))
+                Gain_uVe = -inter;
+                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                fit_fn = np.poly1d([slope, inter]) 
+                ax.plot( log(u_y_tot[:,this_area_y, this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
+                bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                color_tmp = color_tmp+1
+        color_tmp = 0;
+        for this_area_x in range(len(frame_x_divisions)):
+            for this_area_y in range(len(frame_y_divisions)):
+                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                color_tmp = color_tmp+1
+        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+        plt.xlabel('log(Mean[DN])') 
+        plt.ylabel('log(STD[DN])')
+        plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        
         print("Linear fit...")
         slope_tot = []
         inter_tot = []
@@ -402,12 +438,11 @@ class aedat3_process:
                 max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                 this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
-                slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)),sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                #print("slope: "+str(slope))
+                slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
                 Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
-                ax.plot( u_y_tot[:,this_area_y, this_area_x] , sigma_tot[:,this_area_y, this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
                 ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                 color_tmp = color_tmp+1
@@ -418,51 +453,9 @@ class aedat3_process:
                 color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
         plt.xlabel('Mean[DN]') 
-        plt.ylabel('Var[DN^2]  ')
+        plt.ylabel('Var[DN^2]')
         plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-        #plt.close()
-        
-        print("Log fit...")
-        slope_tot = []
-        inter_tot = []
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        un, y_div, x_div = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-        color_tmp = 0;
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
-                max_var = np.max(sigma_fit)
-                max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
-                this_mean_values_lin = this_mean_values[0:max_ind_var]	
-                [a,b], covar = curve_fit(self.fit_ptc, sigma_fit.reshape(len(sigma_fit))[0:max_ind_var], this_mean_values_lin.reshape(len(this_mean_values_lin)))
-                Gain_uVe = a;
-                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
-                fit_fn = self.fit_ptc(this_mean_values_lin.reshape(len(this_mean_values_lin)), *[a,b])
-                ax.plot( u_y_tot[:,this_area_y, this_area_x] , sigma_tot[:,this_area_y, this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
-                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn, '-*', markersize=4, color=colors[color_tmp])
-                bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
-                color_tmp = color_tmp+1
-        color_tmp = 0;
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
-        plt.xlabel('Mean[DN]') 
-        plt.ylabel('Var[DN^2]  ')
-        plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-        #plt.close()
-        
-    def fit_ptc(self, x, a,b):
-        return b+10.0**(a+np.log10(x)*(0.5))
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -1155,18 +1148,20 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/DAVIS208Mono_ADCint_ptc_11_01_16-18_13_55/'
-    camera_dim =  [208, 192] #Pixelparade 208Mono 
+    directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DAVIS208Mono_ADCext_ptc_08_01_16-18_12_44/'
+    camera_dim =  [208,192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
     # 0.596 internal adcs 346B
     # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
     # 0.648 external adcs reference is the same for all chips
-    ADC_range = 1.29
+    ADC_range = 0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] # Pixelparade 208Mono since it is flipped sideways
-# DAVIS240 C [[120,121], [121,122]]#[[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,191]]#[[121,122]]#[[0,180]]
+    frame_x_divisions = [[208-4,208-0], [208-6,208-4], [208-10,208-8], [208-12,208-10], [208-14,208-12], [208-20,208-16], [208-208,208-20]] # Pixelparade 208Mono since it is flipped sideways (don't include last number in python)
+#240C [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+
+# DAVIS240 C #
+    frame_y_divisions = [[0,192]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
