@@ -404,7 +404,7 @@ class aedat3_process:
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
                 slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[0:max_ind_var])),1)
                 #print("slope: "+str(slope))
-                Gain_uVe = -inter;
+                Gain_uVe = -inter/slope;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
                 ax.plot( log(u_y_tot[:,this_area_y, this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
