@@ -1148,20 +1148,19 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DAVIS208Mono_ADCext_ptc_08_01_16-18_12_44/'
+    directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DAVIS208Mono_ADCint_ptc_08_01_16-19_03_29/'
     camera_dim =  [208,192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
     # 0.596 internal adcs 346B
+    # 1.501 external ADC 240C
     # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
     # 0.648 external adcs reference is the same for all chips
-    ADC_range = 0.648#240C 1.501
+    ADC_range = 1.29#0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[208-4,208-0], [208-6,208-4], [208-10,208-8], [208-12,208-10], [208-14,208-12], [208-20,208-16], [208-208,208-20]] # Pixelparade 208Mono since it is flipped sideways (don't include last number in python)
+    frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] # Pixelparade 208Mono since it is flipped sideways (don't include last number in python)
 #240C [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-
-# DAVIS240 C #
-    frame_y_divisions = [[0,192]]#[[121,122]]#[[0,180]]
+    frame_y_divisions = [[0,191]]#[[121,122]]#[[0,180]]
     ################### 
     # END PARAMETERS
     ###################
