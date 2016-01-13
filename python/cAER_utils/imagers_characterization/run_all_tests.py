@@ -30,16 +30,16 @@ frame_number = 100
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
-useinternaladc = True
+useinternaladc = False
 global_shutter = True
-exposures = np.logspace(0,2,num=200)#np.linspace(200,2000,32)#
+exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)##
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
 sensor = "DAVIS208Mono"#"CDAVIS640rgbw"#
 sensor_type ="DAVISFX3" #"DAVISFX2"
-bias_file = "cameras/davis208Mono.xml"#cdavis640rgbw.xml"
+bias_file = "cameras/davis208Mono_ptc.xml"#cdavis640rgbw.xml"
 host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################

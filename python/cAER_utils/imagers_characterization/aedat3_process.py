@@ -1148,7 +1148,7 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = False
-    directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DAVIS208Mono_ADCint_ptc_08_01_16-19_03_29/'
+    directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DARK/DAVIS208Mono_ADCint_ptc_dark_13_01_16-13_49_24/'
     camera_dim =  [208,192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
