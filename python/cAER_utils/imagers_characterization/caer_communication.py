@@ -386,6 +386,12 @@ class caer_communication:
         print("APS array is OFF")
         self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
         print("DVS array is ON")
+        # For PixelParade Only
+	self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+        print("All DVS arrays of PixelParade are ON")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
         safety_margin = 6.0
@@ -402,6 +408,10 @@ class caer_communication:
         print("APS array is ON")
         self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false') 
         print("DVS array is OFF")
+	self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+        print("All DVS arrays of PixelParade are ON")
 
         return        
 
