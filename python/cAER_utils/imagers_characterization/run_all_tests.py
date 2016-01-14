@@ -154,6 +154,7 @@ if do_contrast_sensitivity:
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     for i in range(len(contrast_level)):
+        print("Contrast level: "+str(contrast_level[i]))
         perc_low = base_level-(contrast_level[i]/2.0)*base_level
         perc_hi = base_level+(contrast_level[i]/2.0)*base_level
         v_hi = (perc_hi - inter) / slope
@@ -165,6 +166,8 @@ if do_contrast_sensitivity:
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
         control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[i], base_level = base_level)
+    # Zero the Function Generator
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
 
 if do_latency_pixel:
