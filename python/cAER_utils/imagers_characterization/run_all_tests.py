@@ -18,28 +18,28 @@ import aedat3_process
 ###############################################################################
 # TEST SELECTIONS
 ###############################################################################
-do_ptc = True
+do_ptc = False
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = False
-oscillations = 8.0 #number of complete oscillations
-contrast_level = np.linspace(0.1,0.8,20)
-base_level = 1000 #  1 klux
-frequency = 1
-frame_number = 100
+do_contrast_sensitivity = True
+oscillations = 100.0 #number of complete oscillations for contrast sensitivity and latency
+contrast_level = np.linspace(0.1,0.8,20.0) # contrast sensitivity
+base_level = 1000.0 #  1 klux
+frequency = 1.0 #contrast sensitivity
+frame_number = 100# ptc
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = False
-global_shutter = True
-exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)##
+global_shutter = True # ptc
+exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
 sensor = "DAVIS208Mono"#"CDAVIS640rgbw"#
 sensor_type ="DAVISFX3" #"DAVISFX2"
-bias_file = "cameras/davis208Mono_ptc.xml"#cdavis640rgbw.xml"
+bias_file = "cameras/davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################
@@ -164,8 +164,7 @@ if do_contrast_sensitivity:
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.get_data_contrast_sensitivity(folder = folder, recording_time = recording_time, contrast_level = contrast_level[i], base_level = base_level)
-
+        control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, contrast_level = contrast_level[i], base_level = base_level)
     control.close_communication_command()        
 
 if do_latency_pixel:

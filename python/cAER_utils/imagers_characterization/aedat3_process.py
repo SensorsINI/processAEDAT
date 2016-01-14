@@ -1144,10 +1144,10 @@ if __name__ == "__main__":
     ################### 
     # PARAMETERS
     ###################
-    do_ptc = True
+    do_ptc = False
     do_fpn = False
     do_latency_pixel = False
-    do_contrast_sensitivity = False
+    do_contrast_sensitivity = True
     directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DARK/DAVIS208Mono_ADCint_ptc_dark_13_01_16-13_49_24/'
     camera_dim =  [208,192] #Pixelparade 208Mono 
 	#[240,180] #DAVSI240C

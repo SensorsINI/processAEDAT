@@ -371,12 +371,12 @@ class caer_communication:
         print("APS array is ON")
         return        
 
-    def get_data_contrast_sensitivity(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2", contrast_level = 1.0, base_level = 100):
+    def get_data_contrast_sensitivity(self, folder = 'contrast sensitivity', oscillations = oscillations, frequency sensor_type="DAVISFX2", contrast_level = 1.0, base_level = 100):
         '''
            Contrast Sensitivity
             - aps is off
         '''
-        #make ptc directory
+        #make contrast sensitivty directory
         try:
             os.stat(folder)
         except:
@@ -386,8 +386,10 @@ class caer_communication:
         print("APS array is OFF")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
+        safety_margin = 6.0
+        recording_time = (1.0/frequency)*(oscillations+safety_margin) #number of complete oscillations
         print("Recording for " + str(recording_time))                
-        time.sleep(0.5)
+        time.sleep(recording_time)
         self.open_communication_data()
         filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+'_contrast_level_'+format(int(contrast_level*100),'03d')+'_base_level_'+str(format(int(base_level),'03d'))+'.aedat' 
         self.start_logging(filename)    
