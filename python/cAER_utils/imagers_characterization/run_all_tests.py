@@ -22,8 +22,8 @@ do_ptc = False
 do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = True
-oscillations = 100.0 #number of complete oscillations for contrast sensitivity and latency
-contrast_level = np.linspace(0.1,0.8,20.0) # contrast sensitivity
+oscillations = 10.0 #number of complete oscillations for contrast sensitivity and latency
+contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
 frame_number = 100# ptc
@@ -164,7 +164,7 @@ if do_contrast_sensitivity:
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, contrast_level = contrast_level[i], base_level = base_level)
+        control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[i], base_level = base_level)
     control.close_communication_command()        
 
 if do_latency_pixel:
