@@ -371,7 +371,7 @@ class caer_communication:
         print("APS array is ON")
         return        
 
-    def get_data_contrast_sensitivity(self, folder = 'contrast sensitivity', oscillations = oscillations, frequency sensor_type="DAVISFX2", contrast_level = 1.0, base_level = 100):
+    def get_data_contrast_sensitivity(self, folder = 'contrast sensitivity', oscillations = '100', frequency = '1', sensor_type="DAVISFX2", contrast_level = 1.0, base_level = 100):
         '''
            Contrast Sensitivity
             - aps is off
