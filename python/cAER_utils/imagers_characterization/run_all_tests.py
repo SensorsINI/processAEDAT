@@ -21,8 +21,9 @@ import aedat3_process
 do_ptc = False
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = True
-oscillations = 10.0 #number of complete oscillations for contrast sensitivity and latency
+do_contrast_sensitivity = False
+do_oscillations = True
+oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
@@ -33,19 +34,22 @@ datadir = 'measurements'
 useinternaladc = False
 global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
+contrast_level = 0.3                # in oscillations/latency
+freq_square = 200                   # in oscillations/latency
+oscillations_base_level = [300,500,1000,2000] 	#oscillations
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX3" #"DAVISFX2"
-bias_file = "cameras/davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+sensor = "DAVIS240C" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX2" #"DAVISFX3"
+bias_file = "cameras/davis240c_low_latency.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################
 # SETUP LIGHT CONDITIONS -- MEASURED --
 ##############################################################################
-saturation_level = 3500 # setup saturates at 3.5 klux
+saturation_level = 3500 # LED saturates at 3.5 klux
 volt =np.array([0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.010,0.011,0.012,0.013,0.014,0.015,0.016,0.017,0.018,0.019,0.020,0.040,0.08,0.100,0.2,0.15,0.120,0.180,0.17,0.500,0.400,0.3,0.25,0.28,0.2,0.15,0.27,0.26,0.22,0.21,0.215,0.22,0.217,0.218,0.03,0.05,0.06,0.14,0.0225,0.225,0.235])
 lux = np.array([2.29,17.78,34.460,52.870,71.280,90.740,109.400,128.900,148.000,167.600,186.100,205.600,225.100,244.200,263.300,283.800,302.400,323.400,341.900,361.100,740.900,1467.000,1815.000,3399.000,2633,2152,3105,2950,3861,3861,3861,3861,3861,3378,2627,3861,3861,3663,3531,3597,3663,3601,3634,549.5,917.4,1102,2467,407.9,3729,3795])
 voltage_divider = 0.99 #voltage divider DC
@@ -170,6 +174,45 @@ if do_contrast_sensitivity:
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
 
+if do_oscillations:
+    print "\n"
+    print "we are doing oscillations measurements. ..\
+        1_ Check that the setup is illuminated correctly..\
+        2_ Connect the synch cable from the output of the function generator to the synch input on the DVS board..\
+        3_ Check the options in run_all test.. WARNING: remember to specify the filter type that you are using"
+    raw_input("Press Enter to continue...")
+
+    filter_type = 0.0
+    control.open_communication_command()
+    control.load_biases(xml_file=bias_file)    
+    folder = datadir + '/'+ sensor + '_oscillations_' +  current_date
+    setting_dir = folder + str("/settings/")
+
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+
+    num_measurements = len(oscillations_base_level) 
+    #base_level_v = 1.5
+    #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
+    recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    for i in range(num_measurements):
+        print("Base level: "+str(oscillations_base_level[i]))
+        perc_low = oscillations_base_level[i]-(contrast_level/2.0)*oscillations_base_level[i]
+        perc_hi = oscillations_base_level[i]+(contrast_level/2.0)*oscillations_base_level[i]
+        v_hi = (perc_hi - inter) / slope
+        v_low = (perc_low - inter) / slope 
+        offset = np.mean([v_hi,v_low])
+        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+        control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+    control.close_communication_command()    
+    print "Data saved in " +  folder
+   
 if do_latency_pixel:
     print "\n"
     print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
@@ -184,12 +227,10 @@ if do_latency_pixel:
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
 
-    base_level = lux
+	base_level = lux
     num_measurements = len(base_level) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
-    contrast_level = 0.3
-    freq_square = 200
     recording_time = (1.0/freq_square)*oscillations #number of complete oscillations
     for i in range(num_measurements):
         perc_low = base_level[i]-base_level[i]*(contrast_level/2.0)

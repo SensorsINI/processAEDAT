@@ -470,6 +470,278 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
+    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
+        '''
+            oscillations/latency, single pixel signal reconstruction
+            ----
+            paramenters:
+                 latency_pixel_dir  -> measurements directory
+                 figure_dir         -> figure directory *where to store the figures*
+        '''
+        import string as stra
+        #################################################################
+        ############### LATENCY ANALISYS
+        #################################################################
+        #get all files in dir
+        directory = latency_pixel_dir
+        #files_in_dir = os.listdir(directory)
+        #files_in_dir.sort()  
+        files_in_dir = [f for f in os.listdir(directory) if not f.startswith('.')] #no hidden file
+        files_in_dir.sort()      
+
+        all_latencies_mean_up = []
+        all_latencies_mean_dn = []
+          
+        all_latencies_std_up = []
+        all_latencies_std_dn = []  
+
+        #loop over all recordings
+        all_lux = []
+        all_filters_type = []
+        for this_file in range(len(files_in_dir)):
+            #exp_settings = string.split(files_in_dir[this_file],"_")
+            #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
+            #exp_settings_bias_coarse = exp_settings[8]
+
+            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
+
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                if( file_type == "cAER"):
+                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+                    current_lux = stra.split(files_in_dir[this_file], "_")[8]
+                    filter_type = stra.split(files_in_dir[this_file], "_")[10]
+                    all_lux.append(current_lux)
+                    all_filters_type.append(filter_type)
+                elif( file_type == "jAER" ):
+                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_jaer_file(directory+files_in_dir[this_file])
+                    current_lux = 10
+                    filter_type = 0.0
+                    all_lux.append(current_lux)
+                    all_filters_type.append(filter_type)
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
+
+            if do_plot:
+                fig = plt.figure()
+                plt.subplot(4,1,1)
+            dx = plt.hist(xaddr,camera_dim[0])
+            dy = plt.hist(yaddr,camera_dim[1])
+            # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
+            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+
+            #if(len(ind_x_max) > 1):
+            #    ind_x_max = np.floor(np.mean(ind_x_max))
+            #if(len(ind_y_max) > 1):
+            #    ind_y_max = np.floor(np.mean(ind_y_max))
+
+            ts = np.array(ts)
+            pol = np.array(pol)
+            xaddr = np.array(xaddr)
+            yaddr = np.array(yaddr)
+            sp_t = np.array(sp_t)
+            sp_type = np.array(sp_type)
+            pixel_box = size_led*2+1
+            pixel_num = pixel_box**2
+
+            x_to_get = np.linspace(ind_x_max-size_led,ind_x_max+size_led,pixel_box)
+            y_to_get = np.linspace(ind_y_max-size_led,ind_y_max+size_led,pixel_box)
+            
+            index_to_get, un = self.ismember(xaddr,x_to_get)
+            indey_to_get, un = self.ismember(yaddr,y_to_get)
+            final_index = (index_to_get & indey_to_get)
+
+            index_up_jump = sp_type == 2
+            index_dn_jump = sp_type == 3
+            
+            original = np.zeros(len(ts))
+            this_index = 0
+            for i in range(len(ts)):
+                if(ts[i] < sp_t[this_index]):
+                    original[i] = sp_type[this_index]
+                    #if(this_index != len(sp_t)-1):
+                    #    this_index = this_index+1  
+                elif(ts[i] >= sp_t[this_index]):           
+                    original[i] = sp_type[this_index] 
+                    if(this_index != len(sp_t)-1):
+                        this_index = this_index+1  
+          
+            stim_freq = np.mean(1.0/(np.diff(sp_t)*self.time_res*2))
+            print("stimulus frequency was :"+str(stim_freq))                         
+                  
+            delta_up = np.ones(camera_dim)
+            delta_dn = np.ones(camera_dim)  
+            delta_up_count = np.zeros(camera_dim)
+            delta_dn_count = np.zeros(camera_dim)
+           
+            for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
+                for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
+                    this_index_x = xaddr[final_index] == x_
+                    this_index_y = yaddr[final_index] == y_
+                    index_to_get = this_index_x & this_index_y
+                    delta_up_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 1)
+                    delta_dn_count[x_,y_] = np.sum(pol[final_index][index_to_get] == 0)
+
+            counter_x = 0 
+            counter_tot = 0
+            latency_up_tot = []
+            latency_dn_tot = []
+            signal_rec = []
+            ts_t = []
+            for x_ in range(np.min(xaddr[final_index]),np.max(xaddr[final_index])):
+                counter_y = 0 
+                for y_ in range(np.min(yaddr[final_index]),np.max(yaddr[final_index])):
+                    tmp_rec = []
+                    tmp_t = []
+                    this_index_x = xaddr[final_index] == x_
+                    this_index_y = yaddr[final_index] == y_
+                    index_to_get = this_index_x & this_index_y
+                    
+                    if( delta_up_count[x_,y_] > delta_dn_count[x_,y_]):
+                        delta_dn[x_,y_] = (delta_up_count[x_,y_] / np.double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
+                    else:
+                        delta_up[x_,y_] = (delta_dn_count[x_,y_] / np.double(delta_up_count[x_,y_])) * (delta_dn[x_,y_])
+                        
+                    tmp = 0
+                    counter_transitions_up = 0
+                    counter_transitions_dn = 0
+                    for this_ev in range(np.sum(index_to_get)):
+                        if( pol[final_index][index_to_get][this_ev] == 1):
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev]-1)
+
+                            tmp = tmp+delta_up[x_,y_]
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+                            # get first up transition for this pixel
+                            if( counter_transitions_up < len(sp_t[index_up_jump]) ):
+                                if ( sp_t[index_up_jump][counter_transitions_up] < ts[final_index][index_to_get][this_ev]):
+                                    this_latency = ts[final_index][index_to_get][this_ev] - sp_t[index_up_jump][counter_transitions_up]
+                                    this_neuron = [xaddr[final_index][index_to_get][this_ev],yaddr[final_index][index_to_get][this_ev]]
+                                    if(this_latency > 0):
+                                        latency_up_tot.append([this_latency, this_neuron])  
+                                        counter_transitions_up = counter_transitions_up +1    
+                        if( pol[final_index][index_to_get][this_ev] == 0):
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev]-1)
+
+                            tmp = tmp-delta_dn[x_,y_]
+                            tmp_rec.append(tmp)
+                            tmp_t.append(ts[final_index][index_to_get][this_ev])
+                            if( counter_transitions_dn < len(sp_t[index_dn_jump])):
+                                if ( sp_t[index_dn_jump][counter_transitions_dn] < ts[final_index][index_to_get][this_ev]):
+                                    this_latency = ts[final_index][index_to_get][this_ev] - sp_t[index_dn_jump][counter_transitions_dn]
+                                    this_neuron = [xaddr[final_index][index_to_get][this_ev],yaddr[final_index][index_to_get][this_ev]]
+                                    if(this_latency > 0):
+                                        latency_dn_tot.append([this_latency, this_neuron])  
+                                        counter_transitions_dn = counter_transitions_dn +1    
+                    signal_rec.append(tmp_rec)
+                    ts_t.append(tmp_t)
+
+
+            #open report file
+            report_file = figure_dir+"Report_results_"+str(this_file)+".txt"
+            out_file = open(report_file,"w")
+            out_file.write("lux: " +str(current_lux) + " filter type" +str(filter_type)+"\n")
+            if(len(latency_up_tot) > 0):
+                latencies_up = []
+                for i in range(1,len(latency_up_tot)-1):
+                    tmp = latency_up_tot[i][0]
+                    latencies_up.append(tmp)
+                latencies_up = np.array(latencies_up)
+                all_latencies_mean_up.append(np.mean(latencies_up))
+                err_up = self.confIntMean(latencies_up,conf=confidence_level)
+                all_latencies_std_up.append(err_up)
+                print("mean latency up: " +str(np.mean(latencies_up)) + " us")
+                out_file.write("mean latency up: " +str(np.mean(latencies_up)) + " us\n")
+                print("err latency up: " +str(err_up)  + " us")
+                out_file.write("err latency up: " +str(err_up)  + " us\n")
+
+            if(len(latency_dn_tot) > 0):
+                latencies_dn = []
+                for i in range(1,len(latency_dn_tot)-1):
+                    tmp = latency_dn_tot[i][0]
+                    latencies_dn.append(tmp)
+                latencies_dn = np.array(latencies_dn)
+                all_latencies_mean_dn.append(np.mean(latencies_dn))
+                err_dn = self.confIntMean(latencies_dn,conf=confidence_level)
+                all_latencies_std_dn.append(err_dn)
+                print("mean latency dn: " +str(np.mean(latencies_dn)) + " us")
+                out_file.write("mean latency dn: " +str(np.mean(latencies_dn)) + " us\n")
+                print("err latency dn: " +str(err_dn)  + " us")
+                out_file.write("err latency dn: " +str(err_dn)  + " us\n")           
+            out_file.close()
+
+ 
+            if do_plot:
+                signal_rec = np.array(signal_rec)
+                original = original - np.mean(original)
+                amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
+                original = original/amplitude_rec
+
+                plt.subplot(4,1,2)
+                plt.plot(ts[final_index]-np.min(ts[final_index]),pol[final_index],"o", color='blue')
+                plt.plot(ts-np.min(ts[final_index]),original*2,"x--", color='red')
+                plt.subplot(4,1,3)
+                plt.plot((ts-np.min(ts)),original, linewidth=3)
+                plt.xlim([0, np.max(ts)-np.min(ts)])
+                for i in range(len(signal_rec)):
+                    if( len(signal_rec[i]) > 2):
+                        signal_rec[i] = signal_rec[i] - np.mean(signal_rec[i])
+                        amplitude_rec = np.abs(np.max(signal_rec[i]))+np.abs(np.min(signal_rec[i]))
+                        norm = signal_rec[i]/amplitude_rec
+                        plt.plot((np.array(ts_t[i])-np.min(ts[i])),norm, '-')
+                    else:
+                        print("skipping neuron")
+                
+
+                ax = fig.add_subplot(4,1,4, projection='3d')
+                x = xaddr
+                y = yaddr
+                histo, xedges, yedges = np.histogram2d(x, y, bins=(20,20))#=(np.max(yaddr),np.max(xaddr)))
+                xpos, ypos = np.meshgrid(xedges[:-1]+xedges[1:], yedges[:-1]+yedges[1:])
+                xpos = xpos.flatten()/2.
+                ypos = ypos.flatten()/2.
+                zpos = np.zeros_like (xpos)
+                dx = xedges [1] - xedges [0]
+                dy = yedges [1] - yedges [0]
+                dz = histo.flatten()
+                ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
+                plt.xlabel ("X")
+                plt.ylabel ("Y")
+                # Find maximum point
+                plt.savefig(figure_dir+"combined_latency_"+str(this_file)+".png",  format='png', dpi=300)
+                
+
+        if do_plot:
+            all_lux = np.array(all_lux)
+            all_filters_type = np.array(all_filters_type)
+            all_latencies_mean_up = np.array(all_latencies_mean_up)
+            all_latencies_mean_dn = np.array(all_latencies_mean_dn)
+            all_latencies_std_up = np.array(all_latencies_std_up)
+            all_latencies_std_dn = np.array(all_latencies_std_dn)
+
+            if(len(all_latencies_mean_up) > 0):
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                plt.title("final latency plots with filter: " + str(all_filters_type[0]))
+                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
+                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
+                ax.set_xscale("log", nonposx='clip')
+                ax.set_yscale("log", nonposx='clip')
+                ax.grid(True, which="both", ls="--")
+                #xlim([np.min(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0]))), np.max(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])))+10])
+                #ylim([np.min(all_latencies_mean_up)-np.std(all_latencies_mean_up), np.max(all_latencies_mean_up)+10])
+                plt.xlabel('lux')
+                plt.ylabel('latency [us]')
+                plt.legend(loc='best')
+                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
+                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
+
+        return all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up.T, all_latencies_std_dn.T
+
+
     def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
         '''
             Pixel Latency, single pixel signal reconstruction
@@ -1148,22 +1420,43 @@ if __name__ == "__main__":
     do_fpn = False
     do_latency_pixel = False
     do_contrast_sensitivity = True
+    do_oscillations = True      #for NW
     directory_meas = 'measurements/Measurements_final/208Mono/davis208 plenty of points/DARK/DAVIS208Mono_ADCint_ptc_dark_13_01_16-13_49_24/'
     camera_dim =  [208,192] #Pixelparade 208Mono 
-	#[240,180] #DAVSI240C
+    #[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
     # 0.596 internal adcs 346B
     # 1.501 external ADC 240C
+    # ? dvs external adc reference
     # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
     # 0.648 external adcs reference is the same for all chips
     ADC_range = 1.29#0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] # Pixelparade 208Mono since it is flipped sideways (don't include last number in python)
-#240C [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,191]]#[[121,122]]#[[0,180]]
+    frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
+    #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
+    #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
+    #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_y_divisions = [[0,191]]
+    #   [[121,122]] 640Color
+    #   [[0,180]]
+    # 
+    # ###############################
+    # contrast sensitivity parameter
+    #################################
+    sine_freq = 1.0 # sine freq
+
     ################### 
     # END PARAMETERS
     ###################
+    if do_oscillations:
+        oscil_dir = directory_meas
+        figure_dir =  oscil_dir+'/figures/'
+        if(not os.path.exists(figure_dir)):
+            os.makedirs(figure_dir)
+        aedat = aedat3_process()
+        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.oscillations_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
+        print("latency up :", all_latencies_mean_up, " std ", all_latencies_std_up)
+        print("latency dn :", all_latencies_mean_dn, " std ", all_latencies_std_dn)
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
@@ -1180,7 +1473,7 @@ if __name__ == "__main__":
             os.makedirs(figure_dir)
         # select test pixels areas only two are active
         aedat = aedat3_process()
-        delta_up, delta_dn, rms = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=1.0)
+        delta_up, delta_dn, rms = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
    
 
     if do_fpn:

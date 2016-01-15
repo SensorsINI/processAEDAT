@@ -345,7 +345,7 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_latency(self, folder = 'latency', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1):
+    def get_data_latency(self, folder = 'latency', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2"):
         '''
            Pixel Latency
         '''
@@ -355,7 +355,7 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #loop over exposures and save data
-        self.send_command('put /1/1-DAVISFX2/aps/ Run bool false') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
         print("APS array is OFF")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
@@ -367,9 +367,37 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
-        #self.send_command('put /1/1-DAVISFX2/aps/ Run bool true') 
-        print("APS array is ON")
         return        
+
+    def get_data_oscillations(self, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2"):
+        '''
+           Oscillations measurements,
+            for NW
+            led light input is square wave at a certain frequency
+            BackGroundActivity Filter is OFF
+            APS is OFF
+            DVS is ON
+        '''
+        #make ptc directory
+        try:
+            os.stat(folder)
+        except:
+            os.mkdir(folder) 
+        #loop over exposures and save data
+        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
+        print("APS array is OFF")
+        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+        print("BackGroundActivity Filter is OFF")
+        print("Recording for " + str(recording_time))                
+        time.sleep(0.5)
+        #open communication data
+        self.open_communication_data()
+        filename = folder + '/oscillations_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'_lux_'+str(lux)+'_filter-type_'+str(filter_type)+'_.aedat' 
+        self.start_logging(filename)    
+        time.sleep(recording_time)
+        self.stop_logging()
+        self.close_communication_data()
+        return  
 
     def get_data_contrast_sensitivity(self, folder = 'contrast sensitivity', oscillations = '100', frequency = '1', sensor_type="DAVISFX3", contrast_level = 1.0, base_level = 100):
         '''
