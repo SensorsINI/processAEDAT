@@ -36,7 +36,7 @@ global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
 contrast_level = 0.3                # in oscillations/latency
 freq_square = 200                   # in oscillations/latency
-oscillations_base_level = [300,500,1000,2000] 	#oscillations
+oscillations_base_level = [100,300,500,1000,2000] 	#oscillations
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
@@ -206,10 +206,11 @@ if do_oscillations:
         offset = np.mean([v_hi,v_low])
         amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
         print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_square)+", "+str(amplitude)+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
         control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()    
     print "Data saved in " +  folder
    
