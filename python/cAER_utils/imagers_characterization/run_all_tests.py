@@ -176,9 +176,10 @@ if do_contrast_sensitivity:
 
 if do_oscillations:
     print "\n"
-    print "we are doing oscillations measurements. ..\
-        1_ Check that the setup is illuminated correctly..\
-        2_ Connect the synch cable from the output of the function generator to the synch input on the DVS board..\
+    print "we are doing oscillations measurements. ..\n \
+	WARNING : remember to check that CAER has network streaming enable sends both spiking events and special events ..\n \
+        1_ Check that the setup is illuminated correctly..\n \
+        2_ Connect the synch cable from the output of the function generator to the synch input on the DVS board..\n \
         3_ Check the options in run_all test.. WARNING: remember to specify the filter type that you are using"
     raw_input("Press Enter to continue...")
 

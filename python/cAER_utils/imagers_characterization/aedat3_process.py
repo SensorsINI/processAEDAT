@@ -1421,7 +1421,7 @@ if __name__ == "__main__":
     do_latency_pixel = False
     do_contrast_sensitivity = False
     do_oscillations = True      #for NW
-    directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_oscillations_15_01_16-12_13_37/'
+    directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_oscillations_15_01_16-14_39_08/'
     camera_dim = [240,180]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
@@ -1438,7 +1438,7 @@ if __name__ == "__main__":
     #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
     #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     frame_y_divisions = [[0,180]]
-	#   208Mono 	[[0,191]]
+    #   208Mono 	[[0,191]]
     #   640Color 	[[121,122]] 
     #   240C		[[0,180]]
     # 
