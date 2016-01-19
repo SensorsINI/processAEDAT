@@ -355,7 +355,7 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #switch on edge detector for special event
-	self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
         self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
         self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/DetectFallingEdges bool true')
         self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/DetectRisingEdges bool true')
@@ -374,7 +374,7 @@ class caer_communication:
         self.close_communication_data()
         return        
 
-    def get_data_oscillations(self, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2"):
+    def get_data_oscillations(self, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2", prbias = 0, dvs128xml = False):
         '''
            Oscillations measurements,
             for NW
@@ -388,21 +388,24 @@ class caer_communication:
             os.stat(folder)
         except:
             os.mkdir(folder) 
-        #switch on edge detector
-	self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectFallingEdges bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectRisingEdges bool true')
-        #loop over exposures and save data
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
-        print("APS array is OFF")
+        if(dvs128xml):
+            print("no detector needed, special events will be 4")
+        else:
+            #switch on edge detector
+            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectFallingEdges bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectRisingEdges bool true')
+            #loop over exposures and save data
+            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
+            print("APS array is OFF")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         #open communication data
         self.open_communication_data()
-        filename = folder + '/oscillations_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'_lux_'+str(lux)+'_filter-type_'+str(filter_type)+'_.aedat' 
+        filename = folder + '/oscillations_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'_lux_'+str(lux)+'_filter-type_'+str(filter_type)+'_prvaluefine_'+format(int(prbias), '07d')+'_.aedat' 
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
@@ -533,40 +536,67 @@ class caer_communication:
         print("Done with PTC measurements")
         return   
 
-    def load_biases(self, xml_file = 'cameras/davis240c.xml'):
+    def load_biases(self, xml_file = 'cameras/davis240c.xml', dvs128xml = False):
         '''
             load default biases as defined in the xml file
         '''
-        xmldoc = minidom.parse(xml_file)
-        nodes = xmldoc.getElementsByTagName('node')
-        value_zero = nodes[1].attributes['name'].value
-        value_cam = nodes[2].attributes['name'].value 
-        command = []
-        #loop over xml file, get bias values and load them
-        for i in range(len(nodes)):
-            if(nodes[i].attributes['name'].value == 'bias' ):
-                attrs = dict(nodes[i].attributes.items())
-                base_aa = 'put'
-                bias_node = nodes[i]
-                biases = bias_node.childNodes
-                for j in range(len(biases)):
-                    if(biases[j].hasChildNodes()):
-                        base_a = dict(biases[j].attributes.items())
-                        #print base_a
-                        base_ab = (base_a['path'])
+        if(dvs128xml):
+            xmldoc = minidom.parse(xml_file)
+            nodes = xmldoc.getElementsByTagName('node')
+            value_zero = nodes[1].attributes['name'].value
+            value_cam = nodes[2].attributes['name'].value 
+            command = []
+            #loop over xml file, get bias values and load them
+            for i in range(len(nodes)):
+                if(nodes[i].attributes['name'].value == 'bias' ):
+                    attrs = dict(nodes[i].attributes.items())
+                    base_aa = 'put'
+                    bias_node = nodes[i]
+                    biases = bias_node.childNodes
+                    for j in range(len(biases)):
                         if(biases[j].hasChildNodes()):
-                            bias_values = biases[j].childNodes
-                            for k in range(len(bias_values)):
-                                if(bias_values[k].hasChildNodes()):
-                                    base_b = dict(bias_values[k].attributes.items()) 
-                                    #print base_b
-                                    base_ac = (base_b['key'])
-                                    base_ad = (base_b['type'])
-                                    final_v = str(bias_values[k].firstChild.data)
-                                    #print final_v
-                                    cear_command = base_aa + " " + base_ab + " " + base_ac + " " + base_ad + " " + final_v
-                                    print cear_command
-                                    self.send_command(cear_command)                  
+                            base_a = dict(biases[j].attributes.items())
+                            base_ab = str(attrs['path'])
+                            base_b =  base_a
+                            #print base_b
+                            base_ac = (base_b['key'])
+                            base_ad = (base_b['type'])
+                            final_v = str(biases[j].firstChild.data)
+                            #print final_v
+                            cear_command = base_aa + " " + base_ab + " " + base_ac + " " + base_ad + " " + final_v
+                            print cear_command
+                            self.send_command(cear_command)                  
+        else:
+            xmldoc = minidom.parse(xml_file)
+            nodes = xmldoc.getElementsByTagName('node')
+            value_zero = nodes[1].attributes['name'].value
+            value_cam = nodes[2].attributes['name'].value 
+            command = []
+            #loop over xml file, get bias values and load them
+            for i in range(len(nodes)):
+                if(nodes[i].attributes['name'].value == 'bias' ):
+                    attrs = dict(nodes[i].attributes.items())
+                    base_aa = 'put'
+                    bias_node = nodes[i]
+                    biases = bias_node.childNodes
+                    for j in range(len(biases)):
+                        if(biases[j].hasChildNodes()):
+                            base_a = dict(biases[j].attributes.items())
+                            #print base_a
+                            base_ab = (base_a['path'])
+                            if(biases[j].hasChildNodes()):
+                                bias_values = biases[j].childNodes
+                                for k in range(len(bias_values)):
+                                    if(bias_values[k].hasChildNodes()):
+                                        base_b = dict(bias_values[k].attributes.items()) 
+                                        #print base_b
+                                        base_ac = (base_b['key'])
+                                        base_ad = (base_b['type'])
+                                        final_v = str(bias_values[k].firstChild.data)
+                                        #print final_v
+                                        cear_command = base_aa + " " + base_ab + " " + base_ac + " " + base_ad + " " + final_v
+                                        print cear_command
+                                        self.send_command(cear_command)                  
 
 if __name__ == "__main__":
     # init control class and open communication

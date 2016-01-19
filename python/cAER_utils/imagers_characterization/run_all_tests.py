@@ -23,7 +23,7 @@ do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = False
 do_oscillations = True
-oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
+oscillations = 50.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
@@ -34,16 +34,18 @@ datadir = 'measurements'
 useinternaladc = False
 global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
-contrast_level = 0.3                # in oscillations/latency
-freq_square = 200                   # in oscillations/latency
-oscillations_base_level = [100,300,500,1000,2000] 	#oscillations
+contrast_level = 0.5                # in oscillations/latency
+freq_square = 10.0                  # in oscillations/latency
+oscillations_base_level = [60, 300, 3000]	#oscillations
+prbpvalues = np.linspace(0,500,3)      # davi240c [255,25,3]             #oscillations fine values for PrBp
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS240C" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX2" #"DAVISFX3"
-bias_file = "cameras/davis240c_low_latency.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+sensor = "DVS128" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DVS128" #"DAVISFX3"
+bias_file = "cameras/dvs128_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+dvs128xml = True
 host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################
@@ -122,7 +124,7 @@ if do_ptc:
     setting_dir = folder + str("/settings/")
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
-    control.load_biases(xml_file=bias_file)
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
     control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
@@ -142,7 +144,7 @@ if do_fpn:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
     setting_dir = folder + str("/settings/")
-    control.load_biases(xml_file=bias_file)
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
     print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
     raw_input("Press Enter to continue...")
@@ -153,7 +155,7 @@ if do_contrast_sensitivity:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
     setting_dir = folder + str("/settings/")
-    control.load_biases(xml_file=bias_file)
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
@@ -183,9 +185,9 @@ if do_oscillations:
         3_ Check the options in run_all test.. WARNING: remember to specify the filter type that you are using"
     raw_input("Press Enter to continue...")
 
-    filter_type = 0.0
+    filter_type = 2.0
     control.open_communication_command()
-    control.load_biases(xml_file=bias_file)    
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)    
     folder = datadir + '/'+ sensor + '_oscillations_' +  current_date
     setting_dir = folder + str("/settings/")
 
@@ -198,19 +200,27 @@ if do_oscillations:
     recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    for i in range(num_measurements):
-        print("Base level: "+str(oscillations_base_level[i]))
-        perc_low = oscillations_base_level[i]-(contrast_level/2.0)*oscillations_base_level[i]
-        perc_hi = oscillations_base_level[i]+(contrast_level/2.0)*oscillations_base_level[i]
-        v_hi = (perc_hi - inter) / slope
-        v_low = (perc_low - inter) / slope 
-        offset = np.mean([v_hi,v_low])
-        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_square)+", "+str(amplitude)+",0")
-        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    copyFile(bias_file, setting_dir+str("biases_oscillations_all_exposures_prchanged.xml") )
+    for this_bias in range(len(prbpvalues)):
+        for i in range(num_measurements):
+            print("Base level: "+str(oscillations_base_level[i]))
+            perc_low = oscillations_base_level[i]-(contrast_level/2.0)*oscillations_base_level[i]
+            perc_hi = oscillations_base_level[i]+(contrast_level/2.0)*oscillations_base_level[i]
+            v_hi = (perc_hi - inter) / slope
+            v_low = (perc_low - inter) / slope 
+            offset = np.mean([v_hi,v_low])
+            amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+            print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
+            gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+            gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+            if(dvs128xml):
+                control.send_command("put /1/1-DVS128/bias/ pr int "+str(int(prbpvalues[this_bias])))
+            else:
+                control.send_command("put /1/1-DAVISFX2/bias/PrBp/ fineValue short "+str(prbpvalues[this_bias]))
+            control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()    
     print "Data saved in " +  folder
@@ -222,7 +232,7 @@ if do_latency_pixel:
 
     filter_type = 0.0
     control.open_communication_command()
-    control.load_biases(xml_file=bias_file)    
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)    
     folder = datadir + '/'+ sensor + '_latency_' +  current_date
     setting_dir = folder + str("/settings/")
 
@@ -243,7 +253,7 @@ if do_latency_pixel:
         print("low :", str(v_low))
         string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
         gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
-        control.load_biases(xml_file=bias_file)  
+        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
         control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type)
