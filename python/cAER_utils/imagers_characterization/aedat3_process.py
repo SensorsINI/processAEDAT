@@ -470,7 +470,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
+    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2):
         '''
             oscillations/latency, single pixel signal reconstruction
             ----
@@ -498,6 +498,12 @@ class aedat3_process:
         #loop over all recordings
         all_lux = []
         all_filters_type = []
+
+        all_prvalues = []
+        all_valuesPos = []
+        all_valuesNeg = []
+        all_bins = []
+
         for this_file in range(len(files_in_dir)):
             #exp_settings = string.split(files_in_dir[this_file],"_")
             #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
@@ -512,6 +518,7 @@ class aedat3_process:
                     filter_type = stra.split(files_in_dir[this_file], "_")[10]
                     all_lux.append(current_lux)
                     all_filters_type.append(filter_type)
+                    all_prvalues.append(int(stra.split(files_in_dir[this_file], '_')[12]))
                 elif( file_type == "jAER" ):
                     [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_jaer_file(directory+files_in_dir[this_file])
                     current_lux = 10
@@ -527,9 +534,8 @@ class aedat3_process:
                 plt.subplot(4,1,1)
             dx = plt.hist(xaddr,camera_dim[0])
             dy = plt.hist(yaddr,camera_dim[1])
-            # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
-            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
-            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+            ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+            ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
 
             #if(len(ind_x_max) > 1):
             #    ind_x_max = np.floor(np.mean(ind_x_max))
@@ -673,16 +679,48 @@ class aedat3_process:
                 out_file.write("err latency dn: " +str(err_dn)  + " us\n")           
             out_file.close()
 
- 
+
+            ts_changes = np.where(np.diff(original) != 0)
+            ts_folds = ts[ts_changes[0][0::edges]] #one every two edges
+            #fold ts 
+            ts_subtract = np.min(ts)
+            ts_folded = []
+            counter_fold = 0
+            for this_ts in range(len(ts)):
+                if(counter_fold < len(ts_folds)):
+                    if(ts[this_ts] >= ts_folds[counter_fold]):
+                        ts_subtract = ts[this_ts]
+                        counter_fold += 1
+                ts_folded.append(ts[this_ts] - ts_subtract)
+
+            ts_folded = np.array(ts_folded)
+            final_index_pos = np.where(pol[final_index] == 0)[0]
+            final_index_neg = np.where(pol[final_index] == 1)[0]
+            hist(ts_folded[final_index],100) #histogtrams
+            plot(ts_folded[final_index], original[final_index]*1000, 'o') #sync
+            plot(ts_folded[final_index], pol[final_index]*1000, 'x') 
+            
+            binss = np.linspace(np.min(ts_folded[final_index]), np.max(ts_folded[final_index]), 50)
+            valuesPos  = hist( ts_folded[final_index[final_index_pos]], bins=binss)
+            valuesNeg = hist( ts_folded[final_index[final_index_neg]], bins=binss)          
+                
+            all_valuesPos.append(valuesPos)
+            all_valuesNeg.append(valuesNeg)
+            all_bins.append(binss)
+
             if do_plot:
+                #figure()
+                #bar(binss[1::], valuesPos[0])
+                #bar(binss[1::], 0 - valuesNeg[0])
                 signal_rec = np.array(signal_rec)
                 original = original - np.mean(original)
                 amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
                 original = original/amplitude_rec
 
                 plt.subplot(4,1,2)
-                plt.plot(ts[final_index]-np.min(ts[final_index]),pol[final_index],"o", color='blue')
-                plt.plot(ts-np.min(ts[final_index]),original*2,"x--", color='red')
+                plt.plot(ts[final_index],pol[final_index],"o", color='blue')
+                #raise Exception
+                plt.plot(ts,original*2,"x--", color='red')
                 plt.subplot(4,1,3)
                 plt.plot((ts-np.min(ts)),original, linewidth=3)
                 plt.xlim([0, np.max(ts)-np.min(ts)])
@@ -739,7 +777,7 @@ class aedat3_process:
                 plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
                 plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
-        return all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up.T, all_latencies_std_dn.T
+        return all_lux, all_valuesPos, all_valuesNeg, all_bins, all_prvalues, original
 
 
     def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
@@ -800,13 +838,8 @@ class aedat3_process:
             dx = plt.hist(xaddr,camera_dim[0])
             dy = plt.hist(yaddr,camera_dim[1])
             # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
-            ind_x_max = int(np.floor(np.mean(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
-            ind_y_max = int(np.floor(np.mean(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
-
-            #if(len(ind_x_max) > 1):
-            #    ind_x_max = np.floor(np.mean(ind_x_max))
-            #if(len(ind_y_max) > 1):
-            #    ind_y_max = np.floor(np.mean(ind_y_max))
+            ind_x_max = int(st.mode(xaddr)[0])#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+            ind_y_max = int(st.mode(yaddr)[0])#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
 
             ts = np.array(ts)
             pol = np.array(pol)
@@ -1421,7 +1454,7 @@ if __name__ == "__main__":
     do_latency_pixel = False
     do_contrast_sensitivity = False
     do_oscillations = True      #for NW
-    directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_oscillations_15_01_16-14_39_08/'
+    directory_meas = 'measurements/Measurements_final/Oscillations/DAVIS240C_oscillations_19_01_16-15_58_55/'
     camera_dim = [240,180]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
@@ -1456,9 +1489,24 @@ if __name__ == "__main__":
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         aedat = aedat3_process()
-        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
-        print("latency up :", all_latencies_mean_up, " std ", all_latencies_std_up)
-        print("latency dn :", all_latencies_mean_dn, " std ", all_latencies_std_dn)
+        all_lux, all_valuesPos, all_valuesNeg, all_bins, all_prvalues, original = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
+        all_lux = np.array(all_lux)
+        all_valuesPos = np.array(all_valuesPos)
+        all_bins = np.array(all_bins)
+        all_prvalues = np.array(all_prvalues)
+
+        nb_values = len(np.unique(all_prvalues))
+        nl_values = len(np.unique(all_lux))
+        figure()
+        count = 0
+        import matplotlib.pyplot as plt
+        f, axarr = plt.subplots(nb_values, nl_values)
+        for this_b in range(nb_values):
+            for this_l in range(nl_values):
+                axarr[this_b, this_l].bar(all_bins[count][1::], all_valuesPos[count][0], width=100, color="g")
+                axarr[this_b, this_l].bar(all_bins[count][1::], 0 - all_valuesNeg[count][0], width=100, color="r") 
+                axarr[this_b, this_l].axhline(y=0, xmin=0, xmax=np.max(all_valuesPos[count][1]))
+                count += 1
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot

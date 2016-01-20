@@ -220,7 +220,7 @@ if do_oscillations:
                 control.send_command("put /1/1-DVS128/bias/ pr int "+str(int(prbpvalues[this_bias])))
             else:
                 control.send_command("put /1/1-DAVISFX2/bias/PrBp/ fineValue short "+str(prbpvalues[this_bias]))
-            control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
+            control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=oscillations_base_level[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()    
     print "Data saved in " +  folder
