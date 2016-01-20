@@ -470,7 +470,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2):
+    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False):
         '''
             oscillations/latency, single pixel signal reconstruction
             ----
@@ -480,7 +480,7 @@ class aedat3_process:
         '''
         import string as stra
         #################################################################
-        ############### LATENCY ANALISYS
+        ############### OSCILLATIONS ANALISYS
         #################################################################
         #get all files in dir
         directory = latency_pixel_dir
@@ -558,16 +558,18 @@ class aedat3_process:
             indey_to_get, un = self.ismember(yaddr,y_to_get)
             final_index = (index_to_get & indey_to_get)
 
-            index_up_jump = sp_type == 2
-            index_dn_jump = sp_type == 3
-            
+            if(dvs128xml == False):
+                index_up_jump = sp_type == 2
+                index_dn_jump = sp_type == 3
+            else:
+                index_up_jump = sp_type == 4
+                index_dn_jump = sp_type == 4
+
             original = np.zeros(len(ts))
             this_index = 0
             for i in range(len(ts)):
                 if(ts[i] < sp_t[this_index]):
-                    original[i] = sp_type[this_index]
-                    #if(this_index != len(sp_t)-1):
-                    #    this_index = this_index+1  
+                    original[i] = sp_type[this_index] 
                 elif(ts[i] >= sp_t[this_index]):           
                     original[i] = sp_type[this_index] 
                     if(this_index != len(sp_t)-1):
@@ -694,8 +696,8 @@ class aedat3_process:
                 ts_folded.append(ts[this_ts] - ts_subtract)
 
             ts_folded = np.array(ts_folded)
-            final_index_pos = np.where(pol[final_index] == 0)[0]
-            final_index_neg = np.where(pol[final_index] == 1)[0]
+            final_index_pos = np.where(pol[final_index] == 1)[0]
+            final_index_neg = np.where(pol[final_index] == 0)[0]
             hist(ts_folded[final_index],100) #histogtrams
             plot(ts_folded[final_index], original[final_index]*1000, 'o') #sync
             plot(ts_folded[final_index], pol[final_index]*1000, 'x') 
@@ -718,7 +720,7 @@ class aedat3_process:
                 original = original/amplitude_rec
 
                 plt.subplot(4,1,2)
-                plt.plot(ts[final_index],pol[final_index],"o", color='blue')
+                plt.plot(ts[final_index],pol[final_index]*0.5,"o", color='blue')
                 #raise Exception
                 plt.plot(ts,original*2,"x--", color='red')
                 plt.subplot(4,1,3)
@@ -1503,10 +1505,11 @@ if __name__ == "__main__":
         f, axarr = plt.subplots(nb_values, nl_values)
         for this_b in range(nb_values):
             for this_l in range(nl_values):
-                axarr[this_b, this_l].bar(all_bins[count][1::], all_valuesPos[count][0], width=100, color="g")
-                axarr[this_b, this_l].bar(all_bins[count][1::], 0 - all_valuesNeg[count][0], width=100, color="r") 
+                axarr[this_b, this_l].bar(all_bins[count][1::], all_valuesPos[count][0], width=1000, color="g")
+                axarr[this_b, this_l].bar(all_bins[count][1::], 0 - all_valuesNeg[count][0], width=1000, color="r") 
                 axarr[this_b, this_l].axhline(y=0, xmin=0, xmax=np.max(all_valuesPos[count][1]))
                 count += 1
+        show()
 
     if do_ptc:
         ## Photon transfer curve and sensitivity plot
