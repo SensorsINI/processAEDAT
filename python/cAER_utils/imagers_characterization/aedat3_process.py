@@ -1488,10 +1488,10 @@ if __name__ == "__main__":
     do_ptc = False
     do_fpn = False
     do_latency_pixel = False
-    do_contrast_sensitivity = True
-    do_oscillations = False      #for NW
-    directory_meas = 'measurements/DAVIS208Mono_contrast_sensitivity_14_01_16-14_20_25/'
-    camera_dim = [208,192]
+    do_contrast_sensitivity = False
+    do_oscillations = True      #for NW
+    directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_oscillations_21_01_16-17_21_44/'
+    camera_dim = [240,180]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
@@ -1502,13 +1502,13 @@ if __name__ == "__main__":
     # 0.648 external adcs reference is the same for all chips
     ADC_range = 1.29#0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
+    frame_x_divisions = [[0,128]]
     #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
     #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
     #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     #   128DVS                  [[0,128]]
-    frame_y_divisions = [[0,191]]
-    #   208Mono 	[[0,191]]s
+    frame_y_divisions = [[0,128]]
+    #   208Mono 	[[0,191]]
     #   640Color 	[[121,122]] 
     #   240C		[[0,180]]
     #   128DVS      [[0,128]]
@@ -1533,7 +1533,7 @@ if __name__ == "__main__":
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         aedat = aedat3_process()
-        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [128,128], size_led = 2, file_type="cAER", confidence_level=0.95, pixel_sel = [35,38], dvs128xml=True) #pixel size of the led
+        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 3, file_type="cAER", confidence_level=0.95, pixel_sel = [136, 43] , dvs128xml=False) #pixel_sel = [35,38] #pixel size of the led
 
         all_lux = np.array(all_lux)
         all_prvalues = np.array(all_prvalues)
@@ -1580,8 +1580,16 @@ if __name__ == "__main__":
             valuesNeg = np.histogram( ts_folded[dn_index], bins=binss)
             
             #plot in the 2d grid space of biases vs lux
-            rows = int(np.where(all_lux[this_file] == np.unique(all_lux))[0])
-            cols = int(np.where(all_prvalues[this_file] == np.unique(all_prvalues))[0])
+            n_lux = []
+            for i in range(len(all_lux)):
+                n_lux.append(int(all_lux[i]))
+            n_lux = np.array(n_lux)
+            n_pr = []
+            for i in range(len(all_prvalues)):
+                n_pr.append(int(all_prvalues[i]))
+            n_pr = np.array(n_pr)          
+            rows = int(np.where(n_lux[this_file] == np.unique(n_lux))[0])
+            cols = int(np.where(n_pr[this_file] == np.unique(n_pr))[0])
             axarr[rows, cols].bar(binss[1::], valuesPos[0], width=1000, color="g")
             axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=1000, color="r")
             axarr[rows, cols].plot([meanPeriod, meanPeriod],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
