@@ -574,19 +574,34 @@ class aedat3_process:
                 index_up_jump = sp_type == 2
                 index_dn_jump = sp_type == 3
             else:
-                index_up_jump = sp_type == 4
-                index_dn_jump = sp_type == 4
+                #we only have a single edge
+                index_up_jump = sp_type == 2
+                index_dn_jump = sp_type == 2
+                #we assume 50% duty cicle and we add the second edge
+                sp_t_n = []
+                sp_type_n = []
+                period_diff = np.mean(np.diff(sp_t))
+                for i in range(len(sp_t)):
+                    sp_t_n.append(sp_t[i])
+                    sp_t_n.append(sp_t[i]+int(period_diff/2.0))
+                    sp_type_n.append(sp_type[i])
+                    sp_type_n.append(3) ##add transition
+                sp_type_n = np.array(sp_type_n)
+                sp_t_n = np.array(sp_t_n)
+                sp_t = sp_t_n
+                sp_type = sp_type_n
 
             original = np.zeros(len(ts))
             this_index = 0
             for i in range(len(ts)):
                 if(ts[i] < sp_t[this_index]):
                     original[i] = sp_type[this_index] 
-                elif(ts[i] >= sp_t[this_index]):           
-                    original[i] = sp_type[this_index] 
+                elif(ts[i] >= sp_t[this_index]):      
+                    original[i] = sp_type[this_index]                    
                     if(this_index != len(sp_t)-1):
                         this_index = this_index+1  
-  
+
+
             stim_freq = np.mean(1.0/(np.diff(sp_t)*self.time_res*2))
             print("stimulus frequency was :"+str(stim_freq))                         
                   
@@ -656,6 +671,7 @@ class aedat3_process:
                                     if(this_latency > 0):
                                         latency_dn_tot.append([this_latency, this_neuron])  
                                         counter_transitions_dn = counter_transitions_dn +1    
+                
                     signal_rec.append(tmp_rec)
                     ts_t.append(tmp_t)
 
@@ -772,31 +788,31 @@ class aedat3_process:
                 # Find maximum point
                 plt.savefig(figure_dir+"combined_latency_"+str(this_file)+".png",  format='png', dpi=300)
                 
+        if(dvs128xml == False):
+            if do_plot:
+                all_lux = np.array(all_lux)
+                all_filters_type = np.array(all_filters_type)
+                all_latencies_mean_up = np.array(all_latencies_mean_up)
+                all_latencies_mean_dn = np.array(all_latencies_mean_dn)
+                all_latencies_std_up = np.array(all_latencies_std_up)
+                all_latencies_std_dn = np.array(all_latencies_std_dn)
 
-        if do_plot:
-            all_lux = np.array(all_lux)
-            all_filters_type = np.array(all_filters_type)
-            all_latencies_mean_up = np.array(all_latencies_mean_up)
-            all_latencies_mean_dn = np.array(all_latencies_mean_dn)
-            all_latencies_std_up = np.array(all_latencies_std_up)
-            all_latencies_std_dn = np.array(all_latencies_std_dn)
-
-            if(len(all_latencies_mean_up) > 0):
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
-                plt.title("final latency plots with filter: " + str(all_filters_type[0]))
-                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
-                plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
-                ax.set_xscale("log", nonposx='clip')
-                ax.set_yscale("log", nonposx='clip')
-                ax.grid(True, which="both", ls="--")
-                #xlim([np.min(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0]))), np.max(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])))+10])
-                #ylim([np.min(all_latencies_mean_up)-np.std(all_latencies_mean_up), np.max(all_latencies_mean_up)+10])
-                plt.xlabel('lux')
-                plt.ylabel('latency [us]')
-                plt.legend(loc='best')
-                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
-                plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
+                if(len(all_latencies_mean_up) > 0):
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.title("final latency plots with filter: " + str(all_filters_type[0]))
+                    plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_up, yerr=all_latencies_mean_up-all_latencies_std_up.T[0], markersize=4, marker='o', label='UP')
+                    plt.errorbar(np.array(all_lux, dtype=float)/np.power(10,np.double(all_filters_type[0])), all_latencies_mean_dn, yerr=all_latencies_mean_dn-all_latencies_std_dn.T[0], markersize=4, marker='o', label='DN')
+                    ax.set_xscale("log", nonposx='clip')
+                    ax.set_yscale("log", nonposx='clip')
+                    ax.grid(True, which="both", ls="--")
+                    #xlim([np.min(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0]))), np.max(np.array(all_lux, dtype=double)/np.power(10,double(all_filters_type[0])))+10])
+                    #ylim([np.min(all_latencies_mean_up)-np.std(all_latencies_mean_up), np.max(all_latencies_mean_up)+10])
+                    plt.xlabel('lux')
+                    plt.ylabel('latency [us]')
+                    plt.legend(loc='best')
+                    plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
+                    plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
         return all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index
 
@@ -1474,7 +1490,7 @@ if __name__ == "__main__":
     do_latency_pixel = False
     do_contrast_sensitivity = False
     do_oscillations = True      #for NW
-    directory_meas = 'measurements/Measurements_final/Oscillations/DAVIS240C_oscillations_19_01_16-15_58_55/'
+    directory_meas = 'measurements/Measurements_final/DVS128/DVS128_oscillations_19_01_16-17_09_12/'
     camera_dim = [240,180]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
@@ -1486,14 +1502,16 @@ if __name__ == "__main__":
     # 0.648 external adcs reference is the same for all chips
     ADC_range = 1.29#0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+    frame_x_divisions = [[0,128]]
     #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
     #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
     #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    frame_y_divisions = [[0,180]]
+    #   128DVS                  [[0,128]]
+    frame_y_divisions = [[0,128]]
     #   208Mono 	[[0,191]]
     #   640Color 	[[121,122]] 
     #   240C		[[0,180]]
+    #   128DVS      [[0,128]]
     # 
     # ###############################
     # contrast sensitivity parameter
@@ -1503,13 +1521,19 @@ if __name__ == "__main__":
     ################### 
     # END PARAMETERS
     ###################
+
+
+
     if do_oscillations:
+    ################### 
+    # OSCILLATIONS EXP
+    ###################
         oscil_dir = directory_meas
         figure_dir =  oscil_dir+'/figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         aedat = aedat3_process()
-        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95, pixel_sel = [144, 36]) #pixel size of the led
+        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [128,128], size_led = 2, file_type="cAER", confidence_level=0.95, pixel_sel = [35,38], dvs128xml=True) #pixel size of the led
 
         all_lux = np.array(all_lux)
         all_prvalues = np.array(all_prvalues)
@@ -1534,7 +1558,6 @@ if __name__ == "__main__":
             #now fold signal
             ts_changes_index = np.where(np.diff(current_original) != 0)[0]
             ts_folds = current_ts_original[ts_changes_index][0::edges] #one every two edges
-            #fold ts 
             ts_subtract = 0
             ts_folded = []
             counter_fold = 0
@@ -1556,6 +1579,7 @@ if __name__ == "__main__":
             valuesPos = np.histogram( ts_folded[up_index], bins=binss)
             valuesNeg = np.histogram( ts_folded[dn_index], bins=binss)
             
+            #plot in the 2d grid space of biases vs lux
             rows = int(np.where(all_lux[this_file] == np.unique(all_lux))[0])
             cols = int(np.where(all_prvalues[this_file] == np.unique(all_prvalues))[0])
             axarr[rows, cols].bar(binss[1::], valuesPos[0], width=1000, color="g")
@@ -1565,6 +1589,9 @@ if __name__ == "__main__":
         show()
 
     if do_ptc:
+    #######################
+    # PHOTON TRANSFER CURVE
+    #######################
         ## Photon transfer curve and sensitivity plot
         ptc_dir = directory_meas
         # select test pixels areas
@@ -1573,6 +1600,9 @@ if __name__ == "__main__":
         aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
 
     if do_contrast_sensitivity:
+    #######################
+    # CONTRAST SENSITIVITY
+    #######################
         cs_dir = directory_meas
         figure_dir = cs_dir + '/figures/'
         if(not os.path.exists(figure_dir)):
@@ -1583,6 +1613,9 @@ if __name__ == "__main__":
    
 
     if do_fpn:
+    #######################
+    # FIXED PATTERN NOISE
+    #######################
         fpn_dir = directory_meas
         figure_dir = fpn_dir + '/figures/'
         if(not os.path.exists(figure_dir)):
@@ -1641,6 +1674,9 @@ if __name__ == "__main__":
 
 
     if do_latency_pixel:
+    #######################
+    # LATENCY
+    #######################
         #latency_pixel_dir = 'measurements/Measurements_final/DAVIS240C_latency_25_11_15-16_35_03_FAST_0/'
         latency_pixel_dir = directory_meas
         figure_dir = latency_pixel_dir+'/figures/'
