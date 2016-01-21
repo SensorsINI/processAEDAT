@@ -23,7 +23,7 @@ do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = False
 do_oscillations = True
-oscillations = 50.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
+oscillations = 20.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
@@ -36,16 +36,17 @@ global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
 contrast_level = 0.5                # in oscillations/latency
 freq_square = 10.0                  # in oscillations/latency
-oscillations_base_level = [60, 300, 3000]	#oscillations
-prbpvalues = np.linspace(0,500,3)      # davi240c [255,25,3]             #oscillations fine values for PrBp
+oscillations_base_level = [60, 300, 1300, 3000]	#oscillations
+prbpvalues = [255,25,3]   # davi240c [255,25,3]             #oscillations fine values for PrBp
+                # dvs128   np.linspace(0,1000,5)         
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DVS128" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DVS128" #"DAVISFX3"
-bias_file = "cameras/dvs128_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
-dvs128xml = True
+sensor = "DAVIS240C" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX2" #"DAVISFX3"
+bias_file = "cameras/davis240c_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+dvs128xml = False
 host_ip = '127.0.0.1'#'172.19.11.139'
 
 ##############################################################################

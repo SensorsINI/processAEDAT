@@ -401,8 +401,9 @@ class caer_communication:
             print("APS array is OFF")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
+        print("wait for biases to stabilize...")
+        time.sleep(3)
         print("Recording for " + str(recording_time))                
-        time.sleep(0.5)
         #open communication data
         self.open_communication_data()
         filename = folder + '/oscillations_recording_time_'+format(int(recording_time), '07d')+'_num_meas_'+format(int(num_measurement), '07d')+'_lux_'+str(lux)+'_filter-type_'+str(filter_type)+'_prvaluefine_'+format(int(prbias), '07d')+'_.aedat' 
