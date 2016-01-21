@@ -1533,7 +1533,9 @@ if __name__ == "__main__":
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         aedat = aedat3_process()
-        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 3, file_type="cAER", confidence_level=0.95, pixel_sel = [136, 43] , dvs128xml=False) #pixel_sel = [35,38] #pixel size of the led
+        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 3, file_type="cAER", confidence_level=0.95,pixel_sel = [142,49], dvs128xml=False) 
+        #pixel_sel = [35,38] #pixel size of the led
+        #pixel_sel = [142,50] #pixel size of the led
 
         all_lux = np.array(all_lux)
         all_prvalues = np.array(all_prvalues)
@@ -1594,6 +1596,7 @@ if __name__ == "__main__":
             axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=1000, color="r")
             axarr[rows, cols].plot([meanPeriod, meanPeriod],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
             axarr[rows, cols].text(np.max(binss[1::])/4.0, -np.max(valuesNeg[0])/2.0,  'lux = '+str(all_lux[this_file])+'\n'+'PrBias = '+str(all_prvalues[this_file])+'\n', fontsize = 11, color = 'b')
+            axarr[rows, cols].set_ylim([-50,50])
         show()
 
     if do_ptc:
