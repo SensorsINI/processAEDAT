@@ -470,7 +470,7 @@ class aedat3_process:
         index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
         return tf, index
 
-    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False):
+    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False, pixel_sel = False):
         '''
             oscillations/latency, single pixel signal reconstruction
             ----
@@ -503,6 +503,11 @@ class aedat3_process:
         all_valuesPos = []
         all_valuesNeg = []
         all_bins = []
+        all_originals = []
+        all_folded = []
+        all_ts = []
+        all_pol = []
+        all_final_index = []
 
         for this_file in range(len(files_in_dir)):
             #exp_settings = string.split(files_in_dir[this_file],"_")
@@ -534,9 +539,16 @@ class aedat3_process:
                 plt.subplot(4,1,1)
             dx = plt.hist(xaddr,camera_dim[0])
             dy = plt.hist(yaddr,camera_dim[1])
-            ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
-            ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
-
+            if(pixel_sel == False):
+                ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+                ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+                print("selected pixel x: "+str(ind_x_max))
+                print("selected pixel y: "+str(ind_y_max))
+            else:
+                print("using pixels selected from user x,y: "+str(pixel_sel))
+                ind_x_max = pixel_sel[0]
+                ind_y_max = pixel_sel[1]
+    
             #if(len(ind_x_max) > 1):
             #    ind_x_max = np.floor(np.mean(ind_x_max))
             #if(len(ind_y_max) > 1):
@@ -574,7 +586,7 @@ class aedat3_process:
                     original[i] = sp_type[this_index] 
                     if(this_index != len(sp_t)-1):
                         this_index = this_index+1  
-          
+  
             stim_freq = np.mean(1.0/(np.diff(sp_t)*self.time_res*2))
             print("stimulus frequency was :"+str(stim_freq))                         
                   
@@ -696,28 +708,36 @@ class aedat3_process:
                 ts_folded.append(ts[this_ts] - ts_subtract)
 
             ts_folded = np.array(ts_folded)
-            final_index_pos = np.where(pol[final_index] == 1)[0]
-            final_index_neg = np.where(pol[final_index] == 0)[0]
-            hist(ts_folded[final_index],100) #histogtrams
-            plot(ts_folded[final_index], original[final_index]*1000, 'o') #sync
-            plot(ts_folded[final_index], pol[final_index]*1000, 'x') 
+            all_folded.append(ts_folded)
+            #final_index_pos = np.where(pol[final_index] == 1)[0]
+            #final_index_neg = np.where(pol[final_index] == 0)[0]
+            #plt.hist(ts_folded[final_index],100) #histogtrams
+            #plt.plot(ts_folded[final_index], original[final_index]*1000, 'o') #sync
+            #plt.plot(ts_folded[final_index], pol[final_index]*1000, 'x') 
             
-            binss = np.linspace(np.min(ts_folded[final_index]), np.max(ts_folded[final_index]), 50)
-            valuesPos  = hist( ts_folded[final_index[final_index_pos]], bins=binss)
-            valuesNeg = hist( ts_folded[final_index[final_index_neg]], bins=binss)          
+            all_pol.append(pol)
+            all_final_index.append(final_index)
+
+            #binss = np.linspace(np.min(ts_folded[final_index]), np.max(ts_folded[final_index]), 50)
+            #valuesPos  = plt.hist( ts_folded[final_index[final_index_pos]], bins=binss)
+            #valuesNeg = plt.hist( ts_folded[final_index[final_index_neg]], bins=binss)          
                 
-            all_valuesPos.append(valuesPos)
-            all_valuesNeg.append(valuesNeg)
-            all_bins.append(binss)
+            #all_valuesPos.append(valuesPos)
+            #all_valuesNeg.append(valuesNeg)
+            #all_bins.append(binss)
+
+            signal_rec = np.array(signal_rec)
+            original = original - np.mean(original)
+            amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
+            original = original/amplitude_rec
+            all_originals.append(original)        
+            all_ts.append(ts)
+            #all_ts_final.append(ts[final_index])
 
             if do_plot:
                 #figure()
                 #bar(binss[1::], valuesPos[0])
                 #bar(binss[1::], 0 - valuesNeg[0])
-                signal_rec = np.array(signal_rec)
-                original = original - np.mean(original)
-                amplitude_rec = np.abs(np.max(original))+np.abs(np.min(original))
-                original = original/amplitude_rec
 
                 plt.subplot(4,1,2)
                 plt.plot(ts[final_index],pol[final_index]*0.5,"o", color='blue')
@@ -735,7 +755,6 @@ class aedat3_process:
                     else:
                         print("skipping neuron")
                 
-
                 ax = fig.add_subplot(4,1,4, projection='3d')
                 x = xaddr
                 y = yaddr
@@ -779,7 +798,7 @@ class aedat3_process:
                 plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".pdf",  format='PDF')
                 plt.savefig(figure_dir+"all_latencies_"+str(this_file)+".png",  format='PNG')
 
-        return all_lux, all_valuesPos, all_valuesNeg, all_bins, all_prvalues, original
+        return all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index
 
 
     def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
@@ -980,7 +999,6 @@ class aedat3_process:
                 out_file.write("err latency dn: " +str(err_dn)  + " us\n")           
             out_file.close()
 
- 
             if do_plot:
                 signal_rec = np.array(signal_rec)
                 original = original - np.mean(original)
@@ -1491,24 +1509,59 @@ if __name__ == "__main__":
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         aedat = aedat3_process()
-        all_lux, all_valuesPos, all_valuesNeg, all_bins, all_prvalues, original = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
-        all_lux = np.array(all_lux)
-        all_valuesPos = np.array(all_valuesPos)
-        all_bins = np.array(all_bins)
-        all_prvalues = np.array(all_prvalues)
+        all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95, pixel_sel = [144, 36]) #pixel size of the led
 
+        all_lux = np.array(all_lux)
+        all_prvalues = np.array(all_prvalues)
+        all_ts = np.array(all_ts)
+        all_originals = np.array(all_originals)
+        all_folded = np.array(all_folded)
+        all_pol = np.array(all_pol)
+
+        #just plot 2x2 center pixels 
+        edges = 2
+        import matplotlib.pyplot as plt
+        import pylab
         nb_values = len(np.unique(all_prvalues))
         nl_values = len(np.unique(all_lux))
-        figure()
-        count = 0
-        import matplotlib.pyplot as plt
-        f, axarr = plt.subplots(nb_values, nl_values)
-        for this_b in range(nb_values):
-            for this_l in range(nl_values):
-                axarr[this_b, this_l].bar(all_bins[count][1::], all_valuesPos[count][0], width=1000, color="g")
-                axarr[this_b, this_l].bar(all_bins[count][1::], 0 - all_valuesNeg[count][0], width=1000, color="r") 
-                axarr[this_b, this_l].axhline(y=0, xmin=0, xmax=np.max(all_valuesPos[count][1]))
-                count += 1
+        f, axarr = plt.subplots(nl_values, nb_values)
+        for this_file in range(len(all_ts)):
+            current_ts = all_ts[this_file][all_final_index[this_file]]
+            current_pol = all_pol[this_file][all_final_index[this_file]]
+            current_ts_original = all_ts[this_file]
+            current_original = all_originals[this_file]
+
+            #now fold signal
+            ts_changes_index = np.where(np.diff(current_original) != 0)[0]
+            ts_folds = current_ts_original[ts_changes_index][0::edges] #one every two edges
+            #fold ts 
+            ts_subtract = 0
+            ts_folded = []
+            counter_fold = 0
+            start_saving = False
+            for this_ts in range(len(current_ts)):
+                if(counter_fold < len(ts_folds)):
+                    if(current_ts[this_ts] >= ts_folds[counter_fold]):
+                        ts_subtract = ts_folds[counter_fold]
+                        counter_fold += 1
+                        start_saving = True
+                if(start_saving):
+                    ts_folded.append(current_ts[this_ts] - ts_subtract)
+            ts_folded = np.array(ts_folded)
+            meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:]) / 2.0
+            binss = np.linspace(np.min(ts_folded), np.max(ts_folded), 50)    
+            starting = len(current_ts)-len(ts_folded)
+            dn_index = current_pol[starting::] == 0
+            up_index = current_pol[starting::] == 1    
+            valuesPos = np.histogram( ts_folded[up_index], bins=binss)
+            valuesNeg = np.histogram( ts_folded[dn_index], bins=binss)
+            
+            rows = int(np.where(all_lux[this_file] == np.unique(all_lux))[0])
+            cols = int(np.where(all_prvalues[this_file] == np.unique(all_prvalues))[0])
+            axarr[rows, cols].bar(binss[1::], valuesPos[0], width=1000, color="g")
+            axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=1000, color="r")
+            axarr[rows, cols].plot([meanPeriod, meanPeriod],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
+            axarr[rows, cols].text(np.max(binss[1::])/4.0, -np.max(valuesNeg[0])/2.0,  'lux = '+str(all_lux[this_file])+'\n'+'PrBias = '+str(all_prvalues[this_file])+'\n', fontsize = 11, color = 'b')
         show()
 
     if do_ptc:
