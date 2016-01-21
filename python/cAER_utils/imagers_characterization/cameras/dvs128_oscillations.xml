@@ -9,8 +9,8 @@
                 <node name="bias" path="/1/1-DVS128/bias/">
                     <attr key="cas" type="int">1992</attr>
                     <attr key="diff" type="int">13125</attr>
-                    <attr key="diffOff" type="int">132</attr>
-                    <attr key="diffOn" type="int">209996</attr>
+                    <attr key="diffOff" type="int">1861</attr>
+                    <attr key="diffOn" type="int">144197</attr>
                     <attr key="foll" type="int">271</attr>
                     <attr key="injGnd" type="int">1108364</attr>
                     <attr key="pr" type="int">217</attr>
