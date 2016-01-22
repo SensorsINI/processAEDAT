@@ -1515,8 +1515,9 @@ if __name__ == "__main__":
     do_latency_pixel = True
     do_contrast_sensitivity = False
     do_oscillations = False      #for NW
-    directory_meas = 'measurements/Measurements_final/CDAVIS4640RGBW/CDAVIS640_latency_22_01_16-15_51_04/'
+    directory_meas = 'measurements/CDAVIS640RGBW_oscillations_22_01_16-16_13_33/'
     camera_dim = [640,480]
+    pixel_sel = [362,160]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
@@ -1722,7 +1723,7 @@ if __name__ == "__main__":
         # select test pixels areas only two are active
 
         aedat = aedat3_process()
-        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
+        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER",pixel_sel = pixel_sel,confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
 
 
 

@@ -47,7 +47,7 @@ prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3]             #oscillati
 ###############################################################################
 sensor = "CDAVIS640RGBW" #"DAVIS208Mono"#"CDAVIS640rgbw"#
 sensor_type ="DAVISFX3" #"DAVISFX3"
-bias_file = "cameras/cdavis640rgbw_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+bias_file = "cameras/cdavis640rgbw_latency.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 dvs128xml = False
 host_ip = '127.0.0.1'#'172.19.11.139'
 
