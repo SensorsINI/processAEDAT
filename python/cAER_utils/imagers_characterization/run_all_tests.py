@@ -20,9 +20,10 @@ import aedat3_process
 ###############################################################################
 do_ptc = False
 do_fpn = False
-do_latency_pixel = False
+do_latency_pixel_led_board = False
+do_latency_pixel_big_led = True
 do_contrast_sensitivity = False
-do_oscillations = True
+do_oscillations = False
 oscillations = 20.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
 base_level = 1000.0 #  1 klux
@@ -36,16 +37,17 @@ global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
 contrast_level = 0.5                # in oscillations/latency
 freq_square = 10.0                  # in oscillations/latency
-oscillations_base_level = [60, 300, 1300, 3000]	#oscillations
-prbpvalues = [255,25,3]   # davi240c [255,25,3]             #oscillations fine values for PrBp
+oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
+base_level_latency_big_led = [500, 1500, 2500, 3000]
+prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3]             #oscillations fine values for PrBp
                 # dvs128   np.linspace(0,1000,5)         
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS240C" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX2" #"DAVISFX3"
-bias_file = "cameras/davis240c_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+sensor = "CDAVIS640RGBW" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX3" #"DAVISFX3"
+bias_file = "cameras/cdavis640rgbw_oscillations.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 dvs128xml = False
 host_ip = '127.0.0.1'#'172.19.11.139'
 
@@ -220,15 +222,57 @@ if do_oscillations:
             if(dvs128xml):
                 control.send_command("put /1/1-DVS128/bias/ pr int "+str(int(prbpvalues[this_bias])))
             else:
-                control.send_command("put /1/1-DAVISFX2/bias/PrBp/ fineValue short "+str(prbpvalues[this_bias]))
+                control.send_command("put /1/1-DAVISFX2/bias/RefrBp/ fineValue short "+str(prbpvalues[this_bias]))
             control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=oscillations_base_level[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()    
     print "Data saved in " +  folder
-   
-if do_latency_pixel:
+  
+if do_latency_pixel_big_led:
     print "\n"
-    print "we are doing latency measurements, please put homogeneous light source (integrating sphere), and connect led board. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
+    print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
+    raw_input("Press Enter to continue...")
+
+    filter_type = 2.0
+    control.open_communication_command()
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)    
+    folder = datadir + '/'+ sensor + '_oscillations_' +  current_date
+    setting_dir = folder + str("/settings/")
+
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+
+    num_measurements = len(base_level_latency_big_led) 
+    #base_level_v = 1.5
+    #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
+    recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    copyFile(bias_file, setting_dir+str("biases_latencies_all_exposures.xml") )
+    for i in range(num_measurements):
+        print("Base level: "+str(base_level_latency_big_led[i]))
+        perc_low = base_level_latency_big_led[i]-(contrast_level/2.0)*base_level_latency_big_led[i]
+        perc_hi = base_level_latency_big_led[i]+(contrast_level/2.0)*base_level_latency_big_led[i]
+        v_hi = (perc_hi - inter) / slope
+        v_low = (perc_low - inter) / slope 
+        offset = np.mean([v_hi,v_low])
+        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
+        copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
+        time.sleep(3)
+        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+    control.close_communication_command()    
+    print "Data saved in " +  folder
+ 
+if do_latency_pixel_led_board:
+    print "\n"
+    print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
 
     filter_type = 0.0
@@ -240,7 +284,7 @@ if do_latency_pixel:
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
 
-	base_level = lux
+    base_level = lux
     num_measurements = len(base_level) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
@@ -257,7 +301,7 @@ if do_latency_pixel:
         control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
-        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type)
+        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
 

@@ -190,7 +190,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PixInvBn" path="/1/1-DAVISFX3/bias/PixInvBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
+                        <attr key="coarseValue" type="byte">6</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="short">129</attr>
@@ -198,18 +198,18 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrBp" path="/1/1-DAVISFX3/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">2</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">3</attr>
+                        <attr key="fineValue" type="short">59</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="PrSFBp" path="/1/1-DAVISFX3/bias/PrSFBp/">
-                        <attr key="coarseValue" type="byte">1</attr>
+                        <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">1</attr>
+                        <attr key="fineValue" type="short">17</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -225,7 +225,7 @@
                         <attr key="coarseValue" type="byte">4</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">25</attr>
+                        <attr key="fineValue" type="short">250</attr>
                         <attr key="sex" type="string">P</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -288,11 +288,11 @@
                     <attr key="WaitOnTransferStall" type="bool">false</attr>
                 </node>
                 <node name="externalInput" path="/1/1-DAVISFX3/externalInput/">
-                    <attr key="DetectFallingEdges" type="bool">false</attr>
+                    <attr key="DetectFallingEdges" type="bool">true</attr>
                     <attr key="DetectPulseLength" type="int">120</attr>
                     <attr key="DetectPulsePolarity" type="bool">true</attr>
                     <attr key="DetectPulses" type="bool">true</attr>
-                    <attr key="DetectRisingEdges" type="bool">false</attr>
+                    <attr key="DetectRisingEdges" type="bool">true</attr>
                     <attr key="GeneratePulseInterval" type="int">120</attr>
                     <attr key="GeneratePulseLength" type="int">60</attr>
                     <attr key="GeneratePulsePolarity" type="bool">true</attr>

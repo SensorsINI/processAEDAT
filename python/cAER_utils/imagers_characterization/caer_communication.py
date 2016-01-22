@@ -357,8 +357,8 @@ class caer_communication:
         #switch on edge detector for special event
         self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
         self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/DetectFallingEdges bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/DetectRisingEdges bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectFallingEdges bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectRisingEdges bool true')
         #loop over exposures and save data
         self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
         print("APS array is OFF")
