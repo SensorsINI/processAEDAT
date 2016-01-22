@@ -817,7 +817,7 @@ class aedat3_process:
         return all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index
 
 
-    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER"):
+    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", pixel_sel = False, dvs128xml = False):
         '''
             Pixel Latency, single pixel signal reconstruction
             ----
@@ -874,9 +874,16 @@ class aedat3_process:
                 plt.subplot(4,1,1)
             dx = plt.hist(xaddr,camera_dim[0])
             dy = plt.hist(yaddr,camera_dim[1])
-            # ####### CHECK THIS IF IT IS ALWAYS THE CASE.. maybe not
-            ind_x_max = int(st.mode(xaddr)[0])#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
-            ind_y_max = int(st.mode(yaddr)[0])#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+            if(pixel_sel == False):
+                ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+                ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+                print("selected pixel x: "+str(ind_x_max))
+                print("selected pixel y: "+str(ind_y_max))
+            else:
+                print("using pixels selected from user x,y: "+str(pixel_sel))
+                ind_x_max = pixel_sel[0]
+                ind_y_max = pixel_sel[1]
+    
 
             ts = np.array(ts)
             pol = np.array(pol)
@@ -894,8 +901,26 @@ class aedat3_process:
             indey_to_get, un = self.ismember(yaddr,y_to_get)
             final_index = (index_to_get & indey_to_get)
 
-            index_up_jump = sp_type == 2
-            index_dn_jump = sp_type == 3
+            if(dvs128xml == False):
+                index_up_jump = sp_type == 2
+                index_dn_jump = sp_type == 3
+            else:
+                #we only have a single edge
+                index_up_jump = sp_type == 2
+                index_dn_jump = sp_type == 2
+                #we assume 50% duty cicle and we add the second edge
+                sp_t_n = []
+                sp_type_n = []
+                period_diff = np.mean(np.diff(sp_t))
+                for i in range(len(sp_t)):
+                    sp_t_n.append(sp_t[i])
+                    sp_t_n.append(sp_t[i]+int(period_diff/2.0))
+                    sp_type_n.append(sp_type[i])
+                    sp_type_n.append(3) ##add transition
+                sp_type_n = np.array(sp_type_n)
+                sp_t_n = np.array(sp_t_n)
+                sp_t = sp_t_n
+                sp_type = sp_type_n
             
             original = np.zeros(len(ts))
             this_index = 0
@@ -1487,10 +1512,10 @@ if __name__ == "__main__":
     ###################
     do_ptc = False
     do_fpn = False
-    do_latency_pixel = False
+    do_latency_pixel = True
     do_contrast_sensitivity = False
-    do_oscillations = True      #for NW
-    directory_meas = 'measurements/Measurements_final/CDAVIS4640RGBW/Oscillations/CDAVIS640RGBW_oscillations_22_01_16-15_20_01/'
+    do_oscillations = False      #for NW
+    directory_meas = 'measurements/Measurements_final/CDAVIS4640RGBW/CDAVIS640_latency_22_01_16-15_51_04/'
     camera_dim = [640,480]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
@@ -1697,7 +1722,7 @@ if __name__ == "__main__":
         # select test pixels areas only two are active
 
         aedat = aedat3_process()
-        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = [240,180], size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led
+        all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER", confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
 
 
 
