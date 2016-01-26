@@ -179,7 +179,7 @@ class aedat3_process:
         with open(filename, "rb") as f:       
             while True:
                 data = f.read(self.header_length)
-                if not data:
+                if not data or len(data) != self.header_length:
                     break
                 # read header
                 eventtype = struct.unpack('H',data[0:2])[0]
