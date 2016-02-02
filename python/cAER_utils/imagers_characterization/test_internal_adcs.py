@@ -29,7 +29,7 @@ host_ip = '127.0.0.1'#'172.19.11.139'
 datadir = 'measurements'
 adc_test_voltate = np.linspace(0,63,10)
 exposure_time = 0.2
-frame_number = 10
+frame_number = 50
 #######################
 
 folder = datadir + '/'+ sensor + '_test_internal_adcs_' +  current_date
