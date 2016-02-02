@@ -68,7 +68,9 @@ for this_v in range(len(adc_test_voltate)):
     control.open_communication_data()
     control.start_logging(filename)    
     time.sleep(recording_time)
+    print("stop o")
     control.stop_logging()
+    print("stop a")
     control.close_communication_data()
 
 print("Done with adc measurements")
