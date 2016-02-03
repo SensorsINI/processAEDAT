@@ -245,7 +245,7 @@ class aedat3_process:
             return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot, special_ts, special_types
 
     
-    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions):
+    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):
         '''
             Photon transfer curve and sensitivity plot
          
@@ -1634,7 +1634,7 @@ if __name__ == "__main__":
         # select test pixels areas
         # note that x and y might be swapped inside the ptc_analysis function
         aedat = aedat3_process()
-        aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions)
+        aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)
 
     if do_contrast_sensitivity:
     #######################

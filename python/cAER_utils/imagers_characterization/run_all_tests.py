@@ -21,11 +21,12 @@ import aedat3_process
 do_ptc = False
 do_fpn = False
 do_latency_pixel_led_board = False
-do_latency_pixel_big_led = True
-do_contrast_sensitivity = False
+do_latency_pixel_big_led = False
+do_contrast_sensitivity = True
 do_oscillations = False
 oscillations = 20.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
-contrast_level = np.linspace(0.1,0.8,5.0) # contrast sensitivity
+contrast_level = np.linspace(0.1,0.6,5.0) # contrast sensitivity
+c_base_levels = np.linspace(50,2000,5) #contrast sensitivity base level sweeps
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
 frame_number = 100# ptc
@@ -158,23 +159,27 @@ if do_contrast_sensitivity:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
     setting_dir = folder + str("/settings/")
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    copyFile(bias_file, setting_dir+str("biases_contrast_sensitivity.xml") )
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    for i in range(len(contrast_level)):
-        print("Contrast level: "+str(contrast_level[i]))
-        perc_low = base_level-(contrast_level[i]/2.0)*base_level
-        perc_hi = base_level+(contrast_level[i]/2.0)*base_level
-        v_hi = (perc_hi - inter) / slope
-        v_low = (perc_low - inter) / slope 
-        offset = np.mean([v_hi,v_low])
-        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
-        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[i], base_level = base_level)
+    for this_base in range(c_base_levels):
+        for this_contrast in range(len(contrast_level)):
+            print("Contrast level: "+str(contrast_level[i]))
+            perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+            perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+            v_hi = (perc_hi - inter) / slope
+            v_low = (perc_low - inter) / slope 
+            offset = np.mean([v_hi,v_low])
+            amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+            print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+            gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+            gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+            control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
@@ -193,18 +198,14 @@ if do_oscillations:
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)    
     folder = datadir + '/'+ sensor + '_oscillations_' +  current_date
     setting_dir = folder + str("/settings/")
-
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
-
     num_measurements = len(oscillations_base_level) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
     recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    if(not os.path.exists(setting_dir)):
-        os.makedirs(setting_dir)
     copyFile(bias_file, setting_dir+str("biases_oscillations_all_exposures_prchanged.xml") )
     for this_bias in range(len(prbpvalues)):
         for i in range(num_measurements):
