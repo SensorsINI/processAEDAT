@@ -25,8 +25,8 @@ do_latency_pixel_big_led = False
 do_contrast_sensitivity = True
 do_oscillations = False
 oscillations = 20.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
-contrast_level = np.linspace(0.1,0.6,5.0) # contrast sensitivity
-c_base_levels = np.linspace(50,2000,5) #contrast sensitivity base level sweeps
+contrast_level = np.linspace(0.22,0.75,5.0) # contrast sensitivity
+c_base_levels = np.linspace(100,2000,5) #contrast sensitivity base level sweeps
 base_level = 1000.0 #  1 klux
 frequency = 1.0 #contrast sensitivity
 frame_number = 100# ptc
@@ -36,7 +36,6 @@ datadir = 'measurements'
 useinternaladc = False
 global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
-contrast_level = 0.5                # in oscillations/latency
 freq_square = 10.0                  # in oscillations/latency
 oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
 base_level_latency_big_led = [500, 1500, 2500, 3000]
@@ -46,9 +45,9 @@ prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3]             #oscillati
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "CDAVIS640RGBW" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX3" #"DAVISFX3"
-bias_file = "cameras/cdavis640rgbw_latency.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+sensor = "DAVIS240C_contrast_sensitivity" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX2" #"DAVISFX3"
+bias_file = "cameras/davis240c.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 dvs128xml = False
 host_ip = '127.0.0.1'#'172.19.11.139'
 
@@ -166,9 +165,9 @@ if do_contrast_sensitivity:
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    for this_base in range(c_base_levels):
+    for this_base in range(len(c_base_levels)):
         for this_contrast in range(len(contrast_level)):
-            print("Contrast level: "+str(contrast_level[i]))
+            print("Contrast level: "+str(contrast_level[this_contrast]))
             perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
             perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
             v_hi = (perc_hi - inter) / slope

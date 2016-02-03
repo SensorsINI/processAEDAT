@@ -1509,14 +1509,14 @@ if __name__ == "__main__":
     ################### 
     # PARAMETERS
     ###################
-    do_ptc = False
+    do_ptc = True
     do_fpn = False
-    do_latency_pixel = True
+    do_latency_pixel = False
     do_contrast_sensitivity = False
     do_oscillations = False      #for NW
-    directory_meas = 'measurements/CDAVIS640RGBW_oscillations_22_01_16-16_13_33/'
-    camera_dim = [640,480]
-    pixel_sel = [362,160]
+    directory_meas = 'measurements/DAVIS240C_signal_variation_ADCint_ptc_02_02_16-18_15_38/'
+    camera_dim = [240,180]
+    pixel_sel = [0,200]
     #[208,192] #Pixelparade 208Mono 
     #[240,180] #DAVSI240C
     # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
@@ -1527,12 +1527,12 @@ if __name__ == "__main__":
     # 0.648 external adcs reference is the same for all chips
     ADC_range = 1.29#0.648#240C 1.501
     ADC_values = 1024
-    frame_x_divisions = [[0,128]]
+    frame_x_divisions = [[0,200]]
     #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
     #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
     #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
     #   128DVS                  [[0,128]]
-    frame_y_divisions = [[0,128]]
+    frame_y_divisions = [[0,180]]
     #   208Mono 	[[0,191]]
     #   640Color 	[[121,122]] 
     #   240C		[[0,180]]
