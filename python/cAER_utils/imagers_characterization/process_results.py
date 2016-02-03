@@ -1,19 +1,22 @@
 import aedat3_process
+import matplotlib as plt
+from pylab import *
 import os
 
+ioff()
 ##############################################################################
 # WHAT SHOULD WE DO?
 ##############################################################################
-do_ptc = True
+do_ptc = False
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = False
+do_contrast_sensitivity = True
 do_oscillations = False      #for NW
 
 ################### 
 # PARAMETERS
 ###################
-directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_ptc_15_12_15-15_53_05_Motherboard/'
+directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_contrast_sensitivity_contrast_sensitivity_03_02_16-15_16_08/'
 camera_dim = [240,180]
 pixel_sel = [240,180]
 	# [208,192] #Pixelparade 208Mono 
@@ -142,8 +145,25 @@ if do_contrast_sensitivity:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = aedat3_process.aedat3_process()
-    delta_up, delta_dn, rms = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
+    rms, constrasts, bases = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
+    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
+    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
+    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
 
+    #for j in range(len(rms)):
+    #    for i in range(1):
+    #        plot(rms[j][i], bases[j][i], 'x')
+
+    #from mpl_toolkits.mplot3d import Axes3D
+    #from matplotlib import cm
+    #from matplotlib.ticker import LinearLocator, FormatStrFormatter
+    #import matplotlib.pyplot as plt
+    #import numpy as np
+    #fig = plt.figure()
+    #ax = fig.gca(projection='3d')
+    #surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
+    #                   linewidth=0, antialiased=False)
+    #fig.colorbar(surf, shrink=0.5, aspect=5)
 
 if do_fpn:
     #######################
