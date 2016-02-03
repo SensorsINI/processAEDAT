@@ -33,7 +33,6 @@ class aedat3_process:
         self.timestamp = []
         self.time_res = 1e-6
 	
-
     def confIntMean(self, a, conf=0.95):
       mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
       return mean - m*sem, mean + m*sem
