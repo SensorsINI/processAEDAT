@@ -1,12 +1,18 @@
 function [ output_args ] = importAedat_processDataFormat1or2(info)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
 
+%{
+This is a sub-function of importAedat.
+If the recording is determined to be format 1 or 2, then this function
+runs. This includes the functionality of loadaedat, plus device-specific
+functions for interpretting addresses.
+%}
 
-end
+fileHandle = info.fileHandle;
 
-fseek(f,0,'eof');
-numEvents=floor((ftell(f)-bof-numBytesPerEvent*startEvent)/numBytesPerEvent); % 6 or 8 bytes/event
+% Find the number of events, assuming that the file position is just at the
+% end of the headers. 
+fseek(fileHandle, 0, 'eof');
+numEvents = floor((ftell(f)-bof-numBytesPerEvent*startEvent)/numBytesPerEvent); % 6 or 8 bytes/event
 if numEvents>maxEvents, 
     fprintf('clipping to %d events although there are %d events in file\n',maxEvents,numEvents);
     numEvents=maxEvents;
