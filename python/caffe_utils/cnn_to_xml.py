@@ -63,11 +63,13 @@ def get_edge_label(layer):
 
 def get_layer_label(layer, rankdir):
     """Define node label based on layer type.
+
     Parameters
     ----------
     layer : ?
     rankdir : {'LR', 'TB', 'BT'}
         Direction of graph layout.
+
     Returns
     -------
     string :
@@ -86,16 +88,17 @@ def get_layer_label(layer, rankdir):
     if layer.type == 'Convolution' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
+        param = layer.convolution_param
         node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
-                     (layer.name,
-                      separator,
-                      layer.type,
-                      separator,
-                      layer.convolution_param.kernel_size if (layer.convolution_param.kernel_size) else 1,
-                      separator,
-                      layer.convolution_param.stride if (layer.convolution_param.stride) else 1,
-                      separator,
-                      layer.convolution_param.pad if (layer.convolution_param.pad) else 0)
+                    (layer.name,
+                     separator,
+                     layer.type,
+                     separator,
+                     layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size._values) else 1,
+                     separator,
+                     layer.convolution_param.stride[0] if len(layer.convolution_param.stride._values) else 1,
+                     separator,
+                     layer.convolution_param.pad[0] if len(layer.convolution_param.pad._values) else 0)
     elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
         node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
@@ -177,6 +180,7 @@ def main(dirs):
     nets = []
     net_files = [] 
     weight_files = []
+    ip_present = False
     for i, log_dir in enumerate(dirs):
         print("working on >"+log_dir+"<"+str(i)+">")
         #find networks
@@ -288,6 +292,7 @@ def main(dirs):
                     count_xml_layer += 1
                 elif(layer.type == 'InnerProduct'):
                     type_l = 'ip'
+                    ip_present = True
                     count_xml_layer += 1
                 else:
                     type_l = '"%s%s(%s)"' % (layer.name, "\\n", layer.type)
@@ -332,7 +337,7 @@ def main(dirs):
                 net_string += '\t\t<type>'+str(type_l)+'</type>\n'
                 net_string += '\t\t<inputMaps>'+str(inputmaps)+'</inputMaps>\n'
                 net_string += '\t\t<outputMaps>'+str(outputmaps)+'</outputMaps>\n'
-                net_string += '\t\t<kernelSize>'+str(kernel_size)+'</kernelSize>\n'
+                net_string += '\t\t<kernelSize>'+str(kernel_size[0])+'</kernelSize>\n'
                 net_string += '\t\t<activationFunction>'+act_func+'</activationFunction>\n'
                 net_string += '\t\t<biases dt="ASCII-float32">'+this_biases+'</biases>\n'
                 net_string += '\t\t<kernels dt="ASCII-float32">'+this_kernels+'</kernels>\n'
@@ -396,18 +401,37 @@ def main(dirs):
                         fully_connected_weights = np.transpose(fully_connected_weights) 
                         fully_connected_weights_reshaped = np.reshape(fully_connected_weights, rows*cols)
                 else:
-                    cols, rows = np.shape(fully_connected_weights) 
-                    featurespixels = rows/outputmaps
-                    featureside = np.sqrt(featurespixels)                 
-                    act=np.arange(featurespixels) 
-                    for j in range(cols):
-                        for i in range(outputmaps):
-                            act = fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] 
-                            actback = np.reshape(act, (featureside,featureside)) 
-                            actfix = np.transpose(actback) 
-                            fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] = np.reshape(actfix,  featurespixels, order="F" )  do                                
-                    fully_connected_weights = np.transpose(fully_connected_weights) 
-                    fully_connected_weights_reshaped = np.reshape(fully_connected_weights, rows*cols)
+                    if(type_l == 'ip'): 
+                        cols, rows = np.shape(fully_connected_weights)
+                        featurespixels = rows/outputmaps ### ROWS
+                        featureside = np.sqrt(featurespixels)       
+                        act=np.arange(featurespixels) 
+                        for j in range(cols):
+                            for i in range(outputmaps):
+                                fully_connected_weights = np.reshape(fully_connected_weights, [cols,rows])
+                                act = fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] 
+                                actback = np.reshape(act, (featureside,featureside)) 
+                                actfix = actback
+                                fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] = np.reshape(actfix,  featurespixels, order="F") 
+                        fully_connected_weights = np.transpose(fully_connected_weights) 
+                        fully_connected_weights_reshaped = np.reshape(fully_connected_weights, rows*cols)
+                    if(type_l == 'o'):
+                        cols, rows = np.shape(fully_connected_weights)
+                        if(ip_present):
+                            featurespixels = cols/outputmaps #### COLS
+                        else:
+                            featurespixels = rows/outputmaps #### ROWS
+                        featureside = np.sqrt(featurespixels)                     
+                        act=np.arange(featurespixels) 
+                        for j in range(cols):
+                            for i in range(outputmaps):
+                                fully_connected_weights = np.reshape(fully_connected_weights, [cols,rows])
+                                act = fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] 
+                                actback = np.reshape(act, (featureside,featureside)) 
+                                actfix = (actback) 
+                                fully_connected_weights[j,featurespixels*(i):featurespixels+featurespixels*(i)] = np.reshape(actfix,  featurespixels)            
+                        fully_connected_weights = np.transpose(fully_connected_weights) 
+                        fully_connected_weights_reshaped = np.reshape(fully_connected_weights, rows*cols)
                     
                 biases_output = this_classifier.params[layer.name][1].data
                 if(len(np.shape(biases_output)) > 3):
