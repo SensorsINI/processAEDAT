@@ -227,7 +227,12 @@ def main(dirs):
                 #    continue 
                 #iter_index += 1
         print(prototxt_net)
-        print(weight_files[0][iter_num])
+        try:
+            print(weight_files[0][iter_num])
+        except IndexError:
+            print("\n#################################")
+            print("##### Failed to locate weight file, please check your inputs.")
+            print("#################################\n")
         this_classifier = caffe.Classifier(prototxt_net,weight_files[0][iter_num])
         classifiers.append(this_classifier)
 
