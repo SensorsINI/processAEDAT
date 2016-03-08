@@ -21,33 +21,33 @@ import aedat3_process
 do_ptc = False
 do_fpn = False
 do_latency_pixel_led_board = False
-do_latency_pixel_big_led = False
-do_contrast_sensitivity = True
+do_latency_pixel_big_led = True
+do_contrast_sensitivity = False
 do_oscillations = False
 oscillations = 20.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
-contrast_level = np.linspace(0.22,0.75,5.0) # contrast sensitivity
+contrast_level = np.linspace(0.7,0.7,1) # contrast sensitivity
 c_base_levels = np.linspace(100,2000,5)     #contrast sensitivity base level sweeps
 base_level = 1000.0 #  1 klux
-frequency = 1.0 #contrast sensitivity
-frame_number = 100# ptc
+freq_square = 10.0  # in oscillations/latency
+frequency = 1.0 # contrast sensitivity
+frame_number = 100 # ptc
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 useinternaladc = False
 global_shutter = True # ptc
 exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
-freq_square = 10.0                  # in oscillations/latency
 oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
-base_level_latency_big_led = [500, 1500, 2500, 3000]
+base_level_latency_big_led = [1000, 1000]
 prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3]             #oscillations fine values for PrBp
                 # dvs128   np.linspace(0,1000,5)         
 
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-sensor = "DAVIS240C_contrast_sensitivity" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX2" #"DAVISFX3"
-bias_file = "cameras/davis240c.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
+sensor = "CDAVIS640_latency" #"DAVIS208Mono"#"CDAVIS640rgbw"#
+sensor_type ="DAVISFX3" #"DAVISFX3"
+bias_file = "cameras/cdavis640rgbw_latency.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
 dvs128xml = False
 host_ip = '127.0.0.1'#'172.19.11.139'
 
@@ -175,7 +175,7 @@ if do_contrast_sensitivity:
             offset = np.mean([v_hi,v_low])
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude[0])+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
             control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base])
@@ -259,7 +259,7 @@ if do_latency_pixel_big_led:
         offset = np.mean([v_hi,v_low])
         amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
         print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude[0])+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
         control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  

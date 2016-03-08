@@ -9,16 +9,16 @@ ioff()
 ##############################################################################
 do_ptc = False
 do_fpn = False
-do_latency_pixel = False
-do_contrast_sensitivity = True
+do_latency_pixel = True
+do_contrast_sensitivity = False
 do_oscillations = False      #for NW
 
 ################### 
 # PARAMETERS
 ###################
-directory_meas = 'measurements/Measurements_final/DAVIS240C/DAVIS240C_contrast_sensitivity_contrast_sensitivity_03_02_16-15_16_08/'
-camera_dim = [240,180]
-pixel_sel = [240,180]
+directory_meas = 'measurements/CDAVIS640_latency_oscillations_08_03_16-16_14_58/'
+camera_dim = [320,240]
+pixel_sel = [320,240]
 	# [208,192] #Pixelparade 208Mono 
 	# [240,180] #DAVSI240C  http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
 	# 0.596 internal adcs 346B
@@ -28,12 +28,12 @@ pixel_sel = [240,180]
 	# 0.648 external adcs reference is the same for all chips
 ADC_range = 1.501 #0.648#240C 1.501
 ADC_values = 1024
-frame_x_divisions = [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+frame_x_divisions = [[0,320]]# [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
 	#   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
 	#   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
 	#   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
 	#   128DVS                  [[0,128]]
-frame_y_divisions = [[0,180]]
+frame_y_divisions = [[0,240]]
 	#   208Mono 	[[0,191]]
 	#   640Color 	[[121,122]] 
 	#   240C		[[0,180]]
@@ -234,7 +234,7 @@ if do_latency_pixel:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = aedat3_process.aedat3_process()
-    all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER",pixel_sel = pixel_sel,confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
+    all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER",confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
 
 
 
