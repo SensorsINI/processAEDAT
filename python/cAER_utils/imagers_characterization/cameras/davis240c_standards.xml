@@ -129,10 +129,10 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="OffBn" path="/1/1-DAVISFX2/bias/OffBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
+                        <attr key="coarseValue" type="byte">3</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">0</attr>
+                        <attr key="fineValue" type="short">11</attr>
                         <attr key="sex" type="string">N</attr>
                         <attr key="type" type="string">Normal</attr>
                     </node>
@@ -303,24 +303,31 @@
                 <attr key="showFrames" type="bool">true</attr>
                 <attr key="subsampleRendering" type="short">1</attr>
             </node>
-            <node name="5-NetTCPServerOutput" path="/1/5-NetTCPServerOutput/">
+            <node name="6-NetTCPServerOutput" path="/1/6-NetTCPServerOutput/">
                 <attr key="backlogSize" type="short">5</attr>
                 <attr key="concurrentConnections" type="short">5</attr>
                 <attr key="excludeHeader" type="bool">false</attr>
-                <attr key="ipAddress" type="string">172.19.11.139</attr>
+                <attr key="ipAddress" type="string">127.0.0.1</attr>
                 <attr key="maxBytesPerPacket" type="int">0</attr>
                 <attr key="portNumber" type="short">7777</attr>
                 <attr key="validEventsOnly" type="bool">false</attr>
             </node>
+            <node name="7-NetUDPOutput" path="/1/7-NetUDPOutput/">
+                <attr key="excludeHeader" type="bool">false</attr>
+                <attr key="ipAddress" type="string">127.0.0.1</attr>
+                <attr key="maxBytesPerPacket" type="int">0</attr>
+                <attr key="portNumber" type="short">8888</attr>
+                <attr key="validEventsOnly" type="bool">false</attr>
+            </node>
         </node>
         <node name="logger" path="/logger/">
-            <attr key="logFile" type="string">caer.log</attr>
+            <attr key="logFile" type="string">/home/inilabs/inilabs/cAER/caer.log</attr>
             <attr key="logLevel" type="byte">5</attr>
         </node>
         <node name="server" path="/server/">
             <attr key="backlogSize" type="short">5</attr>
             <attr key="concurrentConnections" type="short">5</attr>
-            <attr key="ipAddress" type="string">172.19.11.139</attr>
+            <attr key="ipAddress" type="string">127.0.0.1</attr>
             <attr key="portNumber" type="int">4040</attr>
         </node>
     </node>
