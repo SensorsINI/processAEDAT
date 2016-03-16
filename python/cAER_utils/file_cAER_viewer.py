@@ -16,7 +16,7 @@ matplotlib.use('GTKAgg')
 from time import sleep
 from matplotlib import pyplot as plt
 
-filename = 'imagers_characterization/measurements/Measurements_final/Oscillations/DAVIS240C_oscillations_19_01_16-15_58_55/oscillations_recording_time_0000005_num_meas_0000000_lux_2.29_filter-type_2.0_prvaluefine_0000025_.aedat'
+filename = '/home/federico/NAS/Characterizations/Measurements_final/DAVIS240C/Thresholds_calibration/DAVIS240C_thresholds__thresholds_16_03_16-10_55_38_Freq02/thresholds_sensitivity_recording_time_0000045_contrast_level_030_base_level_300_onbias_126_ofbias_021.aedat'
 file_read = open(filename, "rb")
 xdim = 240
 ydim = 180
@@ -112,11 +112,11 @@ def run(doblit=True):
     points = ax.imshow(this_m, interpolation='nearest', cmap='jet')
     tic = time.time()
     niter = 0
-    slow_speed = 0.5
+    slow_speed = 1.0
     ts_view = 2500
     
     while(1):
-        sleep(slow_speed)
+        #sleep(slow_speed)
         # update the xy data
         x, y, p, ts_tot = read_events()
         if(len(ts_tot) > 2):

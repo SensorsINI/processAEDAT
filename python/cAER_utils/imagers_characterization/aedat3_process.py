@@ -1364,6 +1364,157 @@ class aedat3_process:
 
         return delta_up, delta_dn, rms
 
+
+    def ts_analysis(self,  cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.2, num_oscillations=10):
+        '''
+            contrast sensitivity analisys
+		        - input signal is a sine wave, setup is in homogeneous lighting conditions
+        '''
+        #################################################################
+        ############### CS and SIGNAL RECOSTRUCTION
+        #################################################################
+        directory = cs_dir      
+        files_in_dir = os.listdir(directory)
+        files_in_dir.sort()  
+        this_file = 0
+        sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        rmse_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        contrast_level = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        base_level = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        for this_file in range(len(files_in_dir)):
+            if not os.path.isdir(directory+files_in_dir[this_file]):
+                rec_time = float(files_in_dir[this_file].strip(".aedat").strip("hresholds_sensitivity_recording_time_").split("_")[0]) # in us
+                this_contrast = float(files_in_dir[this_file].strip(".aedat").strip("hresholds_sensitivity_recording_time_").split("_")[3])/100
+                this_base_level = float(files_in_dir[this_file].strip(".aedat").strip("hresholds_sensitivity_recording_time_").split("_")[6])
+                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+            else:
+                print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
+                continue
+
+            fit_done = False
+
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+
+                    contrast_level[this_file,this_div_y,this_div_x] = this_contrast
+                    base_level[this_file, this_div_y, this_div_x] = this_base_level
+
+                    signal_rec = []
+                    tmp = 0
+                    delta_up = 1.0
+                    delta_dn = 1.0
+                    delta_up_count = 0.0
+                    delta_dn_count = 0.0
+                    ts_t = []  
+                    
+                    #print(np.max(frame_y_divisions[0]))
+                    for this_ev in range(len(ts)):
+                        if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                            xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                            yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                            yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                            if( pol[this_ev] == 1):
+                              delta_up_count = delta_up_count+1        
+                            if( pol[this_ev] == 0):
+                              delta_dn_count = delta_dn_count+1
+
+                    if(delta_dn_count == 0 or delta_up_count == 0):
+                        print("Not even a single event up or down")
+                        print("we are skipping this section of the sensor")
+                    else:
+                        if( delta_up_count > delta_dn_count):
+                            delta_dn = (delta_up_count / double(delta_dn_count)) * (delta_up)
+                        else:
+                            delta_up = (delta_dn_count / double(delta_up_count)) * (delta_dn)
+
+                        for this_ev in range(len(ts)):
+                            if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
+                                xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
+                                yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
+                                yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
+                                if( pol[this_ev] == 1):
+                                    tmp = tmp+delta_up
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
+                                if( pol[this_ev] == 0):
+                                    tmp = tmp-delta_dn
+                                    signal_rec.append(tmp)
+                                    ts_t.append(ts[this_ev])
+
+
+                        plt.figure()
+                        ts = np.array(ts)
+                        signal_rec = np.array(signal_rec)
+                        signal_rec = signal_rec - np.mean(signal_rec)
+                        amplitude_rec = np.abs(np.max(signal_rec))+np.abs(np.min(signal_rec))
+                        signal_rec = signal_rec/amplitude_rec
+                        guess_amplitude = np.max(signal_rec) - np.min(signal_rec)
+                        offset_a = 7.0
+                        offset = 8.0
+                        #raise Exception
+                        p0=[sine_freq, guess_amplitude,
+                                0.0, offset, offset_a]
+                        signal_rec = signal_rec + 10
+                        tnew = (ts_t-np.min(ts))*1e-6
+                        all_x = frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0]
+                        all_y = frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]
+                        contrast_sensitivity_dn = (this_contrast)/((delta_dn_count/(all_x*all_y))/num_oscillations)
+                        contrast_sensitivity_up = (this_contrast)/((delta_up_count/(all_x*all_y))/num_oscillations)
+                        print("this contrast", this_contrast)
+                        print("contrast sensitivity dn", contrast_sensitivity_dn)
+                        print("contrast sensitivity up", contrast_sensitivity_up)
+                        ttt = "CS dn:"+str('%.3g'%(contrast_sensitivity_dn))+" CS up "+str('%.3g'%(contrast_sensitivity_up))
+                        #raise Exception
+                        try:
+                            fit = curve_fit(self.my_sin, tnew, signal_rec, p0=p0)
+                            data_fit = self.my_sin(tnew, *fit[0])
+                            rms = self.rms(signal_rec, data_fit) 
+                            fit_done = True
+                        except RuntimeError:
+                            fit_done = False
+                            #print("Not possible to fit")
+                        if(fit_done and (math.isnan(rms) or math.isinf(rms))):
+                            fit_done = False
+                            #we do not accept fit with nan rmse
+
+                        data_first_guess = self.my_sin(tnew, *p0)    
+                        #print("--- guessed: "+ str(p0))
+                        if fit_done:
+                            #data_fit = self.my_sin(tnew, *fit[0])
+                            #rms = self.rms(signal_rec, data_fit)                        
+                            stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                            plt.plot(tnew, data_fit, label= stringa)
+                        else:
+                            rms = self.rms(signal_rec, data_first_guess)          
+                            stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                            plt.plot(tnew, data_first_guess, label=stringa)
+                        plt.text(1, 11, ttt, ha='left')
+                        print("guessed -->", str(fit[0]))
+                        rmse_tot[this_file,this_div_y, this_div_x] = rms
+                        plt.plot(tnew, signal_rec, label='Measured signal')
+                        plt.legend(loc="lower right")
+                        plt.xlabel('Time [s]')
+                        plt.ylabel('Norm. Amplitude')
+                        plt.ylim([8,12])
+                        if fit_done:
+                            plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
+                        else:
+                            plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
+                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        print(stringa)
+
+        #rmse_tot = np.reshape(rmse_tot,len(rmse_tot))
+        #contrast_level = np.reshape(contrast_level,len(contrast_level))
+        #base_level =  np.reshape(base_level,len(base_level))
+        #plt.figure()
+        #plt.plot(contrast_level,rmse_tot , 'o')
+        #plt.xlabel("contrast level")
+        #plt.ylabel(" RMSE ")
+        #plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF')
+        #plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG')
+        return rmse_tot, contrast_level, base_level
+        
     def cs_analysis(self,  cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3):
         '''
             contrast sensitivity analisys
