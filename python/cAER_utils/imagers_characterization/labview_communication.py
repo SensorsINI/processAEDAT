@@ -157,17 +157,28 @@ class labview_communication:
             return False
 
     def set_wavelength(self, wavelenght):
-        print("here send command")
+        self.s_commands.sendall("Wavelenght""space""str(wavelenght)\r\n\r\n")
+        response = self.receive_data(self.s_commands, 6)
+        return response
         
     def read_wavelength(self, wavelenght):
-        print("here send command")
+        self.s_commands.sendall("WavelenghtT?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 6)
+	return response
                 
     def check_shutter_state(self, wavelenght):
-        print("here send command")
+        self.s_commands.sendall("ShutterT?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 6)
+	return response
 
     def open_shutter(self):
-        print("here send command")
-    
+        self.s_commands.sendall("ShutterTOpen\r\n\r\n")
+        response = self.receive_data(self.s_commands, 6)
+        if(response == 'Opened'):
+            return True
+        else:
+            return False   
+            
     def close_shutter(self):
         self.s_commands.sendall("ShutterTClose\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
@@ -177,6 +188,8 @@ class labview_communication:
             return False
 
     def read_reference_power(self):
-        print("here send command")
+        self.s_commands.sendall("RefPower0?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 53)
+	retunr response
 
 
