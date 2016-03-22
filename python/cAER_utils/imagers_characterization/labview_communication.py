@@ -57,6 +57,11 @@ class labview_communication:
         self.ERRNO_EADDRINUSE=[errno.EADDRINUSE]
         if hasattr(errno, "WSAEADDRINUSE"):
             self.ERRNO_EADDRINUSE.append(errno.WSAEADDRINUSE)
+            
+        self.port_control = port_control
+        self.buffersize = buffersize
+        self.host = host 
+        self.s_commands = socket.socket()            
 
     def receive_data(self, sock, size):
         """Retrieve a given number of bytes from a socket.
@@ -109,7 +114,7 @@ class labview_communication:
                     if len(data)!=size:
                         err=Exception("receiving: not enough data")
                         err.partialData=data  # store the message that was received until now
-                        raise err
+                        #raise err
                     return data  # yay, complete
                 except socket.timeout:
                     raise Exception("receiving: timeout")
@@ -136,16 +141,16 @@ class labview_communication:
             sys.exit()
 
     def check_connection(self):
-        self.s_commands.sendall("*IDN?")
-        response = self.s_commands.receive_data(14)
+        self.s_commands.sendall("*IDN?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 14)
         if(response == 'QESetupControl'):
             return True
         else:
             return False
         
     def check_for_errors(self):
-        self.s_commands.sendall("Error?")
-        response = self.s_commands.receive_data(5)
+        self.s_commands.sendall("ErrorT?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 5)
         if(response == 'False'):
             return True
         else:
@@ -164,8 +169,8 @@ class labview_communication:
         print("here send command")
     
     def close_shutter(self):
-        self.s_commands.sendall("Shutter close")
-        response = self.s_commands.receive_data(6)
+        self.s_commands.sendall("ShutterTClose\r\n\r\n")
+        response = self.receive_data(self.s_commands, 6)
         if(response == 'Closed'):
             return True
         else:
