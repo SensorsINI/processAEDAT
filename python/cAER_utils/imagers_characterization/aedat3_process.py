@@ -1365,7 +1365,7 @@ class aedat3_process:
         return delta_up, delta_dn, rms
 
 
-    def ts_analysis(self,  cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.2, num_oscillations=10):
+    def ts_analysis(self,  cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.2, num_oscillations=10, single_pixels_analysis=True):
         '''
             contrast sensitivity analisys
 		        - input signal is a sine wave, setup is in homogeneous lighting conditions
@@ -1418,6 +1418,7 @@ class aedat3_process:
                             if( pol[this_ev] == 0):
                               delta_dn_count = delta_dn_count+1
 
+
                     if(delta_dn_count == 0 or delta_up_count == 0):
                         print("Not even a single event up or down")
                         print("we are skipping this section of the sensor")
@@ -1440,8 +1441,7 @@ class aedat3_process:
                                     tmp = tmp-delta_dn
                                     signal_rec.append(tmp)
                                     ts_t.append(ts[this_ev])
-
-
+                                    
                         plt.figure()
                         ts = np.array(ts)
                         signal_rec = np.array(signal_rec)
@@ -1456,10 +1456,11 @@ class aedat3_process:
                                 0.0, offset, offset_a]
                         signal_rec = signal_rec + 10
                         tnew = (ts_t-np.min(ts))*1e-6
+                        
                         all_x = frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0]
                         all_y = frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]
-                        contrast_sensitivity_dn = (this_contrast)/((delta_dn_count/(all_x*all_y))/num_oscillations)
-                        contrast_sensitivity_up = (this_contrast)/((delta_up_count/(all_x*all_y))/num_oscillations)
+                        contrast_sensitivity_dn = (this_contrast)/((delta_dn_count/(all_x*all_y))/(num_oscillations))
+                        contrast_sensitivity_up = (this_contrast)/((delta_up_count/(all_x*all_y))/(num_oscillations))
                         print("this contrast", this_contrast)
                         print("contrast sensitivity dn", contrast_sensitivity_dn)
                         print("contrast sensitivity up", contrast_sensitivity_up)
@@ -1503,6 +1504,160 @@ class aedat3_process:
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
                         print(stringa)
+                        this_file += 1
+                                    
+                    if(single_pixels_analysis):
+                        print("starting single pixels analysis...")
+                        # we loop on all the single pixels and we carry signal reconstruction 
+                        # for every pixel in the array 
+                        xaddr_ar = np.array(xaddr)
+                        yaddr_ar = np.array(yaddr)
+                        pol_ar = np.array(pol)
+                        ts_ar = np.array(ts)
+                        range_x = frame_x_divisions[this_div_x][1] - frame_x_divisions[this_div_x][0]
+                        range_y = frame_y_divisions[this_div_y][1] - frame_x_divisions[this_div_y][0]
+                        matrix_up = np.zeros([range_x,range_y])
+                        matrix_dn = np.zeros([range_x,range_y])
+                        matrix_delta_up = np.ones([range_x,range_y])
+                        matrix_delta_dn = np.ones([range_x,range_y])
+                        matrix_rmse = np.zeros([range_x,range_y])
+                        pol_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
+                        rec_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
+                        ts_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
+                        for this_x in range(range_x):
+                            for this_y in range(range_y):
+                                index_x = xaddr_ar == this_x
+                                index_y = yaddr_ar == this_y 
+                                index_this_pixel = index_x & index_y    
+                                num_up_spikes = np.sum(pol_ar[index_this_pixel] == 1)
+                                num_dn_spikes = np.sum(pol_ar[index_this_pixel] == 0)
+                                matrix_up[this_x,this_y] = num_up_spikes
+                                matrix_dn[this_x,this_y] = num_dn_spikes
+                                pol_matrix[this_x][this_y] = pol_ar[index_this_pixel]
+                                tmp = 0
+                                delta_up = 1.0
+                                delta_dn = 1.0
+                                if(matrix_up[this_x,this_y] == 0 or matrix_dn[this_x,this_y] == 0):
+                                    print("not even a single spike.. skipping.")
+                                else:
+                                    if( matrix_up[this_x,this_y] > matrix_dn[this_x,this_y]):
+                                        matrix_delta_dn[this_x,this_y] = (matrix_up[this_x,this_y] / double(matrix_dn[this_x,this_y])) * (delta_up)
+                                    else:
+                                        matrix_delta_up[this_x,this_y] = (matrix_dn[this_x,this_y] / double(matrix_up[this_x,this_y])) * (delta_dn)
+                                    for i in range(len(pol_ar[index_this_pixel])):
+                                        this_pol = pol_ar[index_this_pixel][i]
+                                        this_ts = ts_ar[index_this_pixel][i]
+                                        if(this_pol == 1):
+                                            tmp = tmp + matrix_delta_up[this_x,this_y]
+                                            rec_matrix[this_x][this_y].append(tmp)
+                                            ts_matrix[this_x][this_y].append(this_ts)
+                                        if(this_pol == 0):    
+                                            tmp = tmp - matrix_delta_dn[this_x,this_y]
+                                            rec_matrix[this_x][this_y].append(tmp)
+                                            ts_matrix[this_x][this_y].append(this_ts)
+                                            
+                                            
+                                    all_x = frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0]
+                                    all_y = frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]
+                                    contrast_sensitivity_dn = (this_contrast)/((matrix_dn[this_x,this_y]/(all_x*all_y))/(num_oscillations))
+                                    contrast_sensitivity_up = (this_contrast)/((matrix_up[this_x,this_y]/(all_x*all_y))/(num_oscillations))
+                                    print("this contrast", this_contrast)
+                                    print("contrast sensitivity dn", contrast_sensitivity_dn)
+                                    print("contrast sensitivity up", contrast_sensitivity_up)
+                                    ttt = "CS dn:"+str('%.3g'%(contrast_sensitivity_dn))+" CS up "+str('%.3g'%(contrast_sensitivity_up))
+                                    plt.figure()
+                                    amplitude_rec = np.abs(np.max(rec_matrix[this_x][this_y]))+np.abs(np.min(rec_matrix[this_x][this_y]))
+                                    rec_matrix[this_x][this_y] = rec_matrix[this_x][this_y]/amplitude_rec
+                                    guess_amplitude = np.max(rec_matrix[this_x][this_y]) - np.min(rec_matrix[this_x][this_y])
+                                    offset_a = 7.0
+                                    offset = 8.0
+                                    #raise Exception
+                                    p0=[sine_freq, guess_amplitude,
+                                            0.0, offset, offset_a]
+                                    rec_matrix[this_x][this_y] = rec_matrix[this_x][this_y] + 10
+                                    ts_matrix[this_x][this_y] = (ts_matrix[this_x][this_y]-np.min(ts_matrix[this_x][this_y]))*1e-6                        
+                        
+                                    try:
+                                        fit = curve_fit(self.my_sin, ts_matrix[this_x][this_y], rec_matrix[this_x][this_y], p0=p0)
+                                        data_fit = self.my_sin(tnew, *fit[0])
+                                        rms = self.rms(signal_rec, data_fit) 
+                                        fit_done = True
+                                    except RuntimeError:
+                                        fit_done = False
+                                        #print("Not possible to fit")
+                                    if(fit_done and (math.isnan(rms) or math.isinf(rms))):
+                                        fit_done = False
+                                        #we do not accept fit with nan rmse
+     
+                                    data_first_guess = self.my_sin(ts_matrix[this_x][this_y], *p0)    
+                                    #print("--- guessed: "+ str(p0))
+                                    if fit_done:
+                                        #data_fit = self.my_sin(tnew, *fit[0])
+                                        #rms = self.rms(signal_rec, data_fit)                        
+                                        stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                                        plt.plot(tnew, data_fit, label = stringa)
+                                    else:
+                                        rms = self.rms(signal_rec, data_first_guess)          
+                                        stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                                        plt.plot(ts_matrix[this_x][this_y], data_first_guess, label=stringa)
+                                    plt.text(1, 11, ttt, ha='left')
+                                    print("guessed -->", str(fit[0]))
+                                    matrix_rmse[this_div_y, this_div_x] = rms
+                                    plt.plot(ts_matrix[this_x][this_y], rec_matrix[this_x][this_y], label='Measured signal pixel x'+str(this_x)+' y '+str(this_y))
+                                    plt.legend(loc="lower right")
+                                    plt.xlabel('Time [s]')
+                                    plt.ylabel('Norm. Amplitude')
+                                    plt.ylim([8,12])
+                                    if fit_done:
+                                        plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
+                                    else:
+                                        plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
+                                    plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                                    plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                                    this_file += 1
+                                    print(stringa)
+                                    
+                        plt.figure()
+                        plt.title("delta up matrix")
+                        plt.imshow(matrix_delta_up, interpolation='nearest')
+                        plt.colorbar()
+                        plt.savefig(figure_dir+"delta_up_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"delta_up_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        this_file += 1      
+                        
+                        plt.figure()
+                        plt.title("delta dn matrix")
+                        plt.imshow(matrix_delta_dn, interpolation='nearest')
+                        plt.colorbar() 
+                        plt.savefig(figure_dir+"delta_dn_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"delta_dn_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')      
+                        this_file += 1                                   
+                                    
+                        plt.figure()
+                        for this_x in range(range_x): 
+                            for this_y in range(range_y):
+                                plt.plot(ts_matrix[this_x][this_y],rec_matrix[this_x][this_y], 'o-')
+                        plt.savefig(figure_dir+"all_single_rec_"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"all_single_rec_"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        this_file += 1        
+                        
+                        plt.figure()
+                        plt.title("up spikes count")
+                        plt.imshow(matrix_dn, interpolation='nearest')
+                        plt.colorbar()
+                        plt.savefig(figure_dir+"spikes_up_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"spikes_up_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        this_file += 1
+                        plt.figure()
+                        plt.title("dn spikes count")
+                        plt.imshow(matrix_up, interpolation='nearest')
+                        plt.colorbar()
+                        plt.savefig(figure_dir+"spikes_dn_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                        plt.savefig(figure_dir+"spikes_dn_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                        this_file += 1
+
+                        print("done single pixels analysis")
+                        raise Exception
 
         #rmse_tot = np.reshape(rmse_tot,len(rmse_tot))
         #contrast_level = np.reshape(contrast_level,len(contrast_level))

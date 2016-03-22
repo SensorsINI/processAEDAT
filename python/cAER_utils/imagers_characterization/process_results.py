@@ -9,15 +9,16 @@ ioff()
 ##############################################################################
 do_ptc = False
 do_fpn = False
-do_latency_pixel = True
+do_latency_pixel = False
 do_contrast_sensitivity = False
+do_tresholds_miss = True
 do_oscillations = False      #for NW
 
 ################### 
 # PARAMETERS
 ###################
-directory_meas = 'measurements/CDAVIS640_latency_oscillations_08_03_16-16_14_58/'
-camera_dim = [320,240]
+directory_meas = '/home/federico/NAS/Characterizations/Measurements_final/DAVIS240C/DAVIS240C_thresholds__thresholds_16_03_16-15_36_56/'
+camera_dim = [240,180]
 pixel_sel = [320,240]
 	# [208,192] #Pixelparade 208Mono 
 	# [240,180] #DAVSI240C  http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
@@ -28,12 +29,12 @@ pixel_sel = [320,240]
 	# 0.648 external adcs reference is the same for all chips
 ADC_range = 1.501 #0.648#240C 1.501
 ADC_values = 1024
-frame_x_divisions = [[0,320]]# [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
+frame_x_divisions = [[0,240]]# [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
 	#   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
 	#   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
 	#   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
 	#   128DVS                  [[0,128]]
-frame_y_divisions = [[0,240]]
+frame_y_divisions = [[0,180]]
 	#   208Mono 	[[0,191]]
 	#   640Color 	[[121,122]] 
 	#   240C		[[0,180]]
@@ -42,7 +43,7 @@ frame_y_divisions = [[0,240]]
 # ###############################
 # contrast sensitivity parameter
 #################################
-sine_freq = 1.0 # sine freq
+sine_freq = 0.2 # sine freq
 
 ################### 
 # END PARAMETERS
@@ -135,6 +136,21 @@ if do_ptc:
     aedat = aedat3_process.aedat3_process()
     aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)
 
+if do_tresholds_miss:
+    #######################
+    # THRESHOLDS VALUES
+    #######################
+    cs_dir = directory_meas
+    figure_dir = cs_dir + '/figures/'
+    if(not os.path.exists(figure_dir)):
+        os.makedirs(figure_dir)
+    # select test pixels areas only two are active
+    aedat = aedat3_process.aedat3_process()
+    rms, constrasts, bases = aedat.ts_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
+    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
+    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
+    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
+    
 if do_contrast_sensitivity:
     #######################
     # CONTRAST SENSITIVITY
