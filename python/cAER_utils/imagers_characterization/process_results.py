@@ -11,7 +11,7 @@ do_ptc = False
 do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = False
-do_tresholds_miss = True
+do_tresholds_sensitivity = True
 do_oscillations = False      #for NW
 
 ################### 
@@ -136,7 +136,7 @@ if do_ptc:
     aedat = aedat3_process.aedat3_process()
     aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)
 
-if do_tresholds_miss:
+if do_tresholds_sensitivity:
     #######################
     # THRESHOLDS VALUES
     #######################

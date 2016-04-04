@@ -23,7 +23,7 @@ do_fpn = False
 do_latency_pixel_led_board = False
 do_latency_pixel_big_led = False
 do_contrast_sensitivity = False
-do_thresholds_values = True
+do_tresholds_sensitivity = True
 do_oscillations = False
 oscillations = 3.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity/ thresholds
@@ -159,7 +159,7 @@ if do_fpn:
     control.get_data_fpn(folder = folder, recording_time=20)
     control.close_communication_command()    
 
-if do_thresholds_values:
+if do_tresholds_sensitivity:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_thresholds_' +  current_date
     setting_dir = folder + str("/settings/")
