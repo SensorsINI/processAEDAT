@@ -1,9 +1,10 @@
 import aedat3_process
 import sys
-sys.path.append('analysis/DVS_contrast_sensitivity')
-sys.path.append('analysis/DVS_latency')
-sys.path.append('analysis/DVS_oscillations')
-sys.path.append('analysis/APS_photon_transfer_curve')
+sys.path.append('analysis/')
+import DVS_contrast_sensitivity
+import DVS_latency
+import DVS_oscillations
+import APS_photon_transfer_curve
 import matplotlib as plt
 from pylab import *
 import os

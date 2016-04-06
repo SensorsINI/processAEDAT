@@ -143,8 +143,8 @@ class DVS_contrast_sensitivity:
                         print("Off on average per pixel:", (off_event_count/(dim_x*dim_y)))
                         print("On on average per pixel:", (on_event_count/(dim_x*dim_y)))                        
                         print("This oscillations:", num_oscillations)
-                        print("Contrast sensitivity off:", contrast_sensitivity_off)
-                        print("Contrast sensitivity on:", contrast_sensitivity_on)
+                        print "Contrast sensitivity off: " + str('{0:.3f}'.format(contrast_sensitivity_off*100))+ "%"
+                        print "Contrast sensitivity on: " + str('{0:.3f}'.format(contrast_sensitivity_on*100))+ "%"
                         ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off))+" CS on "+str('%.3g'%(contrast_sensitivity_on))
                         
                         # Fit
@@ -184,7 +184,7 @@ class DVS_contrast_sensitivity:
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
                         print(stringa)
                         
-                    
+                    # not fixed yet
                     if(single_pixels_analysis):
                         print("Starting single pixels analysis...")
                         # we loop on all the single pixels and we carry signal reconstruction 
