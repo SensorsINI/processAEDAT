@@ -13,7 +13,6 @@ import shutil
 # import caer communication and control gpib/usb instrumentations
 import caer_communication
 import gpio_usb
-import aedat3_process
 
 ###############################################################################
 # TEST SELECTIONS
@@ -25,13 +24,13 @@ do_latency_pixel_big_led = False
 do_contrast_sensitivity = False
 do_tresholds_sensitivity = True
 do_oscillations = False
-oscillations = 3.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
+oscillations = 100.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
 contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity/ thresholds
 c_base_levels = np.linspace(300,300,1) #contrast sensitivity base level sweeps / thresholds
 diffs_levels = np.linspace(25,255,3)
 base_level = 1000.0 #  1 klux
 freq_square = 10.0  # in oscillations/latency
-frequency = 0.3 # contrast sensitivity/threshold
+sine_freq = 0.3 # contrast sensitivity/threshold
 frame_number = 100 # ptc
 recording_time = 5
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
@@ -137,13 +136,6 @@ if do_ptc:
     control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
     print "Data saved in " +  folder
-    # To be changed, made separately on another file!
-    #import aedat3_process
-    #reload(aedat3_process)
-    #aedatp = aedat3_process.aedat3_process()
-    #frame_x_divisions = [[207-5,207-0], [207-12,207-8], [207-18,207-15], [207-207,207-19]] 
-    #frame_y_divisions = [[0,95], [96,191]]#[[121,122]]#[[0,180]] 
-    #aedatp.ptc_analysis(folder + '/', frame_y_divisions, frame_x_divisions)
 
 # 2 - Fixed Pattern Noise - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
@@ -182,7 +174,7 @@ if do_tresholds_sensitivity:
                 offset = np.mean([v_hi,v_low])
                 amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
                 print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude)+",0")
+                gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
                 gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
                 gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
 
@@ -195,7 +187,7 @@ if do_tresholds_sensitivity:
                 print("off finevalue "+str(offthr[this_bias_index])+ "on finevalue"+str(onthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
-                control.get_data_thresholds(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], on_bias = onthr[this_bias_index], off_bias = offthr[this_bias_index] )
+                control.get_data_thresholds(folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], on_bias = onthr[this_bias_index], off_bias = offthr[this_bias_index] )
 
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
@@ -222,15 +214,15 @@ if do_contrast_sensitivity:
             offset = np.mean([v_hi,v_low])
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(frequency)+", "+str(amplitude[0])+",0")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-            control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, frequency = frequency, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base])
+            control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
 
-if do_oscillations:
+if do_num_oscillations:
     print "\n"
     print "we are doing oscillations measurements. ..\n \
 	WARNING : remember to check that CAER has network streaming enable sends both spiking events and special events ..\n \
@@ -249,7 +241,7 @@ if do_oscillations:
     num_measurements = len(oscillations_base_level) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
-    recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
+    recording_time = (1.0/freq_square)*num_oscillations # number of complete oscillations
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     copyFile(bias_file, setting_dir+str("biases_oscillations_all_exposures_prchanged.xml") )
