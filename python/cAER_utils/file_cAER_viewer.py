@@ -16,10 +16,10 @@ matplotlib.use('GTKAgg')
 from time import sleep
 from matplotlib import pyplot as plt
 
-filename = '/home/federico/NAS/Characterizations/Measurements_final/DAVIS240C/Thresholds_calibration/DAVIS240C_thresholds__thresholds_16_03_16-10_55_38_Freq02/thresholds_sensitivity_recording_time_0000045_contrast_level_030_base_level_300_onbias_126_ofbias_021.aedat'
+filename = '/home/federico/space/inilabs/data/caer_out-2016-04-05_17_45_37.aedat'
 file_read = open(filename, "rb")
-xdim = 240
-ydim = 180
+xdim = 346
+ydim = 260
 
 def matrix_active(x, y, pol):
     matrix = np.zeros([ydim, xdim])
@@ -43,9 +43,21 @@ def ind2sub(array_shape, ind):
     cols = ind % array_shape[1]
     return (rows, cols)
 
+def skip_header():
+    ''' skip header '''
+    line = file_read.readline()
+    while line.startswith("#"):
+        if ( line == '#!END-HEADER\r\n'):
+            break
+        else:
+            line = file_read.readline()
+            
+            
+
 def read_events():
     """ A simple function that read events from cAER tcp"""
-
+    
+    #raise Exception
     data = file_read.read(28)
 
     # read header
@@ -60,17 +72,20 @@ def read_events():
     next_read = eventcapacity * eventsize  # we now read the full packet
     data = file_read.read(next_read)    
     counter = 0  # eventnumber[0]
+    #return arrays
+    x_addr_tot = []
+    y_addr_tot = []
+    pol_tot = []
+    ts_tot =[]
+    spec_type_tot =[]
+    spec_ts_tot = []
 
     if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
-        x_addr_tot = []
-        y_addr_tot = []
-        pol_tot = []
-        ts_tot =[]
         while(data[counter:counter + eventsize]):  # loop over all event packets
             aer_data = struct.unpack('I', data[counter:counter + 4])[0]
             timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
-            x_addr = (aer_data >> 17) & 0x00007FFF
-            y_addr = (aer_data >> 2) & 0x00007FFF
+            x_addr = (aer_data >> 18) & 0x00003FFF
+            y_addr = (aer_data >> 4) & 0x00003FFF
             x_addr_tot.append(x_addr)
             y_addr_tot.append(y_addr)
             pol = (aer_data >> 1) & 0x00000001
@@ -78,13 +93,20 @@ def read_events():
             ts_tot.append(timestamp)
             # print (timestamp, x_addr, y_addr, pol)
             counter = counter + eventsize
-    else:
-        x_addr_tot = []
-        y_addr_tot = []
-        pol_tot    = []
-        ts_tot     = []
+    elif(eventtype == 0):
+        spec_type_tot =[]
+        spec_ts_tot = []
+        while(data[counter:counter + eventsize]):  # loop over all event packets
+            special_data = struct.unpack('I', data[counter:counter + 4])[0]
+            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
+            spec_type = (special_data >> 1) & 0x0000007F
+            spec_type_tot.append(spec_type)
+            spec_ts_tot.append(timestamp)
+            # print (timestamp, spec_type)
+            counter = counter + eventsize        
 
-    return np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot)
+
+    return np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot), np.array(spec_ts_tot)
 
 def run(doblit=True):
     """
@@ -96,7 +118,8 @@ def run(doblit=True):
     ax.set_xlim(0, xdim)
     ax.set_ylim(0, ydim)
     ax.hold(True)
-    x, y, p, ts_tot = read_events()
+    skip_header()
+    x, y, p, ts_tot, sp_t, sp_ts = read_events()
 
 
     this_m = matrix_active(x, y, p)
@@ -109,16 +132,15 @@ def run(doblit=True):
         background = fig.canvas.copy_from_bbox(ax.bbox)
 
     this_m = this_m/np.max(this_m)
-    points = ax.imshow(this_m, interpolation='nearest', cmap='jet')
+    points = ax.imshow(this_m, interpolation='nearest', cmap='jet', origin='upper')
     tic = time.time()
     niter = 0
     slow_speed = 1.0
-    ts_view = 2500
     
     while(1):
         #sleep(slow_speed)
         # update the xy data
-        x, y, p, ts_tot = read_events()
+        x, y, p, ts_tot, spec_type, spec_type_ts = read_events()
         if(len(ts_tot) > 2):
             time_window = np.max(ts_tot) - np.min(ts_tot)
             print("time_window "+str(time_window)+" us")   
