@@ -16,7 +16,7 @@ matplotlib.use('GTKAgg')
 from time import sleep
 from matplotlib import pyplot as plt
 
-filename = '/home/federico/space/inilabs/data/caer_out-2016-04-05_17_45_37.aedat'
+filename = '/home/federico/space/inilabs/data/caer_out-2016-04-06_15_49_08.aedat'
 file_read = open(filename, "rb")
 xdim = 346
 ydim = 260
@@ -102,7 +102,8 @@ def read_events():
             spec_type = (special_data >> 1) & 0x0000007F
             spec_type_tot.append(spec_type)
             spec_ts_tot.append(timestamp)
-            # print (timestamp, spec_type)
+            if(spec_type == 6 or spec_type == 7 or spec_type == 9 or spec_type == 10):
+                print (timestamp, spec_type)
             counter = counter + eventsize        
 
 
@@ -143,7 +144,7 @@ def run(doblit=True):
         x, y, p, ts_tot, spec_type, spec_type_ts = read_events()
         if(len(ts_tot) > 2):
             time_window = np.max(ts_tot) - np.min(ts_tot)
-            print("time_window "+str(time_window)+" us")   
+            #print("time_window "+str(time_window)+" us")   
             #index_a = np.where(ts_tot <= (np.min(ts_tot) + ts_tot))[0]
             #index_b = np.where(ts_tot > (np.min(ts_tot) + ts_tot))[0]
             this_m = matrix_active(x,y,p)#[index_a], y[index_a], p[index_a])
