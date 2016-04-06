@@ -1,4 +1,9 @@
 import aedat3_process
+import sys
+sys.path.append('analysis/DVS_contrast_sensitivity')
+sys.path.append('analysis/DVS_latency')
+sys.path.append('analysis/DVS_oscillations')
+sys.path.append('analysis/APS_photon_transfer_curve')
 import matplotlib as plt
 from pylab import *
 import os
@@ -10,14 +15,13 @@ ioff()
 do_ptc = False
 do_fpn = False
 do_latency_pixel = False
-do_contrast_sensitivity = False
-do_tresholds_sensitivity = True
+do_contrast_sensitivity = True
 do_oscillations = False      #for NW
 
 ################### 
 # PARAMETERS
 ###################
-directory_meas = '/home/federico/NAS/Characterizations/Measurements_final/DAVIS240C/DAVIS240C_thresholds__thresholds_16_03_16-15_36_56/'
+directory_meas = "Z:/Characterizations/Measurements_final/DAVIS240C/testContrast/"
 camera_dim = [240,180]
 pixel_sel = [320,240]
 	# [208,192] #Pixelparade 208Mono 
@@ -43,11 +47,43 @@ frame_y_divisions = [[0,180]]
 # ###############################
 # contrast sensitivity parameter
 #################################
-sine_freq = 0.2 # sine freq
+sine_freq = 1.0 # sine freq
+num_oscillations = 100.0
+single_pixels_analysis = False
 
 ################### 
 # END PARAMETERS
 ###################
+
+if do_contrast_sensitivity:
+    #######################
+    # CONTRAST SENSITIVITY
+    #######################
+    cs_dir = directory_meas
+    figure_dir = cs_dir + 'figures/'
+    if(not os.path.exists(figure_dir)):
+        os.makedirs(figure_dir)
+    # select test pixels areas only two are active
+    aedat = DVS_contrast_sensitivity.DVS_contrast_sensitivity()
+    rms, constrasts, bases = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, single_pixels_analysis = single_pixels_analysis)
+    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
+    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
+    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
+
+    for j in range(len(rms)):
+        for i in range(1):
+            plot(rms[j][i], bases[j][i], 'x')
+
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import cm
+    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+    import matplotlib.pyplot as plt
+    import numpy as np
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
 
 if do_oscillations:
     ################### 
@@ -57,7 +93,7 @@ if do_oscillations:
     figure_dir =  oscil_dir+'/figures/'
     if(not os.path.exists(figure_dir)):
         os.makedirs(figure_dir)
-    aedat = aedat3_process.aedat3_process()
+    aedat = DVS_oscillations.DVS_oscillations()
     all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index = aedat.oscillations_latency_analysis(oscil_dir, figure_dir, camera_dim = [640,480], size_led = 3, file_type="cAER", confidence_level=0.95, pixel_sel = [362,160], dvs128xml=False) 
     #pixel_sel = [35,38] #pixel size of the led
     #pixel_sel = [142,50] #pixel size of the led pixel_sel = [132,34]
@@ -133,53 +169,8 @@ if do_ptc:
     ptc_dir = directory_meas
     # select test pixels areas
     # note that x and y might be swapped inside the ptc_analysis function
-    aedat = aedat3_process.aedat3_process()
-    aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)
-
-if do_tresholds_sensitivity:
-    #######################
-    # THRESHOLDS VALUES
-    #######################
-    cs_dir = directory_meas
-    figure_dir = cs_dir + '/figures/'
-    if(not os.path.exists(figure_dir)):
-        os.makedirs(figure_dir)
-    # select test pixels areas only two are active
-    aedat = aedat3_process.aedat3_process()
-    rms, constrasts, bases = aedat.ts_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
-    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
-    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
-    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
-    
-if do_contrast_sensitivity:
-    #######################
-    # CONTRAST SENSITIVITY
-    #######################
-    cs_dir = directory_meas
-    figure_dir = cs_dir + '/figures/'
-    if(not os.path.exists(figure_dir)):
-        os.makedirs(figure_dir)
-    # select test pixels areas only two are active
-    aedat = aedat3_process.aedat3_process()
-    rms, constrasts, bases = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=sine_freq)
-    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
-    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
-    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
-
-    #for j in range(len(rms)):
-    #    for i in range(1):
-    #        plot(rms[j][i], bases[j][i], 'x')
-
-    #from mpl_toolkits.mplot3d import Axes3D
-    #from matplotlib import cm
-    #from matplotlib.ticker import LinearLocator, FormatStrFormatter
-    #import matplotlib.pyplot as plt
-    #import numpy as np
-    #fig = plt.figure()
-    #ax = fig.gca(projection='3d')
-    #surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
-    #                   linewidth=0, antialiased=False)
-    #fig.colorbar(surf, shrink=0.5, aspect=5)
+    aedat = APS_photon_transfer_curve.APS_photon_transfer_curve()
+    aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
 
 if do_fpn:
     #######################
@@ -238,7 +229,6 @@ if do_fpn:
             plt.xlabel('time us')
             plt.ylabel('arb units')
 
-
 if do_latency_pixel:
     #######################
     # LATENCY
@@ -249,8 +239,5 @@ if do_latency_pixel:
     if(not os.path.exists(figure_dir)):
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
-    aedat = aedat3_process.aedat3_process()
+    aedat = DVS_latency.DVS_latency()
     all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER",confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
-
-
-
