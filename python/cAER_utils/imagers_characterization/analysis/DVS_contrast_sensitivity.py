@@ -51,6 +51,9 @@ class DVS_contrast_sensitivity:
         
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
         for this_file in range(len(files_in_dir)):
+            print "*************"            
+            print "** File #" +str(this_file)+ " **"
+            print "*************"            
             if not os.path.isdir(directory+files_in_dir[this_file]):
                 print("Loading data..")                
 #                rec_time = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[0]) # in us
@@ -114,23 +117,23 @@ class DVS_contrast_sensitivity:
                     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
                     fig.colorbar(im, cax=cbar_ax)     
                     plt.draw()
-                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+".png",  format='png', dpi=300)
+                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
 
+                    [dim1, dim2] = np.shape(matrix_on)
                     on_event_count_median_per_pixel = median(matrix_on)/(num_oscillations)
                     off_event_count_median_per_pixel = median(matrix_off)/(num_oscillations)
-                    [dim1, dim2] = np.shape(matrix_on)
                     on_event_count_average_per_pixel = float(sum(matrix_on))/(dim1*dim2*num_oscillations)
                     off_event_count_average_per_pixel = float(sum(matrix_off))/(dim1*dim2*num_oscillations)
                     print ""
-                    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+                    print "####################################################################"
                     print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
-                    print("Off median per pixel per cycle:", off_event_count_median_per_pixel)
-                    print("On median per pixel per cycle:", on_event_count_median_per_pixel) 
-                    print("Off average per pixel per cycle:", off_event_count_average_per_pixel)
-                    print("On average per pixel per cycle:", on_event_count_average_per_pixel)
+                    print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel)
+                    print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel) 
+                    print "Off average per pixel per cycle: " + str(off_event_count_average_per_pixel)
+                    print "On average per pixel per cycle: " + str(on_event_count_average_per_pixel)
 
-                    if(on_event_count_median_per_pixel == 0.0 and off_event_count_median_per_pixel == 0.0):
-                        print("Not even a single spike.. skipping.")
+                    if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0):
+                        print "Not even a single spike.. skipping."
                     else:
                         # From the equation delta_on : on_event_count = delta_off : off_event_count (inverted to increase smaller eventcount's delta)
                         if(on_event_count > off_event_count): # to keep the max dlta to 1
@@ -141,7 +144,7 @@ class DVS_contrast_sensitivity:
                         print "Delta ON: " + str(delta_on)
                         tmp = 0.0
                         # Reconstruct signal
-                        print("Reconstructing signal")
+                        print "Reconstructing signal"
                         for this_ev in range(len(ts)):
                             if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
                                 xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
@@ -177,13 +180,13 @@ class DVS_contrast_sensitivity:
                         contrast_sensitivity_off_median = (this_contrast)/(off_event_count_median_per_pixel)
                         contrast_sensitivity_on_average = (this_contrast)/(on_event_count_average_per_pixel)
                         contrast_sensitivity_off_average = (this_contrast)/(off_event_count_average_per_pixel)
-                        print("This contrast:", this_contrast)
-                        print("This oscillations:", num_oscillations)
+                        print "This contrast: " + str(this_contrast)
+                        print "This oscillations: " + str(num_oscillations)
                         print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
                         print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
-                        ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off_median))+" CS on "+str('%.3g'%(contrast_sensitivity_on_median))
+                        ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
                         
                         # Fit
                         try:
