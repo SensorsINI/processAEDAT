@@ -18,6 +18,7 @@ import string
 from pylab import *
 import scipy.stats as st
 import math
+import matplotlib as mpl
 
 class DVS_contrast_sensitivity:
     def __init__(self):
@@ -62,13 +63,12 @@ class DVS_contrast_sensitivity:
                 continue
 
             fit_done = False
-            
+            ion()
             # For every division in x and y at particular contrast and base level
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div_y in range(len(frame_y_divisions)):
                     contrast_level[this_file,this_div_y,this_div_x] = this_contrast
-                    base_level[this_file, this_div_y, this_div_x] = this_base_level
-                    
+                    base_level[this_file, this_div_y, this_div_x] = this_base_level      
                     # Initialize parameters
                     signal_rec = []
                     tmp = 0
@@ -77,29 +77,69 @@ class DVS_contrast_sensitivity:
                     on_event_count = 0.0
                     off_event_count = 0.0
                     ts_t = []  
+                    xaddr_ar = np.array(xaddr)
+                    yaddr_ar = np.array(yaddr)
+                    pol_ar = np.array(pol)
+                    ts_ar = np.array(ts)
+                    range_x = frame_x_divisions[this_div_x][1] - frame_x_divisions[this_div_x][0]
+                    range_y = frame_y_divisions[this_div_y][1] - frame_y_divisions[this_div_y][0]
+                    matrix_on = np.zeros([range_x,range_y])
+                    matrix_off = np.zeros([range_x,range_y])
                     
-                    # Count events in the region if they are ON or OFF separately
-                    for this_ev in range(len(ts)):
-                        if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
-                            xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
-                            yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
-                            yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
-                            if( pol[this_ev] == 1):
-                              on_event_count = on_event_count+1        
-                            if( pol[this_ev] == 0):
-                              off_event_count = off_event_count+1
-                    print("Events counted")
+                    # Count spikes separately
+                    for this_x in range(range_x):
+                        for this_y in range(range_y):
+                            index_x = xaddr_ar == this_x
+                            index_y = yaddr_ar == this_y 
+                            index_this_pixel = index_x & index_y    
+                            num_on_spikes = np.sum(pol_ar[index_this_pixel] == 1)
+                            num_off_spikes = np.sum(pol_ar[index_this_pixel] == 0)
+                            matrix_on[this_x,this_y] = num_on_spikes
+                            matrix_off[this_x,this_y] = num_off_spikes
                     
-                    if(off_event_count == 0 or on_event_count == 0):
-                        print("Not even a single event up or down")
-                        print("we are skipping this section of the sensor")
+                    # Plot spike counts
+                    fig= plt.figure()
+                    ax = fig.add_subplot(121)
+                    ax.set_title('Median ON/pix/cycle')
+                    plt.xlabel ("X")
+                    plt.ylabel ("Y")
+                    im = plt.imshow(matrix_on, interpolation='nearest', origin='low', extent=[frame_x_divisions[this_div_x][0], frame_x_divisions[this_div_x][1], frame_y_divisions[this_div_y][0], frame_y_divisions[this_div_y][1]])
+                    ax = fig.add_subplot(122)
+                    ax.set_title('Median OFF/pix/cycle')
+                    plt.xlabel ("X")
+                    plt.ylabel ("Y")
+                    im = plt.imshow(matrix_off, interpolation='nearest', origin='low', extent=[frame_x_divisions[this_div_x][0], frame_x_divisions[this_div_x][1], frame_y_divisions[this_div_y][0], frame_y_divisions[this_div_y][1]])
+                    fig.tight_layout()                    
+                    fig.subplots_adjust(right=0.8)
+                    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+                    fig.colorbar(im, cax=cbar_ax)     
+                    plt.draw()
+                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+".png",  format='png', dpi=300)
+
+                    on_event_count_median_per_pixel = median(matrix_on)/(num_oscillations)
+                    off_event_count_median_per_pixel = median(matrix_off)/(num_oscillations)
+                    [dim1, dim2] = np.shape(matrix_on)
+                    on_event_count_average_per_pixel = float(sum(matrix_on))/(dim1*dim2*num_oscillations)
+                    off_event_count_average_per_pixel = float(sum(matrix_off))/(dim1*dim2*num_oscillations)
+                    print ""
+                    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+                    print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+                    print("Off median per pixel per cycle:", off_event_count_median_per_pixel)
+                    print("On median per pixel per cycle:", on_event_count_median_per_pixel) 
+                    print("Off average per pixel per cycle:", off_event_count_average_per_pixel)
+                    print("On average per pixel per cycle:", on_event_count_average_per_pixel)
+
+                    if(on_event_count_median_per_pixel == 0.0 and off_event_count_median_per_pixel == 0.0):
+                        print("Not even a single spike.. skipping.")
                     else:
-                        # From the equation delta_on : on_event_count = delta_off : off_event_count
+                        # From the equation delta_on : on_event_count = delta_off : off_event_count (inverted to increase smaller eventcount's delta)
                         if(on_event_count > off_event_count): # to keep the max dlta to 1
-                            delta_off = (double(on_event_count) / double(off_event_count)) * (delta_on)
+                            delta_off = (double(on_event_count_average_per_pixel) / double(off_event_count_average_per_pixel)) * (delta_on)
                         else:
-                            delta_on = (double(off_event_count) / double(on_event_count)) * (delta_off)
-                        
+                            delta_on = (double(off_event_count_average_per_pixel) / double(on_event_count_average_per_pixel)) * (delta_off)
+                        print "Delta OFF: " + str(delta_off)
+                        print "Delta ON: " + str(delta_on)
+                        tmp = 0.0
                         # Reconstruct signal
                         print("Reconstructing signal")
                         for this_ev in range(len(ts)):
@@ -132,20 +172,18 @@ class DVS_contrast_sensitivity:
                         tnew = (ts_t-np.min(ts))*1e-6 # Restart timestamps
                         
                         # Get contrast sensitivity
-                        dim_x = frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0]
-                        dim_y = frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]
                         # For 0.20 contrast / ((5 events on average per pixel) / 5 oscillations) = CS = 0.2
-                        contrast_sensitivity_on = (this_contrast)/((on_event_count/(dim_x*dim_y))/(num_oscillations))
-                        contrast_sensitivity_off = (this_contrast)/((off_event_count/(dim_x*dim_y))/(num_oscillations))
+                        contrast_sensitivity_on_median = (this_contrast)/(on_event_count_median_per_pixel)
+                        contrast_sensitivity_off_median = (this_contrast)/(off_event_count_median_per_pixel)
+                        contrast_sensitivity_on_average = (this_contrast)/(on_event_count_average_per_pixel)
+                        contrast_sensitivity_off_average = (this_contrast)/(off_event_count_average_per_pixel)
                         print("This contrast:", this_contrast)
-                        print("xsize: ", dim_x)
-                        print("ysize: ", dim_y)
-                        print("Off on average per pixel:", (off_event_count/(dim_x*dim_y)))
-                        print("On on average per pixel:", (on_event_count/(dim_x*dim_y)))                        
                         print("This oscillations:", num_oscillations)
-                        print "Contrast sensitivity off: " + str('{0:.3f}'.format(contrast_sensitivity_off*100))+ "%"
-                        print "Contrast sensitivity on: " + str('{0:.3f}'.format(contrast_sensitivity_on*100))+ "%"
-                        ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off))+" CS on "+str('%.3g'%(contrast_sensitivity_on))
+                        print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
+                        print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
+                        print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
+                        print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
+                        ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off_median))+" CS on "+str('%.3g'%(contrast_sensitivity_on_median))
                         
                         # Fit
                         try:
