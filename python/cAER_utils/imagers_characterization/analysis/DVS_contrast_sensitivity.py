@@ -381,42 +381,15 @@ class DVS_contrast_sensitivity:
 #                        plt.savefig(figure_dir+"delta_off_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
 #                        plt.savefig(figure_dir+"delta_off_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')      
 #                        this_file += 1                                   
-#                                    
-#                        plt.figure()
-#                        for this_x in range(range_x): 
-#                            for this_y in range(range_y):
-#                                plt.plot(ts_matrix[this_x][this_y],rec_matrix[this_x][this_y], 'o-')
-#                        plt.savefig(figure_dir+"all_single_rec_"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                        plt.savefig(figure_dir+"all_single_rec_"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-#                        this_file += 1        
-#                        
-#                        plt.figure()
-#                        plt.title("On spikes count")
-#                        plt.imshow(matrix_off, interpolation='nearest')
-#                        plt.colorbar()
-#                        plt.savefig(figure_dir+"spikes_on_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                        plt.savefig(figure_dir+"spikes_on_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-#                        this_file += 1
-#                        
-#                        plt.figure()
-#                        plt.title("Off spikes count")
-#                        plt.imshow(matrix_on, interpolation='nearest')
-#                        plt.colorbar()
-#                        plt.savefig(figure_dir+"spikes_off_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                        plt.savefig(figure_dir+"spikes_off_count"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-#                        this_file += 1
-#
 #                        print("Done single pixels analysis")
-
-            rmse_tot = np.reshape(rmse_tot,len(rmse_tot))
-            contrast_level = np.reshape(contrast_level,len(contrast_level))
-            base_level =  np.reshape(base_level,len(base_level))
-            plt.figure()
-            plt.plot(contrast_level,rmse_tot , 'o')
-            plt.xlabel("Contrast level")
-            plt.ylabel(" RMSE ")
-            plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF')
-            plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG')
+        plt.figure()
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+               plt.plot(contrast_level[:,this_div_y, this_div_x],rmse_tot[:,this_div_y, this_div_x] , 'o')
+        plt.xlabel("Contrast level")
+        plt.ylabel(" RMSE ")
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF')
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG')
      
         return rmse_tot, contrast_level, base_level
 	
