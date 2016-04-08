@@ -15,45 +15,67 @@ import caer_communication
 import gpio_usb
 
 ###############################################################################
+# CAMERA SELECTION and SETUP PARAMETERS
+###############################################################################
+camera_file = 'cameras/davis208Mono.txt'
+info = np.genfromtxt(camera_file, dtype='str')
+sensor = info[0]
+sensor_type = info[1]
+bias_file = info[2]
+dvs128xml = info[3]
+host_ip = info[4]
+
+###############################################################################
 # TEST SELECTIONS
 ###############################################################################
+do_contrast_sensitivity = True
 do_ptc = False
 do_fpn = False
 do_latency_pixel_led_board = False
 do_latency_pixel_big_led = False
-do_contrast_sensitivity = False
-do_tresholds_sensitivity = True
 do_oscillations = False
-oscillations = 100.0   # number of complete oscillations for contrast sensitivity/latency/oscillations
-contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity/ thresholds
-c_base_levels = np.linspace(300,300,1) #contrast sensitivity base level sweeps / thresholds
-diffs_levels = np.linspace(25,255,3)
-base_level = 1000.0 #  1 klux
-freq_square = 10.0  # in oscillations/latency
-sine_freq = 0.3 # contrast sensitivity/threshold
-frame_number = 100 # ptc
-recording_time = 5
+
+###############################################################################
+# PARAMETERS
+###############################################################################
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
-useinternaladc = False
-global_shutter = True # ptc
-exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
-oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
-base_level_latency_big_led = [1000, 1000]
-prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3]             #oscillations fine values for PrBp
-                # dvs128   np.linspace(0,1000,5)         
 
-onthr = np.linspace(255,100,6)   #ON AND OFF SAME LENGHT!!!!
-offthr = np.linspace(21,126,6)
+# UNKNOWN --> FIX
+diffs_levels = np.linspace(25,255,3)
 
-###############################################################################
-# CAMERA SELECTION and SETUP PARAMETERS
-###############################################################################
-sensor = "DAVIS240C_thresholds_" #"DAVIS208Mono"#"CDAVIS640rgbw"#
-sensor_type ="DAVISFX2" #"DAVISFX3"
-bias_file = "cameras/davis240c_standards.xml"#davis208Mono_contrast_sensitivity.xml"#cdavis640rgbw.xml"
-dvs128xml = False
-host_ip = '127.0.0.1'#'172.19.11.139'
+if(do_latency_pixel_led_board or do_latency_pixel_big_led):
+    oscillations = 100.0
+    freq_square = 10.0
+    base_level_latency_big_led = [1000, 1000]
+
+if(so_oscillations):
+    oscillations = 100.0
+    freq_square = 10.0
+    #oscillations fine values for PrBp
+    prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3] # dvs128   np.linspace(0,1000,5)  
+    oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations       
+    
+if(do_contrast_sensitivity):
+    sine_freq = 1 # contrast sensitivity/threshold
+    oscillations = 100.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
+    c_base_levels = np.linspace(300,300,1) #contrast sensitivity base level sweeps
+    contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity
+    # These thresholds are indexed together: they must be the same length
+    onthr = np.linspace(255,100,6)
+    offthr = np.linspace(21,126,6)
+    diffthr = np.linspace(6,6,6)
+    oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
+    if(sensor == 'DAVIS208Mono'):
+        refss = np.linspace(5,20,50,100)
+
+if(do_ptc):
+    base_level = 1000.0 #  1 klux
+    frame_number = 100
+    recording_time = 5
+    exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
+    useinternaladc = False
+    global_shutter = True
 
 ##############################################################################
 # SETUP LIGHT CONDITIONS -- MEASURED --
@@ -149,49 +171,7 @@ if do_fpn:
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
     raw_input("Press Enter to continue...")
     control.get_data_fpn(folder = folder, recording_time=20)
-    control.close_communication_command()    
-
-if do_tresholds_sensitivity:
-    control.open_communication_command()
-    folder = datadir + '/'+ sensor + '_thresholds_' +  current_date
-    setting_dir = folder + str("/settings/")
-    if(not os.path.exists(setting_dir)):
-        os.makedirs(setting_dir)
-    copyFile(bias_file, setting_dir+str("biases_thresholds.xml") )
-    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-    print "we are doing thresholds measurements, please put homogeneous light source (integrating sphere)."
-    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
-    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    for this_base in range(len(c_base_levels)):
-        for this_contrast in range(len(contrast_level)):
-            for this_bias_index in range(len(onthr)):
-
-                print("Contrast level: "+str(contrast_level[this_contrast]))
-                perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                v_hi = (perc_hi - inter) / slope
-                v_low = (perc_low - inter) / slope 
-                offset = np.mean([v_hi,v_low])
-                amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-                print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
-                gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-                gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-
-                #set biases
-                #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
-                #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
-                #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
-                #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
-                control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-                print("off finevalue "+str(offthr[this_bias_index])+ "on finevalue"+str(onthr[this_bias_index]))
-                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
-                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
-                control.get_data_thresholds(folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], on_bias = onthr[this_bias_index], off_bias = offthr[this_bias_index] )
-
-    # Zero the Function Generator
-    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
-    control.close_communication_command()     
+    control.close_communication_command()       
 
 if do_contrast_sensitivity:
     control.open_communication_command()
@@ -206,18 +186,55 @@ if do_contrast_sensitivity:
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     for this_base in range(len(c_base_levels)):
         for this_contrast in range(len(contrast_level)):
-            print("Contrast level: "+str(contrast_level[this_contrast]))
-            perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-            perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-            v_hi = (perc_hi - inter) / slope
-            v_low = (perc_low - inter) / slope 
-            offset = np.mean([v_hi,v_low])
-            amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-            print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
-            gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-            gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-            control.get_data_contrast_sensitivity(folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base])
+            for this_bias_index in range(len(onthr)):
+                if (sensor == 'DAVIS208Mono'):
+                    for this_refss in range(len(refss)):
+                        print("Contrast level: "+str(contrast_level[this_contrast]))
+                        perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+                        perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+                        v_hi = (perc_hi - inter) / slope
+                        v_low = (perc_low - inter) / slope 
+                        offset = np.mean([v_hi,v_low])
+                        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+                        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
+                        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+                        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+                        #set biases
+                        #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
+                        #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
+                        #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
+                        #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
+                        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+                        print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index]) + "refss finevalue" + str(refss[this_refss])
+                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
+                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
+                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
+                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
+                        control.get_data_contrast_sensitivity(sensor = sensor, folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr[this_bias_index], diffthr[this_bias_index], offthrr[this_bias_index], refss[this_refss])
+                else:
+                    print("Contrast level: "+str(contrast_level[this_contrast]))
+                    perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+                    perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+                    v_hi = (perc_hi - inter) / slope
+                    v_low = (perc_low - inter) / slope 
+                    offset = np.mean([v_hi,v_low])
+                    amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+                    print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
+                    gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+                    gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+                    #set biases
+                    #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
+                    #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
+                    #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
+                    #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
+                    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+                    print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index])
+                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
+                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
+                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
+                    control.get_data_contrast_sensitivity(sensor = sensor, folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr[this_bias_index], diffthr[this_bias_index], offthrr[this_bias_index])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        

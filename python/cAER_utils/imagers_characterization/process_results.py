@@ -23,28 +23,34 @@ do_oscillations = False      #for NW
 # PARAMETERS
 ###################
 directory_meas = "Z:/Characterizations/Measurements_final/208Mono/contrast_sensitivity/DAVIS208Mono_contrast_sensitivity_14_01_16-14_20_25/"
-camera_dim = [208,192]
-pixel_sel = [208,192]
-	# [208,192] #Pixelparade 208Mono 
-	# [240,180] #DAVSI240C  http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
-	# 0.596 internal adcs 346B
-	# 1.501 external ADC 240C
-	# ? dvs external adc reference
-	# 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
-	# 0.648 external adcs reference is the same for all chips
-ADC_range = 1.501 #0.648#240C 1.501
-ADC_values = 1024
-frame_x_divisions = [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]]
-	#   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
-	#   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
+camera_file = 'cameras/davis208Mono.txt'
+info = np.genfromtxt(camera_file, dtype='str')
+sensor = info[0]
+sensor_type = info[1]
+bias_file = info[2]
+dvs128xml = info[3]
+host_ip = info[4]
+camera_dim = [float(info[5].split(',')[0].strip('[').strip(']')), float(info[5].split(',')[1].strip('[').strip(']'))]
+pixel_sel = [float(info[6].split(',')[0].strip('[').strip(']')), float(info[6].split(',')[1].strip('[').strip(']'))]
+ADC_range_int = float(info[7])
+ADC_range_ext = float(info[8]) # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
+	# 0.596 internal adcs 346B	# 1.501 external ADC 240C
+ADC_range = 1.501 ### fix this!
+ADC_values = float(info[9])
+frame_x_divisions=[[0 for x in range(2)] for x in range(len(info[10].split(','))/2)]
+for x in range(0,len(info[10].split(',')),2):
+    frame_x_divisions[x/2][0] = float(info[10].split(',')[x].strip('[').strip(']'))
+    frame_x_divisions[x/2][1] = float(info[10].split(',')[x+1].strip('[').strip(']'))
 	#   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
 	#   128DVS                  [[0,128]]
-frame_y_divisions = [[0,192]]
-	#   208Mono 	[[0,191]]
+frame_y_divisions=[[0 for y in range(2)] for y in range(len(info[11].split(','))/2)]
+for y in range(0,len(info[11].split(',')),2):
+    frame_y_divisions[y/2][0] = float(info[11].split(',')[y].strip('[').strip(']'))
+    frame_y_divisions[y/2][1] = float(info[11].split(',')[y+1].strip('[').strip(']'))
 	#   640Color 	[[121,122]] 
 	#   240C		[[0,180]]
 	#   128DVS      [[0,128]]
-	# 
+
 # ###############################
 # contrast sensitivity parameter
 #################################
