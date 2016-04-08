@@ -80,11 +80,11 @@ if do_contrast_sensitivity:
     from matplotlib.ticker import LinearLocator, FormatStrFormatter
     import matplotlib.pyplot as plt
     import numpy as np
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
-                       linewidth=0, antialiased=False)
-    fig.colorbar(surf, shrink=0.5, aspect=5)
+#    fig = plt.figure()
+#    ax = fig.gca(projection='3d')
+#    surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
+#                       linewidth=0, antialiased=False)
+#    fig.colorbar(surf, shrink=0.5, aspect=5)
 
 if do_oscillations:
     ################### 
