@@ -90,6 +90,7 @@ class DVS_contrast_sensitivity:
                     matrix_off = np.zeros([range_x,range_y])
                     
                     # Count spikes separately
+                    print "Counting spikes.."                    
                     for this_x in range(range_x):
                         for this_y in range(range_y):
                             index_x = xaddr_ar == this_x
@@ -117,7 +118,8 @@ class DVS_contrast_sensitivity:
                     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
                     fig.colorbar(im, cax=cbar_ax)     
                     plt.draw()
-                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
+#                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
+                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
 
                     [dim1, dim2] = np.shape(matrix_on)
                     on_event_count_median_per_pixel = median(matrix_on)/(num_oscillations)
@@ -131,7 +133,32 @@ class DVS_contrast_sensitivity:
                     print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel) 
                     print "Off average per pixel per cycle: " + str(off_event_count_average_per_pixel)
                     print "On average per pixel per cycle: " + str(on_event_count_average_per_pixel)
-
+                    
+                    # Plot histograms if Off and On counts
+                    fig= plt.figure()
+                    ax = fig.add_subplot(121)
+                    ax.set_title('ON/pix/cycle')
+                    plt.xlabel ("ON per pixel per cycle")
+                    plt.ylabel ("Count")
+                    im = plt.hist(reshape(matrix_on, dim1*dim2)/(num_oscillations), 20)
+                    ax = fig.add_subplot(122)
+                    ax.set_title('OFF/pix/cycle')
+                    plt.xlabel ("OFF per pixel per cycle")
+                    plt.ylabel ("Count")
+                    im = plt.hist(reshape(matrix_off, dim1*dim2)/(num_oscillations), 20)
+                    fig.tight_layout()     
+                    plt.savefig(figure_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
+                    plt.savefig(figure_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
+                    # Confidence interval = error metric                    
+                    err_off = self.confIntMean(reshape(matrix_off, dim1*dim2)/(num_oscillations))
+                    err_on = self.confIntMean(reshape(matrix_on, dim1*dim2)/(num_oscillations))                    
+                    print "Off confidence interval of 95%: " + str(err_off)
+                    print "On confidence interval of 95%: " + str(err_on)
+                    err_off_percent = 100*np.abs(err_off[0]-off_event_count_average_per_pixel)/off_event_count_average_per_pixel
+                    err_on_percent = 100*np.abs(err_on[0]-on_event_count_average_per_pixel)/on_event_count_average_per_pixel
+                    print "Off confidence interval of 95% within " + str('{0:.3f}'.format(err_off_percent))+ "% of mean"
+                    print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean"
+                    
                     if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0):
                         print "Not even a single spike.. skipping."
                     else:
@@ -186,7 +213,7 @@ class DVS_contrast_sensitivity:
                         print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
-                        ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
+                        ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
                         
                         # Fit
                         try:
