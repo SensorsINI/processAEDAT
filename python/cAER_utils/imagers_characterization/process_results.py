@@ -11,19 +11,20 @@ import os
 
 ioff()
 ##############################################################################
-# WHAT SHOULD WE DO?
+# ANALYSIS
 ##############################################################################
 do_ptc = False
 do_fpn = False
 do_latency_pixel = False
 do_contrast_sensitivity = True
-do_oscillations = False      #for NW
+do_oscillations = False
 
 ################### 
-# PARAMETERS
+# GET CHIP INFO
 ###################
 directory_meas = "Z:/Characterizations/Measurements_final/208Mono/contrast_sensitivity/DAVIS208Mono_contrast_sensitivity_14_01_16-14_20_25/"
 camera_file = 'cameras/davis208Mono.txt'
+
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
 sensor_type = info[1]
@@ -33,30 +34,24 @@ host_ip = info[4]
 camera_dim = [float(info[5].split(',')[0].strip('[').strip(']')), float(info[5].split(',')[1].strip('[').strip(']'))]
 pixel_sel = [float(info[6].split(',')[0].strip('[').strip(']')), float(info[6].split(',')[1].strip('[').strip(']'))]
 ADC_range_int = float(info[7])
-ADC_range_ext = float(info[8]) # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
-	# 0.596 internal adcs 346B	# 1.501 external ADC 240C
-ADC_range = 1.501 ### fix this!
+ADC_range_ext = float(info[8])
 ADC_values = float(info[9])
 frame_x_divisions=[[0 for x in range(2)] for x in range(len(info[10].split(','))/2)]
 for x in range(0,len(info[10].split(',')),2):
     frame_x_divisions[x/2][0] = float(info[10].split(',')[x].strip('[').strip(']'))
     frame_x_divisions[x/2][1] = float(info[10].split(',')[x+1].strip('[').strip(']'))
-	#   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-	#   128DVS                  [[0,128]]
 frame_y_divisions=[[0 for y in range(2)] for y in range(len(info[11].split(','))/2)]
 for y in range(0,len(info[11].split(',')),2):
     frame_y_divisions[y/2][0] = float(info[11].split(',')[y].strip('[').strip(']'))
     frame_y_divisions[y/2][1] = float(info[11].split(',')[y+1].strip('[').strip(']'))
-	#   640Color 	[[121,122]] 
-	#   240C		[[0,180]]
-	#   128DVS      [[0,128]]
-
-# ###############################
-# contrast sensitivity parameter
-#################################
-sine_freq = 1.0 # sine freq
-num_oscillations = 16.0 # 100 will be used!
-single_pixels_analysis = False
+    
+################### 
+# PARAMETERS
+###################
+if(do_contrast_sensitivity):
+    sine_freq = 1.0
+    num_oscillations = 100.0
+    single_pixels_analysis = False
 
 ################### 
 # END PARAMETERS
@@ -177,6 +172,10 @@ if do_ptc:
     # select test pixels areas
     # note that x and y might be swapped inside the ptc_analysis function
     aedat = APS_photon_transfer_curve.APS_photon_transfer_curve()
+    if('_ADCint' in ptc_dir):
+        ADC_range = ADC_range_int
+    else:
+        ADC_range = ADC_range_ext
     aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
 
 if do_fpn:

@@ -408,8 +408,8 @@ class APS_photon_transfer_curve:
                     while(data[counter:counter+8]):  #loop over all event packets
                         aer_data = struct.unpack('I',data[counter:counter+4])[0]
                         timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
-                        x_addr = (aer_data >> 17) & 0x00007FFF
-                        y_addr = (aer_data >> 2) & 0x00007FFF
+                        x_addr = (aer_data >> 18) & 0x00003FFF
+                        y_addr = (aer_data >> 4) & 0x00003FFF
                         x_addr_tot.append(x_addr)
                         y_addr_tot.append(y_addr)
                         pol = (aer_data >> 1) & 0x00000001
@@ -471,49 +471,3 @@ class APS_photon_transfer_curve:
     # log(sine) wave to fit
     def my_log_sin(self, x, freq, amplitude, phase, offset_in, offset_out):
         return np.log(-np.sin( 2*np.pi* x * freq + phase) * amplitude + offset_in ) + offset_out
-
-if __name__ == "__main__":
-    ##############################################################################
-    # WHAT SHOULD WE DO?
-    ##############################################################################
-
-    ################### 
-    # PARAMETERS
-    ###################
-    do_ptc = True
-    do_fpn = False
-    do_latency_pixel = False
-    do_contrast_sensitivity = False
-    do_oscillations = False      #for NW
-    directory_meas = 'measurements/DAVIS240C_signal_variation_ADCint_ptc_02_02_16-18_15_38/'
-    camera_dim = [240,180]
-    pixel_sel = [0,200]
-    #[208,192] #Pixelparade 208Mono 
-    #[240,180] #DAVSI240C
-    # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
-    # 0.596 internal adcs 346B
-    # 1.501 external ADC 240C
-    # ? dvs external adc reference
-    # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
-    # 0.648 external adcs reference is the same for all chips
-    ADC_range = 1.29#0.648#240C 1.501
-    ADC_values = 1024
-    frame_x_divisions = [[0,200]]
-    #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
-    #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
-    #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    #   128DVS                  [[0,128]]
-    frame_y_divisions = [[0,180]]
-    #   208Mono 	[[0,191]]
-    #   640Color 	[[121,122]] 
-    #   240C		[[0,180]]
-    #   128DVS      [[0,128]]
-    # 
-    # ###############################
-    # contrast sensitivity parameter
-    #################################
-    sine_freq = 1.0 # sine freq
-
-    ################### 
-    # END PARAMETERS
-    ###################

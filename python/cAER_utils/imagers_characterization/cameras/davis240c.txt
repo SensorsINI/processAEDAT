@@ -1,0 +1,24 @@
+# Sensor name
+DAVIS240C
+# Sensor type
+DAVISFX3
+# Bias file
+davis240c_contrast_sensitivity.xml
+# Is it DVS128?
+False
+# Host IP, don't change (127.0.0.1 or 172.19.11.139)
+127.0.0.1
+# Camera dimensions [X,Y] (no spaces, comma separated)
+[240,180]
+# Camera selected dimensions [X,Y] (no spaces, comma separated)
+[240,180]
+# Internal ADC range internal adcs reference (none)
+0
+# External ADC range external 
+1.501
+# ADC levels
+1024
+# X divisions (no spaces, comma separated)
+[[0,20],[20,190],[190,210],[210,220],[220,230],[230,240]]
+# Y divisions (no spaces, comma separated)
+[[0,180]]

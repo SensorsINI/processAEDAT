@@ -543,8 +543,8 @@ class DVS_oscillations:
                     while(data[counter:counter+8]):  #loop over all event packets
                         aer_data = struct.unpack('I',data[counter:counter+4])[0]
                         timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
-                        x_addr = (aer_data >> 17) & 0x00007FFF
-                        y_addr = (aer_data >> 2) & 0x00007FFF
+                        x_addr = (aer_data >> 18) & 0x00003FFF
+                        y_addr = (aer_data >> 4) & 0x00003FFF
                         x_addr_tot.append(x_addr)
                         y_addr_tot.append(y_addr)
                         pol = (aer_data >> 1) & 0x00000001

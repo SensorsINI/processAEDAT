@@ -1,0 +1,24 @@
+# Sensor name
+DAVIS346Mono
+# Sensor type
+DAVISFX3
+# Bias file
+davis346Mono_contrast_sensitivity.xml
+# Is it DVS128?
+False
+# Host IP, don't change (127.0.0.1 or 172.19.11.139)
+127.0.0.1
+# Camera dimensions [X,Y] (no spaces, comma separated)
+[346,260]
+# Camera selected dimensions [X,Y] (no spaces, comma separated)
+[346,260]
+# Internal ADC range internal adcs reference (none)
+0.596
+# External ADC range external 
+0.648
+# ADC levels
+1024
+# X divisions (no spaces, comma separated)
+[[0,346]]
+# Y divisions (no spaces, comma separated)
+[[0,260]]

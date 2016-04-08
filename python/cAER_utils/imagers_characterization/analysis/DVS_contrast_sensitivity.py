@@ -83,7 +83,6 @@ class DVS_contrast_sensitivity:
                     xaddr_ar = np.array(xaddr)
                     yaddr_ar = np.array(yaddr)
                     pol_ar = np.array(pol)
-                    ts_ar = np.array(ts)
                     range_x = frame_x_divisions[this_div_x][1] - frame_x_divisions[this_div_x][0]
                     range_y = frame_y_divisions[this_div_y][1] - frame_y_divisions[this_div_y][0]
                     matrix_on = np.zeros([range_x,range_y])
@@ -252,7 +251,7 @@ class DVS_contrast_sensitivity:
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
                         print(stringa)
                         
-                    # not fixed yet
+                    # not fixed yet but can be removed probably
 #                    if(single_pixels_analysis):
 #                        print("Starting single pixels analysis...")
 #                        # we loop on all the single pixels and we carry signal reconstruction 
@@ -557,8 +556,8 @@ class DVS_contrast_sensitivity:
                     while(data[counter:counter+8]):  #loop over all event packets
                         aer_data = struct.unpack('I',data[counter:counter+4])[0]
                         timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
-                        x_addr = (aer_data >> 17) & 0x00007FFF
-                        y_addr = (aer_data >> 2) & 0x00007FFF
+                        x_addr = (aer_data >> 18) & 0x00003FFF
+                        y_addr = (aer_data >> 4) & 0x00003FFF
                         x_addr_tot.append(x_addr)
                         y_addr_tot.append(y_addr)
                         pol = (aer_data >> 1) & 0x00000001
