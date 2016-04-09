@@ -34,7 +34,7 @@ class DVS_contrast_sensitivity:
         self.timestamp = []
         self.time_res = 1e-6
 
-    def cs_analysis(self, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 100.0, single_pixels_analysis=False):
+    def cs_analysis(self, sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 100.0, single_pixels_analysis=False):
         '''
             Contrast sensitivity analisys and signal reconstruction
             Input signal is a sine wave from the integrating sphere
@@ -55,10 +55,27 @@ class DVS_contrast_sensitivity:
             print "** File #" +str(this_file)+ " **"
             print "*************"            
             if not os.path.isdir(directory+files_in_dir[this_file]):
-                print("Loading data..")                
-#                rec_time = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[0]) # in us
+                print("Loading data..")    
+                '''               
+                REMEMBER:
+                filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+\
+                '_contrast_level_'+format(int(contrast_level*100),'03d')+\
+                '_base_level_'+str(format(int(base_level),'03d'))+\
+                '_on_'+str(format(int(onthr),'03d'))+\
+                '_diff_'+str(format(int(diffthr),'03d'))+\
+                '_off_'+str(format(int(offthr),'03d'))+\
+                '_refss_'+str(format(int(refss),'03d'))+\
+                '.aedat'
+                '''
+                this_rec_time = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[0]) # in us
                 this_contrast = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[3])/100
                 this_base_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[6])
+                this_on_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[8])
+                this_diff_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[10])
+                this_off_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[12])
+                if(sensor == 'DAVIS208Mono'):
+                    this_refss_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[14])
+                               
                 [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
                 print("Addresses extracted")
             else:
@@ -70,8 +87,15 @@ class DVS_contrast_sensitivity:
             # For every division in x and y at particular contrast and base level
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div_y in range(len(frame_y_divisions)):
-                    contrast_level[this_file,this_div_y,this_div_x] = this_contrast
-                    base_level[this_file, this_div_y, this_div_x] = this_base_level      
+                    rec_time[this_file,this_div_x,this_div_y] = this_rec_time
+                    contrast_level[this_file,this_div_x,this_div_y] = this_contrast
+                    base_level[this_file,this_div_x,this_div_y] = this_base_level  
+                    on_level[this_file,this_div_x,this_div_y] = this_on_level  
+                    diff_level[this_file,this_div_x,this_div_y] = this_diff_level  
+                    off_level[this_file,this_div_x,this_div_y] = this_off_level  
+                    if(sensor == 'DAVIS208Mono'):
+                        refss_level[this_file,this_div_x,this_div_y] = this_refss_level  
+                    
                     # Initialize parameters
                     signal_rec = []
                     tmp = 0
@@ -208,12 +232,23 @@ class DVS_contrast_sensitivity:
                         contrast_sensitivity_off_average = (this_contrast)/(off_event_count_average_per_pixel)
                         print "This contrast: " + str(this_contrast)
                         print "This oscillations: " + str(num_oscillations)
+                        print "This recording time: " + str(this_rec_time)
+                        print "This base level: " + str(this_base_level)
+                        print "This on level: " + str(this_on_level)
+                        print "This diff level: " + str(this_diff_level)
+                        print "This off level: " + str(this_off_level)
+                        if(sensor == 'DAVIS208Mono'):
+                            print "This refss level: " + str(this_refss_level)                       
                         print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
                         print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
                         ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
-                        
+
+                        contrast_sensitivity_off_average_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_off_average
+                        contrast_sensitivity_on_average_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_average
+                        contrast_sensitivity_off_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_off_median
+                        contrast_sensitivity_on_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_median                        
                         # Fit
                         try:
                             fit = curve_fit(self.my_log_sin, tnew, signal_rec, p0=p0)
@@ -237,7 +272,7 @@ class DVS_contrast_sensitivity:
                             stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
                             plt.plot(tnew, data_first_guess, label=stringa)
                         plt.text(1, 11, ttt, ha='left')
-                        rmse_tot[this_file,this_div_y, this_div_x] = rms
+                        rmse_tot[this_file,this_div_x, this_div_y] = rms
                         plt.plot(tnew, signal_rec, label='Reconstructed signal')
                         plt.legend(loc="lower right")
                         plt.xlabel('Time [s]')
@@ -250,146 +285,65 @@ class DVS_contrast_sensitivity:
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
                         plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
                         print(stringa)
-                        
-                    # not fixed yet but can be removed probably
-#                    if(single_pixels_analysis):
-#                        print("Starting single pixels analysis...")
-#                        # we loop on all the single pixels and we carry signal reconstruction 
-#                        # for every pixel in the array 
-#                        xaddr_ar = np.array(xaddr)
-#                        yaddr_ar = np.array(yaddr)
-#                        pol_ar = np.array(pol)
-#                        ts_ar = np.array(ts)
-#                        range_x = frame_x_divisions[this_div_x][1] - frame_x_divisions[this_div_x][0]
-#                        range_y = frame_y_divisions[this_div_y][1] - frame_x_divisions[this_div_y][0]
-#                        matrix_on = np.zeros([range_x,range_y])
-#                        matrix_off = np.zeros([range_x,range_y])
-#                        matrix_delta_on = np.ones([range_x,range_y])
-#                        matrix_delta_off = np.ones([range_x,range_y])
-#                        matrix_rmse = np.zeros([range_x,range_y])
-#                        pol_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
-#                        rec_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
-#                        ts_matrix = [[[] for i in range(range_y)] for i in range(range_x)]
-#                        
-#                        for this_x in range(range_x):
-#                            for this_y in range(range_y):
-#                                index_x = xaddr_ar == this_x
-#                                index_y = yaddr_ar == this_y 
-#                                index_this_pixel = index_x & index_y    
-#                                num_on_spikes = np.sum(pol_ar[index_this_pixel] == 1)
-#                                num_off_spikes = np.sum(pol_ar[index_this_pixel] == 0)
-#                                matrix_on[this_x,this_y] = num_on_spikes
-#                                matrix_off[this_x,this_y] = num_off_spikes
-#                                pol_matrix[this_x][this_y] = pol_ar[index_this_pixel]
-#                                tmp = 0
-#                                delta_on = 1.0
-#                                delta_off = 1.0
-#                                if(matrix_on[this_x,this_y] == 0 or matrix_off[this_x,this_y] == 0):
-#                                    print("Not even a single spike.. skipping.")
-#                                else:
-#                                    if( matrix_on[this_x,this_y] > matrix_off[this_x,this_y]):
-#                                        matrix_delta_off[this_x,this_y] = (double(matrix_off[this_x,this_y]) / double(matrix_on[this_x,this_y])) * (delta_on)
-#                                    else:
-#                                        matrix_delta_on[this_x,this_y] = (double(matrix_on[this_x,this_y]) / double(matrix_off[this_x,this_y])) * (delta_off)
-#                                    for i in range(len(pol_ar[index_this_pixel])):
-#                                        this_pol = pol_ar[index_this_pixel][i]
-#                                        this_ts = ts_ar[index_this_pixel][i]
-#                                        if(this_pol == 1):
-#                                            tmp = tmp + matrix_delta_on[this_x,this_y]
-#                                            rec_matrix[this_x][this_y].append(tmp)
-#                                            ts_matrix[this_x][this_y].append(this_ts)
-#                                        if(this_pol == 0):    
-#                                            tmp = tmp - matrix_delta_off[this_x,this_y]
-#                                            rec_matrix[this_x][this_y].append(tmp)
-#                                            ts_matrix[this_x][this_y].append(this_ts)
-#                                            
-#                                            
-#                                    dim_x = frame_x_divisions[this_div_x][1]-frame_x_divisions[this_div_x][0]
-#                                    dim_y = frame_y_divisions[this_div_y][1]-frame_y_divisions[this_div_y][0]
-#                                    contrast_sensitivity_off = (this_contrast)/((matrix_off[this_x,this_y]/(dim_x*dim_y))/(num_oscillations))
-#                                    contrast_sensitivity_on = (this_contrast)/((matrix_on[this_x,this_y]/(dim_x*dim_y))/(num_oscillations))
-#                                    print("This contrast: ", this_contrast)
-#                                    print("Off on average per pixel: ", (off_event_count/(dim_x*dim_y)))
-#                                    print("On on average per pixel: ", (on_event_count/(dim_x*dim_y)))                        
-#                                    print("This oscillations: ", num_oscillations)
-#                                    print("Contrast sensitivity off:", contrast_sensitivity_off)
-#                                    print("Contrast sensitivity on: ", contrast_sensitivity_on)
-#                                    ttt = "CS off:"+str('%.3g'%(contrast_sensitivity_off))+" CS on "+str('%.3g'%(contrast_sensitivity_on))
-#                                    plt.figure()
-#                                    amplitude_rec = np.abs(np.max(rec_matrix[this_x][this_y]))+np.abs(np.min(rec_matrix[this_x][this_y]))
-#                                    rec_matrix[this_x][this_y] = rec_matrix[this_x][this_y]/amplitude_rec
-#                                    guess_amplitude = np.max(rec_matrix[this_x][this_y]) - np.min(rec_matrix[this_x][this_y])
-#                                    offset_out = 7.0
-#                                    offset_in = 8.0
-#                                    #raise Exception
-#                                    p0=[sine_freq, guess_amplitude, 0.0, offset_in, offset_out]
-#                                    rec_matrix[this_x][this_y] = rec_matrix[this_x][this_y] + 10
-#                                    ts_matrix[this_x][this_y] = (ts_matrix[this_x][this_y]-np.min(ts_matrix[this_x][this_y]))*1e-6                        
-#                        
-#                                    try:
-#                                        fit = curve_fit(self.my_log_sin, ts_matrix[this_x][this_y], rec_matrix[this_x][this_y], p0=p0)
-#                                        data_fit = self.my_log_sin(tnew, *fit[0])
-#                                        rms = self.rms(signal_rec, data_fit) 
-#                                        fit_done = True
-#                                    except RuntimeError:
-#                                        fit_done = False
-#                                        print "Not possible to fit"
-#                                    if(fit_done and (math.isnan(rms) or math.isinf(rms))):
-#                                        fit_done = False
-#                                        print "We do not accept fit with NaN rmse"
-#     
-#                                    data_first_guess = self.my_log_sin(ts_matrix[this_x][this_y], *p0)
-#                                    if fit_done:
-#                                        #data_fit = self.my_log_sin(tnew, *fit[0])
-#                                        #rms = self.rms(signal_rec, data_fit)                        
-#                                        stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
-#                                        plt.plot(tnew, data_fit, label = stringa)
-#                                    else:
-#                                        rms = self.rms(signal_rec, data_first_guess)          
-#                                        stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
-#                                        plt.plot(ts_matrix[this_x][this_y], data_first_guess, label=stringa)
-#                                    plt.text(1, 11, ttt, ha='left')
-#                                    print("guessed -->", str(fit[0]))
-#                                    matrix_rmse[this_div_y, this_div_x] = rms
-#                                    plt.plot(ts_matrix[this_x][this_y], rec_matrix[this_x][this_y], label='Measured signal pixel x'+str(this_x)+' y '+str(this_y))
-#                                    plt.legend(loc="lower right")
-#                                    plt.xlabel('Time [s]')
-#                                    plt.ylabel('Normalized Amplitude')
-#                                    plt.ylim([8,12])
-#                                    if fit_done:
-#                                        plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
-#                                    else:
-#                                        plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
-#                                    plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                                    plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-#                                    this_file += 1
-#                                    print(stringa)
-#                                    
-#                        plt.figure()
-#                        plt.title("Delta on matrix")
-#                        plt.imshow(matrix_delta_on, interpolation='nearest')
-#                        plt.colorbar()
-#                        plt.savefig(figure_dir+"delta_on_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                        plt.savefig(figure_dir+"delta_on_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-#                        this_file += 1      
-#                        
-#                        plt.figure()
-#                        plt.title("Delta off matrix")
-#                        plt.imshow(matrix_delta_off, interpolation='nearest')
-#                        plt.colorbar() 
-#                        plt.savefig(figure_dir+"delta_off_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-#                        plt.savefig(figure_dir+"delta_off_matrix"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')      
-#                        this_file += 1                                   
-#                        print("Done single pixels analysis")
+
         plt.figure()
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(contrast_level[:,this_div_y, this_div_x],rmse_tot[:,this_div_y, this_div_x] , 'o')
+               plt.plot(contrast_level[:,this_div_x, this_div_y],rmse_tot[:,this_div_x, this_div_y] , 'o')
         plt.xlabel("Contrast level")
         plt.ylabel(" RMSE ")
+        plt.savefig(figure_dir+"contrast_level_vs_rmse.pdf",  format='PDF')
+        plt.savefig(figure_dir+"contrast_level_vs_rmse.png",  format='PNG')
+        
+        plt.figure()
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o')
+        plt.xlabel("RMSE")
+        plt.ylabel("Contrast sensitivity")
         plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF')
         plt.savefig(figure_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG')
-     
+        
+        plt.figure()
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x')
+               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x')
+        plt.xlabel("Base level [Lux]")
+        plt.ylabel("Contrast sensitivity")
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_base_level.pdf",  format='PDF')
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_base_level.png",  format='PNG')
+
+        plt.figure()
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+               plt.plot(on_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(on_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(on_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o')
+               plt.plot(on_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o')
+        plt.xlabel("On level [FineValue]")
+        plt.ylabel("Contrast sensitivity")
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_on_level.pdf",  format='PDF')
+        plt.savefig(figure_dir+"contrast_sensitivity_vs_on_level.png",  format='PNG')
+        
+        if(sensor == 'DAVIS208Mono'):
+            plt.figure()
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o')
+                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o')
+                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o')
+                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o')
+            plt.xlabel("Refss level [FineValue]")
+            plt.ylabel("Contrast sensitivity")
+            plt.savefig(figure_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF')
+            plt.savefig(figure_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG')
+        
         return rmse_tot, contrast_level, base_level
 	
     def confIntMean(self, a, conf=0.95):
@@ -622,11 +576,7 @@ class DVS_contrast_sensitivity:
 
 if __name__ == "__main__":
     ##############################################################################
-    # WHAT SHOULD WE DO?
-    ##############################################################################
-
-    ################### 
-    # PARAMETERS
+    # TO BE REMOVED?
     ###################
     do_ptc = True
     do_fpn = False

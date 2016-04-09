@@ -67,7 +67,7 @@ if do_contrast_sensitivity:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = DVS_contrast_sensitivity.DVS_contrast_sensitivity()
-    rms, constrasts, bases = aedat.cs_analysis(cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, single_pixels_analysis = single_pixels_analysis)
+    rms, constrasts, bases = aedat.cs_analysis(sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, single_pixels_analysis = single_pixels_analysis)
     constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
     bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
     rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
