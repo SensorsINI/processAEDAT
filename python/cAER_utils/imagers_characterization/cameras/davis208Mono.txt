@@ -3,7 +3,7 @@ DAVIS208Mono
 # Sensor type
 DAVISFX3
 # Bias file
-davis208Mono_contrast_sensitivity.xml
+cameras/davis208Mono_contrast_sensitivity.xml
 # Is it DVS128?
 False
 # Host IP, don't change (127.0.0.1 or 172.19.11.139)

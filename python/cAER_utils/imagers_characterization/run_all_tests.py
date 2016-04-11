@@ -22,7 +22,10 @@ info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
 sensor_type = info[1]
 bias_file = info[2]
-dvs128xml = info[3]
+if(info[3] == 'False'):
+    dvs128xml = False
+elif(info[3] == 'True'):
+    dvs128xml == True
 host_ip = info[4]
 
 ###############################################################################
@@ -49,7 +52,7 @@ if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     freq_square = 10.0
     base_level_latency_big_led = [1000, 1000]
 
-if(so_oscillations):
+if(do_oscillations):
     oscillations = 100.0
     freq_square = 10.0
     #oscillations fine values for PrBp
@@ -58,7 +61,7 @@ if(so_oscillations):
     
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
-    oscillations = 100.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
+    oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
     c_base_levels = np.linspace(300,300,1) #contrast sensitivity base level sweeps
     contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity
     # These thresholds are indexed together: they must be the same length
@@ -197,7 +200,7 @@ if do_contrast_sensitivity:
                         offset = np.mean([v_hi,v_low])
                         amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
                         print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
+                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
                         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
                         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
                         #set biases
@@ -211,7 +214,7 @@ if do_contrast_sensitivity:
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
-                        control.get_data_contrast_sensitivity(sensor = sensor, folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr[this_bias_index], diffthr[this_bias_index], offthrr[this_bias_index], refss[this_refss])
+                        control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
                     print("Contrast level: "+str(contrast_level[this_contrast]))
                     perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
@@ -221,7 +224,7 @@ if do_contrast_sensitivity:
                     offset = np.mean([v_hi,v_low])
                     amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
                     print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude[0])+",0")
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
                     gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
                     gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
                     #set biases
@@ -234,7 +237,7 @@ if do_contrast_sensitivity:
                     control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
                     control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
                     control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
-                    control.get_data_contrast_sensitivity(sensor = sensor, folder = folder, oscillations = oscillations, sine_freq = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr[this_bias_index], diffthr[this_bias_index], offthrr[this_bias_index])
+                    control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
