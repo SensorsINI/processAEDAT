@@ -209,12 +209,15 @@ if do_contrast_sensitivity:
                 #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
                 #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
                 control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-                print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index]) + "refss finevalue" + str(refss[this_refss])
+                print "on finevalue " + str(onthr[this_bias_index]) 
+                print "diff finevalue" + str(diffthr[this_bias_index]) 
+                print "off finevalue" + str(offthr[this_bias_index]) 
                 control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                 if (sensor == 'DAVIS208Mono'):
                     for this_refss in range(len(refss)):
+                        print"refss finevalue" + str(refss[this_refss])
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
                         control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
