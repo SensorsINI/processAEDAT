@@ -7,6 +7,7 @@ import DVS_oscillations
 import APS_photon_transfer_curve
 import matplotlib as plt
 from pylab import *
+import numpy as np
 import os
 
 ioff()
@@ -29,7 +30,10 @@ info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
 sensor_type = info[1]
 bias_file = info[2]
-dvs128xml = info[3]
+if(info[3] == 'False'):
+    dvs128xml = False
+elif(info[3] == 'True'):
+    dvs128xml == True
 host_ip = info[4]
 camera_dim = [float(info[5].split(',')[0].strip('[').strip(']')), float(info[5].split(',')[1].strip('[').strip(']'))]
 pixel_sel = [float(info[6].split(',')[0].strip('[').strip(']')), float(info[6].split(',')[1].strip('[').strip(']'))]

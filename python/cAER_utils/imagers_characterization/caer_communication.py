@@ -443,7 +443,6 @@ class caer_communication:
             print("All DVS arrays of PixelParade are ON")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
-        safety_margin = 6.0
         recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Recording for " + str(recording_time))                
         time.sleep(2.0)

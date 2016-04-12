@@ -188,61 +188,42 @@ if do_contrast_sensitivity:
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     for this_base in range(len(c_base_levels)):
+        print("Base level: "+str(c_base_levels[this_base]))
         for this_contrast in range(len(contrast_level)):
+            print("Contrast level: "+str(contrast_level[this_contrast]))
+            perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+            perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+            v_hi = (perc_hi - inter) / slope
+            v_low = (perc_low - inter) / slope 
+            offset = np.mean([v_hi,v_low])
+            amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+            print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
+            gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+            gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
             for this_bias_index in range(len(onthr)):
+                print("Bias combination: "+str(this_bias_index))
+                #set biases
+                #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
+                #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
+                #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
+                #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
+                control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+                print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index]) + "refss finevalue" + str(refss[this_refss])
+                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
+                control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
+                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                 if (sensor == 'DAVIS208Mono'):
                     for this_refss in range(len(refss)):
-                        print("Contrast level: "+str(contrast_level[this_contrast]))
-                        perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                        perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                        v_hi = (perc_hi - inter) / slope
-                        v_low = (perc_low - inter) / slope 
-                        offset = np.mean([v_hi,v_low])
-                        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-                        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
-                        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-                        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-                        #set biases
-                        #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
-                        #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
-                        #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
-                        #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
-                        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-                        print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index]) + "refss finevalue" + str(refss[this_refss])
-                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
-                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
-                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
                         control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
-                    print("Contrast level: "+str(contrast_level[this_contrast]))
-                    perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                    perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-                    v_hi = (perc_hi - inter) / slope
-                    v_low = (perc_low - inter) / slope 
-                    offset = np.mean([v_hi,v_low])
-                    amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
-                    print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
-                    gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
-                    gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-                    #set biases
-                    #put /1/1-DAVISFX3/bias/DiffBn/ coarseValue byte  4
-                    #put /1/1-DAVISFX3/bias/DiffBn/ fineValue short 120
-                    #put /1/1-DAVISFX3/bias/OffBn/ fineValue short 6
-                    #put /1/1-DAVISFX3/bias/OnBn/ fineValue short 255
-                    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-                    print "on finevalue " + str(onthr[this_bias_index]) + "diff finevalue" + str(diffthr[this_bias_index]) + "off finevalue" + str(offthr[this_bias_index])
-                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
-                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
-                    control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                     control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
 
-if do_num_oscillations:
+if do_oscillations:
     print "\n"
     print "we are doing oscillations measurements. ..\n \
 	WARNING : remember to check that CAER has network streaming enable sends both spiking events and special events ..\n \
