@@ -9,8 +9,6 @@ import os
 import struct
 import threading
 import sys
-sys.path.append('utils/')
-import load_files
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -20,6 +18,8 @@ import string
 from pylab import *
 import scipy.stats as st
 import math
+sys.path.append('utils/')
+import load_files
 
 class APS_photon_transfer_curve:
     def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):

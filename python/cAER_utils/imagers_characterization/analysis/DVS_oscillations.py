@@ -20,19 +20,6 @@ import scipy.stats as st
 import math
 
 class DVS_oscillations:
-    def __init__(self):
-        self.V3 = "aedat3"
-        self.V2 = "aedat" # current 32bit file format
-        self.V1 = "dat" # old format
-        self.header_length = 28
-        self.EVT_DVS = 0 # DVS event type
-        self.EVT_APS = 2 # APS event
-        self.file = []
-        self.x_addr = []
-        self.y_addr = []
-        self.timestamp = []
-        self.time_res = 1e-6
-
     def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False, pixel_sel = False):
         '''
             oscillations/latency, single pixel signal reconstruction

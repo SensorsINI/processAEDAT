@@ -9,8 +9,6 @@ import os
 import struct
 import threading
 import sys
-sys.path.append('utils/')
-import load_files
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -21,6 +19,8 @@ from pylab import *
 import scipy.stats as st
 import math
 import matplotlib as mpl
+sys.path.append('utils/')
+import load_files
 
 class DVS_contrast_sensitivity:
     def cs_analysis(self, sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 100.0, single_pixels_analysis=False):

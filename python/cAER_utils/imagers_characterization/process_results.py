@@ -1,7 +1,8 @@
 import aedat3_process
 import sys
-sys.path.append('analysis/')
 sys.path.append('utils/')
+import load_files
+sys.path.append('analysis/')
 import DVS_contrast_sensitivity
 import DVS_latency
 import DVS_oscillations
