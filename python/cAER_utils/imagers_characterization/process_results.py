@@ -1,6 +1,7 @@
 import aedat3_process
 import sys
 sys.path.append('analysis/')
+sys.path.append('utils/')
 import DVS_contrast_sensitivity
 import DVS_latency
 import DVS_oscillations
@@ -24,7 +25,7 @@ do_oscillations = False
 # GET CHIP INFO
 ###################
 directory_meas = "Z:/Characterizations/Measurements_final/208Mono/contrast_sensitivity/DAVIS208Mono_contrast_sensitivity_14_01_16-14_20_25/"
-camera_file = 'cameras/davis208Mono.txt'
+camera_file = 'cameras/davis208Mono_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]

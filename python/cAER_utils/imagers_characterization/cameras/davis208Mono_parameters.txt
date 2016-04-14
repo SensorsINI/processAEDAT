@@ -1,0 +1,47 @@
+# #########################################################
+# General parameters
+# #########################################################
+# 0 # Sensor name
+DAVIS208Mono
+# 1 # Sensor type
+DAVISFX3
+# 2 # Bias file
+cameras/davis208Mono_contrast_sensitivity.xml
+# 3 # Is it DVS128?
+False
+# 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
+127.0.0.1
+# 5 # Camera dimensions [X,Y] (no spaces, comma separated)
+[208,192]
+# 6 # Camera selected dimensions [X,Y] (no spaces, comma separated)
+[208,192]
+# 7 # Internal ADC range internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
+1.290
+# 8 # External ADC range external adcs reference is the same for all chips, http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
+0.648
+# 9 # ADC levels
+1024
+# 1 # X divisions (no spaces, comma separated) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]]
+[[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
+# 11 #  Y divisions (no spaces, comma separated)
+[[0,191]]
+# #########################################################
+# Contrast sensitivity parameters (no spaces, comma separated)
+# #########################################################
+# 12 # ON bias finevalue (coarse is 5)
+[255,255,255]
+# 13 # DIFF bias finevalue (coarse is 4)
+[39,39,39]
+# 14 # OFF bias finevalue (coarse is 4)
+[1,5,10]
+# 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
+[20,25,30]
+# #########################################################
+# Photon transfer curve parameters (no spaces, comma separated)
+# #########################################################
+# 16 # start, end and number of points for exposures
+[1,1000000,100]
+# 17 # Use internal ADC?
+False
+# 18 # Global shutter enabled?
+True

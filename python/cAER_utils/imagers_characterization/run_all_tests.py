@@ -17,7 +17,7 @@ import gpio_usb
 ###############################################################################
 # CAMERA SELECTION and SETUP PARAMETERS
 ###############################################################################
-camera_file = 'cameras/davis208Mono.txt'
+camera_file = 'cameras/davis208Mono_parameters.txt'
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
 sensor_type = info[1]
@@ -44,9 +44,43 @@ do_oscillations = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
-# UNKNOWN --> FIX
-diffs_levels = np.linspace(25,255,3)
+if(do_contrast_sensitivity):
+    sine_freq = 1 # contrast sensitivity/threshold
+    oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
+    contrast_base_levels = [500, 1000, 2000] #contrast sensitivity base level sweeps
+    contrast_level = [0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
+    onthr=[0 for x in range(len(info[12].split(',')))]
+    for x in range(len(info[12].split(','))):
+        onthr[x] = int(info[12].split(',')[x].strip('[').strip(']'))
+    diffthr =[0 for x in range(len(info[13].split(',')))]
+    for x in range(len(info[13].split(','))):
+        diffthr[x] = int(info[13].split(',')[x].strip('[').strip(']'))
+    offthr = [0 for x in range(len(info[14].split(',')))]
+    for x in range(len(info[14].split(','))):
+        offthr[x] = int(info[14].split(',')[x].strip('[').strip(']'))
+    if(sensor == 'DAVIS208Mono'):
+        refss = [0 for x in range(len(info[15].split(',')))]
+        for x in range(len(info[15].split(','))):
+            refss[x] = int(info[15].split(',')[x].strip('[').strip(']'))
 
+if(do_ptc):
+    base_level = 1000.0 #  1 klux
+    frame_number = 100
+    recording_time = 5
+    start_exp = int(info[17].split(',')[0].strip('[').strip(']'))
+    end_exp = int(info[16].split(',')[1].strip('[').strip(']'))
+    num_points_exp = int(info[16].split(',')[2].strip('[').strip(']'))
+    exposures = np.linspace(start_exp, end_exp, num_points_exp)
+    if(info[17] == 'False'):
+        useinternaladc = False
+    elif(info[17] == 'True'):
+        useinternaladc == True
+    if(info[18] == 'False'):
+        global_shutter = False
+    elif(info[18] == 'True'):
+        global_shutter == True    
+        
 if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     oscillations = 100.0
     freq_square = 10.0
@@ -58,27 +92,6 @@ if(do_oscillations):
     #oscillations fine values for PrBp
     prbpvalues = np.linspace(3,255,3)   # davi240c [255,25,3] # dvs128   np.linspace(0,1000,5)  
     oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations       
-    
-if(do_contrast_sensitivity):
-    sine_freq = 1 # contrast sensitivity/threshold
-    oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    c_base_levels = np.linspace(300,300,1) #contrast sensitivity base level sweeps
-    contrast_level = np.linspace(0.3,0.3,1) # contrast sensitivity
-    # These thresholds are indexed together: they must be the same length
-    onthr = np.linspace(255,100,6)
-    offthr = np.linspace(21,126,6)
-    diffthr = np.linspace(6,6,6)
-    oscillations_base_level = [60, 500, 1500, 2500, 3000]	#oscillations
-    if(sensor == 'DAVIS208Mono'):
-        refss = np.linspace(5,20,50,100)
-
-if(do_ptc):
-    base_level = 1000.0 #  1 klux
-    frame_number = 100
-    recording_time = 5
-    exposures = np.linspace(1,1000000,100)#np.logspace(0,2,num=200)## ptc
-    useinternaladc = False
-    global_shutter = True
 
 ##############################################################################
 # SETUP LIGHT CONDITIONS -- MEASURED --
@@ -187,12 +200,12 @@ if do_contrast_sensitivity:
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    for this_base in range(len(c_base_levels)):
-        print("Base level: "+str(c_base_levels[this_base]))
+    for this_base in range(len(contrast_base_levels)):
+        print("Base level: "+str(contrast_base_levels[this_base]))
         for this_contrast in range(len(contrast_level)):
             print("Contrast level: "+str(contrast_level[this_contrast]))
-            perc_low = c_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
-            perc_hi = c_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*c_base_levels[this_base]
+            perc_low = contrast_base_levels[this_base]-(contrast_level[this_contrast]/2.0)*contrast_base_levels[this_base]
+            perc_hi = contrast_base_levels[this_base]+(contrast_level[this_contrast]/2.0)*contrast_base_levels[this_base]
             v_hi = (perc_hi - inter) / slope
             v_low = (perc_low - inter) / slope 
             offset = np.mean([v_hi,v_low])
@@ -219,9 +232,9 @@ if do_contrast_sensitivity:
                     for this_refss in range(len(refss)):
                         print"refss finevalue" + str(refss[this_refss])
                         control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
-                        control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
+                        control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
-                    control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = c_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
+                    control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
@@ -353,5 +366,3 @@ gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X")
 gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
 gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(0)) #voltage output
 gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-
-
