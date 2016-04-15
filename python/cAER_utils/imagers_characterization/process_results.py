@@ -25,7 +25,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "Z:/Characterizations/Measurements_final/208Mono/contrast_sensitivity/DAVIS208Mono_contrast_sensitivity_14_01_16-14_20_25/"
+directory_meas = "Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_14_04_16-18_04_33/"
 camera_file = 'cameras/davis208Mono_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
@@ -44,12 +44,12 @@ ADC_range_ext = float(info[8])
 ADC_values = float(info[9])
 frame_x_divisions=[[0 for x in range(2)] for x in range(len(info[10].split(','))/2)]
 for x in range(0,len(info[10].split(',')),2):
-    frame_x_divisions[x/2][0] = float(info[10].split(',')[x].strip('[').strip(']'))
-    frame_x_divisions[x/2][1] = float(info[10].split(',')[x+1].strip('[').strip(']'))
+    frame_x_divisions[x/2][0] = int(info[10].split(',')[x].strip('[').strip(']'))
+    frame_x_divisions[x/2][1] = int(info[10].split(',')[x+1].strip('[').strip(']'))
 frame_y_divisions=[[0 for y in range(2)] for y in range(len(info[11].split(','))/2)]
 for y in range(0,len(info[11].split(',')),2):
-    frame_y_divisions[y/2][0] = float(info[11].split(',')[y].strip('[').strip(']'))
-    frame_y_divisions[y/2][1] = float(info[11].split(',')[y+1].strip('[').strip(']'))
+    frame_y_divisions[y/2][0] = int(info[11].split(',')[y].strip('[').strip(']'))
+    frame_y_divisions[y/2][1] = int(info[11].split(',')[y+1].strip('[').strip(']'))
     
 ################### 
 # PARAMETERS

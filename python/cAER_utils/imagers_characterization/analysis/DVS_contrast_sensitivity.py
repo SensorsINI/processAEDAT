@@ -33,10 +33,21 @@ class DVS_contrast_sensitivity:
         files_in_dir = os.listdir(directory)
         files_in_dir.sort()  
         this_file = 0
-#        sine_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        rmse_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        contrast_level = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        base_level = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+#        sine_tot = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        rmse_tot = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        contrast_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        base_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        rec_time = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        contrast_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        base_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        on_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        diff_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        off_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])     
+        refss_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])    
+        contrast_sensitivity_off_average_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        contrast_sensitivity_on_average_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        contrast_sensitivity_off_median_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        contrast_sensitivity_on_median_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
         for this_file in range(len(files_in_dir)):
@@ -172,7 +183,7 @@ class DVS_contrast_sensitivity:
                     print "Off confidence interval of 95% within " + str('{0:.3f}'.format(err_off_percent))+ "% of mean"
                     print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean"
                     
-                    if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0):
+                    if(on_event_count_average_per_pixel == 0.0 or off_event_count_average_per_pixel == 0.0):
                         print "Not even a single spike.. skipping."
                     else:
                         # From the equation delta_on : on_event_count = delta_off : off_event_count (inverted to increase smaller eventcount's delta)
