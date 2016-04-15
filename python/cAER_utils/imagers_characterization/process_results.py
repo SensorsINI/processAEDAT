@@ -56,7 +56,7 @@ for y in range(0,len(info[11].split(',')),2):
 ###################
 if(do_contrast_sensitivity):
     sine_freq = 1.0
-    num_oscillations = 100.0
+    num_oscillations = 10.0
     single_pixels_analysis = False
 
 ################### 

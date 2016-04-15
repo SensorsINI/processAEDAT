@@ -97,13 +97,18 @@ class DVS_contrast_sensitivity:
                     if(sensor == 'DAVIS208Mono'):
                         refss_level[this_file,this_div_x,this_div_y] = this_refss_level  
                     
+                    print ""
+                    print "####################################################################"
+                    print "FILE: " + str(this_file+1) + "/" + str(len(files_in_dir)) + ", X: " + str(this_div_x+1) + "/" + str(len(frame_x_divisions)) + ", Y: " + str(this_div_y+1) + "/" + str(len(frame_y_divisions)) 
+                    print "####################################################################"
+                    
                     # Initialize parameters
                     signal_rec = []
                     tmp = 0
                     delta_on = 1.0
                     delta_off = 1.0
-                    on_event_count = 0.0
-                    off_event_count = 0.0
+                    on_event_count_average_per_pixel = 0.0
+                    off_event_count_average_per_pixel = 0.0
                     ts_t = []  
                     xaddr_ar = np.array(xaddr)
                     yaddr_ar = np.array(yaddr)
@@ -150,9 +155,17 @@ class DVS_contrast_sensitivity:
                     off_event_count_median_per_pixel = median(matrix_off)/(num_oscillations)
                     on_event_count_average_per_pixel = float(sum(matrix_on))/(dim1*dim2*num_oscillations)
                     off_event_count_average_per_pixel = float(sum(matrix_off))/(dim1*dim2*num_oscillations)
-                    print ""
-                    print "####################################################################"
+                    
                     print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+                    print "This contrast: " + str(this_contrast)
+                    print "This oscillations: " + str(num_oscillations)
+                    print "This recording time: " + str(this_rec_time)
+                    print "This base level: " + str(this_base_level)
+                    print "This on level: " + str(this_on_level)
+                    print "This diff level: " + str(this_diff_level)
+                    print "This off level: " + str(this_off_level)  
+                    if(sensor == 'DAVIS208Mono'):
+                        print "This refss level: " + str(this_refss_level) 
                     print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel)
                     print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel) 
                     print "Off average per pixel per cycle: " + str(off_event_count_average_per_pixel)
@@ -173,29 +186,53 @@ class DVS_contrast_sensitivity:
                     fig.tight_layout()     
                     plt.savefig(figure_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
                     plt.savefig(figure_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
+                    
                     # Confidence interval = error metric                    
                     err_off = self.confIntMean(reshape(matrix_off, dim1*dim2)/(num_oscillations))
                     err_on = self.confIntMean(reshape(matrix_on, dim1*dim2)/(num_oscillations))                    
                     print "Off confidence interval of 95%: " + str(err_off)
                     print "On confidence interval of 95%: " + str(err_on)
-                    err_off_percent = 100*np.abs(err_off[0]-off_event_count_average_per_pixel)/off_event_count_average_per_pixel
-                    err_on_percent = 100*np.abs(err_on[0]-on_event_count_average_per_pixel)/on_event_count_average_per_pixel
+                    if(off_event_count_average_per_pixel != 0.0):
+                        err_off_percent = 100*np.abs(err_off[0]-off_event_count_average_per_pixel)/off_event_count_average_per_pixel
+                    else:
+                        err_off_percent = np.nan
+                    if(on_event_count_average_per_pixel != 0.0):                        
+                        err_on_percent = 100*np.abs(err_on[0]-on_event_count_average_per_pixel)/on_event_count_average_per_pixel
+                    else:
+                        err_on_percent = np.nan
                     print "Off confidence interval of 95% within " + str('{0:.3f}'.format(err_off_percent))+ "% of mean"
                     print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean"
                     
-                    if(on_event_count_average_per_pixel == 0.0 or off_event_count_average_per_pixel == 0.0):
+                    if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0):
                         print "Not even a single spike.. skipping."
+                        delta_off = 0.0
+                        delta_on = 0.0
+                        contrast_sensitivity_off_average_array[this_file,this_div_x,this_div_y] = np.nan
+                        contrast_sensitivity_on_average_array[this_file,this_div_x,this_div_y] = np.nan
+                        contrast_sensitivity_off_median_array[this_file,this_div_x,this_div_y] = np.nan
+                        contrast_sensitivity_on_median_array[this_file,this_div_x,this_div_y] = np.nan  
+                        rmse_tot[this_file,this_div_x, this_div_y] = np.nan
+                        
                     else:
                         # From the equation delta_on : on_event_count = delta_off : off_event_count (inverted to increase smaller eventcount's delta)
-                        if(on_event_count > off_event_count): # to keep the max dlta to 1
-                            delta_off = (double(on_event_count_average_per_pixel) / double(off_event_count_average_per_pixel)) * (delta_on)
+                        if(on_event_count_average_per_pixel > off_event_count_average_per_pixel): # to keep the max dlta to 1
+                            if(off_event_count_average_per_pixel != 0.0):
+                                delta_off = (double(on_event_count_average_per_pixel) / double(off_event_count_average_per_pixel)) * (delta_on)
+                            else:
+                                delta_off = 0.0 # made zero or reconstruction complains
+                                off_event_count_median_per_pixel = np.nan # Make nan so that contrast sensitivity becomes nan (just a trick!)
+                                off_event_count_average_per_pixel = np.nan
                         else:
-                            delta_on = (double(off_event_count_average_per_pixel) / double(on_event_count_average_per_pixel)) * (delta_off)
-                        print "Delta OFF: " + str(delta_off)
-                        print "Delta ON: " + str(delta_on)
-                        tmp = 0.0
+                            if(on_event_count_average_per_pixel != 0.0):
+                                delta_on = (double(off_event_count_average_per_pixel) / double(on_event_count_average_per_pixel)) * (delta_off)
+                            else:
+                                delta_on = 0.0
+                                on_event_count_median_per_pixel = np.nan
+                                on_event_count_average_per_pixel = np.nan
+                                
                         # Reconstruct signal
                         print "Reconstructing signal"
+                        tmp = 0.0
                         for this_ev in range(len(ts)):
                             if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
                                 xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
@@ -209,83 +246,78 @@ class DVS_contrast_sensitivity:
                                     tmp = tmp - delta_off
                                     signal_rec.append(tmp)
                                     ts_t.append(ts[this_ev])
-
-                        # Plot reconstructed signal
-                        plt.figure()
-                        ts = np.array(ts)
-                        signal_rec = np.array(signal_rec)
-                        signal_rec = signal_rec - np.mean(signal_rec) # Center signal at zero
-                        amplitude_pk2pk_rec = np.abs(np.max(signal_rec)) + np.abs(np.min(signal_rec))
-                        signal_rec = signal_rec/amplitude_pk2pk_rec # Normalize
-                        # Initial guesses
-                        guess_amplitude = np.max(signal_rec) - np.min(signal_rec)
-                        offset_out = 7.0 # Outside log()
-                        offset_in = 8.0 # Inside log()
-                        p0=[sine_freq, guess_amplitude, 0.0, offset_in, offset_out]
-                        signal_rec = signal_rec + 10 # Add offset of 10 to the reconstruction so there are no log(negative)
-                        tnew = (ts_t-np.min(ts))*1e-6 # Restart timestamps
-                        
+                                    
                         # Get contrast sensitivity
                         # For 0.20 contrast / ((5 events on average per pixel) / 5 oscillations) = CS = 0.2
                         contrast_sensitivity_on_median = (this_contrast)/(on_event_count_median_per_pixel)
                         contrast_sensitivity_off_median = (this_contrast)/(off_event_count_median_per_pixel)
                         contrast_sensitivity_on_average = (this_contrast)/(on_event_count_average_per_pixel)
-                        contrast_sensitivity_off_average = (this_contrast)/(off_event_count_average_per_pixel)
-                        print "This contrast: " + str(this_contrast)
-                        print "This oscillations: " + str(num_oscillations)
-                        print "This recording time: " + str(this_rec_time)
-                        print "This base level: " + str(this_base_level)
-                        print "This on level: " + str(this_on_level)
-                        print "This diff level: " + str(this_diff_level)
-                        print "This off level: " + str(this_off_level)
-                        if(sensor == 'DAVIS208Mono'):
-                            print "This refss level: " + str(this_refss_level)                       
-                        print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
-                        print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
-                        print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
-                        print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
-                        ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
-
+                        contrast_sensitivity_off_average = (this_contrast)/(off_event_count_average_per_pixel)                        
                         contrast_sensitivity_off_average_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_off_average
                         contrast_sensitivity_on_average_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_average
                         contrast_sensitivity_off_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_off_median
-                        contrast_sensitivity_on_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_median                        
-                        # Fit
-                        try:
-                            fit = curve_fit(self.my_log_sin, tnew, signal_rec, p0=p0)
-                            data_fit = self.my_log_sin(tnew, *fit[0])
-                            rms = self.rms(signal_rec, data_fit) 
-                            fit_done = True
-                        except RuntimeError:
-                            fit_done = False
-                            print "Not possible to fit, some error occurred"
-                        if(fit_done and (math.isnan(rms) or math.isinf(rms))):
-                            fit_done = False
-                            print "We do not accept fit with NaN rmse"
+                        contrast_sensitivity_on_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_median   
+                        ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
 
-                        data_first_guess = self.my_log_sin(tnew, *p0)
-                        if fit_done:                  
-                            stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
-                            plt.plot(tnew, data_fit, label= stringa)
-                        else:
-                            print "Fit failed, just plotting guess"
-                            rms = self.rms(signal_rec, data_first_guess)          
-                            stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
-                            plt.plot(tnew, data_first_guess, label=stringa)
-                        plt.text(1, 11, ttt, ha='left')
-                        rmse_tot[this_file,this_div_x, this_div_y] = rms
-                        plt.plot(tnew, signal_rec, label='Reconstructed signal')
-                        plt.legend(loc="lower right")
-                        plt.xlabel('Time [s]')
-                        plt.ylabel('Normalized Amplitude')
-                        plt.ylim([8,12])
-                        if fit_done:
-                            plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
-                        else:
-                            plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
-                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
-                        plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
-                        print(stringa)
+                        if((not(not signal_rec)) and (len(signal_rec)>=5.0)): # More points than guess parameters are needed to get the fit to work
+                            # Plot reconstructed signal
+                            plt.figure()
+                            ts = np.array(ts)
+                            signal_rec = np.array(signal_rec)
+                            signal_rec = signal_rec - np.mean(signal_rec) # Center signal at zero
+                            amplitude_pk2pk_rec = np.abs(np.max(signal_rec)) + np.abs(np.min(signal_rec))
+                            signal_rec = signal_rec/amplitude_pk2pk_rec # Normalize
+                            # Initial guesses
+                            guess_amplitude = np.max(signal_rec) - np.min(signal_rec)
+                            offset_out = 7.0 # Outside log()
+                            offset_in = 8.0 # Inside log()
+                            p0=[sine_freq, guess_amplitude, 0.0, offset_in, offset_out]
+                            signal_rec = signal_rec + 10 # Add offset of 10 to the reconstruction so there are no log(negative)
+                            tnew = (ts_t-np.min(ts))*1e-6 # Restart timestamps
+                            # Fit
+                            try:
+                                fit = curve_fit(self.my_log_sin, tnew, signal_rec, p0=p0)
+                                data_fit = self.my_log_sin(tnew, *fit[0])
+                                rms = self.rms(signal_rec, data_fit) 
+                                fit_done = True
+                            except RuntimeError:
+                                fit_done = False
+                                print "Not possible to fit, some error occurred"
+                            if(fit_done and (math.isnan(rms) or math.isinf(rms))):
+                                fit_done = False
+                                print "We do not accept fit with NaN rmse"
+    
+                            data_first_guess = self.my_log_sin(tnew, *p0)
+                            if fit_done:                  
+                                stringa = "- Fit - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                                plt.plot(tnew, data_fit, label= stringa)
+                            else:
+                                print "Fit failed, just plotting guess"
+                                rms = self.rms(signal_rec, data_first_guess)          
+                                stringa = "- Guess - RMSE: " + str('{0:.3f}'.format(rms*100))+ "%"
+                                plt.plot(tnew, data_first_guess, label=stringa)
+                            plt.text(1, 11, ttt, ha='left')
+                            rmse_tot[this_file,this_div_x, this_div_y] = rms
+                            plt.plot(tnew, signal_rec, label='Reconstructed signal')
+                            plt.legend(loc="lower right")
+                            plt.xlabel('Time [s]')
+                            plt.ylabel('Normalized Amplitude')
+                            plt.ylim([8,12])
+                            if fit_done:
+                                plt.title('Measured and fitted signal for the DVS pixels sinusoidal stimulation')
+                            else:
+                                plt.title('Measured and guessed signal for the DVS pixels sinusoidal stimulation')
+                            plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
+                            plt.savefig(figure_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG')
+                            print(stringa)
+                    
+                    plt.close("all")   
+                    print "Delta OFF: " + str(delta_off)
+                    print "Delta ON: " + str(delta_on)
+                    print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
+                    print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
+                    print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
+                    print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
 
         plt.figure()
         for this_div_x in range(len(frame_x_divisions)) :
