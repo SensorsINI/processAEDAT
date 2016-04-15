@@ -52,7 +52,7 @@ class DVS_contrast_sensitivity:
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
         for this_file in range(len(files_in_dir)):
             print "*************"            
-            print "** File #" +str(this_file)+ " **"
+            print "** File # " +str(this_file+1)+ "/" + str(len(files_in_dir))
             print "*************"            
             if not os.path.isdir(directory+files_in_dir[this_file]):
                 print("Loading data..")    
@@ -266,13 +266,15 @@ class DVS_contrast_sensitivity:
                             signal_rec = np.array(signal_rec)
                             signal_rec = signal_rec - np.mean(signal_rec) # Center signal at zero
                             amplitude_pk2pk_rec = np.abs(np.max(signal_rec)) + np.abs(np.min(signal_rec))
+                            if(amplitude_pk2pk_rec == 0): # Hack to avoid problems
+                                amplitude_pk2pk_rec = 1
                             signal_rec = signal_rec/amplitude_pk2pk_rec # Normalize
                             # Initial guesses
                             guess_amplitude = np.max(signal_rec) - np.min(signal_rec)
                             offset_out = 7.0 # Outside log()
                             offset_in = 8.0 # Inside log()
                             p0=[sine_freq, guess_amplitude, 0.0, offset_in, offset_out]
-                            signal_rec = signal_rec + 10 # Add offset of 10 to the reconstruction so there are no log(negative)
+                            signal_rec = signal_rec + 10 # Add offset of 10 to the reconstruction so there are no log(negative)                    
                             tnew = (ts_t-np.min(ts))*1e-6 # Restart timestamps
                             # Fit
                             try:
