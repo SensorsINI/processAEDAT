@@ -25,8 +25,9 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
-#"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_14_04_16-18_04_33/" # Diederik's PC path
+directory_meas = "Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
+#"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
+#"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
 camera_file = 'cameras/davis208Mono_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')

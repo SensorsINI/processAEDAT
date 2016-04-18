@@ -36,12 +36,11 @@ class DVS_contrast_sensitivity:
         files_in_dir_raw = os.listdir(directory)
         for this_file in range(len(files_in_dir_raw)):
             newpath = os.path.join(cs_dir,files_in_dir_raw[this_file])
-            if(not os.path.isdir(newpath)):
+            if(not os.path.isdir(newpath)): # Remove folders
                 files_in_dir.append(files_in_dir_raw[this_file])
                 file_n = file_n + 1
         files_in_dir.sort()  
         this_file = 0
-#        sine_tot = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         rmse_tot = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         contrast_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         base_level = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
@@ -60,8 +59,7 @@ class DVS_contrast_sensitivity:
         err_on_percent_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
-        for this_file in range(len(files_in_dir)):
-            
+        for this_file in range(len(files_in_dir)):            
             print ""
             print "*************"            
             print "** File # " +str(this_file+1)+ "/" + str(len(files_in_dir))
@@ -112,6 +110,7 @@ class DVS_contrast_sensitivity:
                     print ""
                     print "####################################################################"
                     print "FILE: " + str(this_file+1) + "/" + str(len(files_in_dir)) + ", X: " + str(this_div_x+1) + "/" + str(len(frame_x_divisions)) + ", Y: " + str(this_div_y+1) + "/" + str(len(frame_y_divisions)) 
+                    print "FILE NAME: " + files_in_dir[this_file]             
                     print "####################################################################"
                     
                     # Initialize parameters
@@ -129,9 +128,8 @@ class DVS_contrast_sensitivity:
                     range_y = frame_y_divisions[this_div_y][1] - frame_y_divisions[this_div_y][0]
                     matrix_on = np.zeros([range_x,range_y])
                     matrix_off = np.zeros([range_x,range_y])
-                    
                     # Count spikes separately
-                    print "Counting spikes.."                    
+                    print "Counting spikes.."
                     for this_x in range(range_x):
                         for this_y in range(range_y):
                             index_x = xaddr_ar == this_x
@@ -159,7 +157,7 @@ class DVS_contrast_sensitivity:
                     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
                     fig.colorbar(im, cax=cbar_ax)     
                     plt.draw()
-#                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
+                    plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=300)
                     plt.savefig(figure_dir+"matrix_on_and_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
 
                     [dim1, dim2] = np.shape(matrix_on)
@@ -342,7 +340,7 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(contrast_level[:,this_div_x, this_div_y],rmse_tot[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(100*contrast_level[:,this_div_x, this_div_y],rmse_tot[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("Contrast level")
@@ -354,11 +352,11 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1               
-               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(rmse_tot[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(rmse_tot[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(rmse_tot[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(rmse_tot[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("RMSE")
@@ -371,11 +369,11 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1               
-               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(base_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("Base level [Lux]")
@@ -388,11 +386,11 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(off_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1               
-               plt.plot(off_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(off_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#               plt.plot(off_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("Off level [FineValue]")
@@ -405,7 +403,7 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], err_off_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], err_off_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("OFF Contrast sensitivity")
@@ -418,7 +416,7 @@ class DVS_contrast_sensitivity:
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
             for this_div_y in range(len(frame_y_divisions)):
-               plt.plot(contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], err_on_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+               plt.plot(100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], err_on_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("ON Contrast sensitivity")
@@ -432,11 +430,11 @@ class DVS_contrast_sensitivity:
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div_y in range(len(frame_y_divisions)):
-                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1                   
-                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-#                   plt.plot(refss_level[:,this_div_x, this_div_y], contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel("Refss level [FineValue]")

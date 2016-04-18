@@ -82,7 +82,7 @@ class caer_communication:
         self.cmd_part_key = 2
         self.cmd_part_type = 3
         self.cmd_part_value = 4
-        self.data_buffer_size = 4069*30
+        self.data_buffer_size = 4069*30 ###???
         self.NODE_EXISTS = 0
         self.ATTR_EXISTS = 1
         self.GET = 2
