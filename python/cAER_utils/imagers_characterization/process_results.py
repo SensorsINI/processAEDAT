@@ -25,7 +25,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_14_04_16-18_04_33/"
+directory_meas = "/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_14_04_16-18_04_33/" # Diederik's PC path
 camera_file = 'cameras/davis208Mono_parameters.txt'
 
@@ -75,19 +75,19 @@ if do_contrast_sensitivity:
     # select test pixels areas only two are active
     aedat = DVS_contrast_sensitivity.DVS_contrast_sensitivity()
     rmse_tot, contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, contrast_sensitivity_on_average_array, contrast_sensitivity_off_median_array, contrast_sensitivity_on_median_array, err_on_percent_array, err_off_percent_array = aedat.cs_analysis(sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, single_pixels_analysis = single_pixels_analysis)
-    constrasts = np.reshape(constrasts,[len(constrasts),len(frame_x_divisions)])
-    bases = np.reshape(bases,[len(bases),len(frame_x_divisions)])
-    rms = np.reshape(rms,[len(rms),len(frame_x_divisions)])
-
-    for j in range(len(rms)):
-        for i in range(1):
-            plot(rms[j][i], bases[j][i], 'x')
-
-    from mpl_toolkits.mplot3d import Axes3D
-    from matplotlib import cm
-    from matplotlib.ticker import LinearLocator, FormatStrFormatter
-    import matplotlib.pyplot as plt
-    import numpy as np
+#    contrast_level = np.reshape(contrast_level,[len(contrast_level),len(frame_x_divisions),len(frame_y_divisions)])
+#    base_level = np.reshape(base_level,[len(base_level),len(frame_x_divisions),len(frame_y_divisions)])
+#    rmse_tot = np.reshape(rmse_tot,[len(rmse_tot),len(frame_x_divisions),len(frame_y_divisions)])
+#
+#    for j in range(len(rmse_tot)):
+#        for i in range(1):
+#            plot(rmse_tot[j][i], base_level[j][i], 'x')
+#
+#    from mpl_toolkits.mplot3d import Axes3D
+#    from matplotlib import cm
+#    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+#    import matplotlib.pyplot as plt
+#    import numpy as np
 #    fig = plt.figure()
 #    ax = fig.gca(projection='3d')
 #    surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,

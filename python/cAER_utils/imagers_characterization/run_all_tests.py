@@ -48,7 +48,7 @@ if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
     oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
     contrast_base_levels = [500, 1000, 2000] #contrast sensitivity base level sweeps
-    contrast_level = [0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    contrast_level = [0.5]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
     for x in range(len(info[12].split(','))):

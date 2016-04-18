@@ -21,21 +21,21 @@ False
 0.648
 # 9 # ADC levels
 1024
-# 1 # X divisions (no spaces, comma separated) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]]
-[[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
+# 1 # X divisions (no spaces, comma separated) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]] == [[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
+[[0,187]]
 # 11 #  Y divisions (no spaces, comma separated)
 [[0,191]]
 # #########################################################
 # Contrast sensitivity parameters (no spaces, comma separated)
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
-[255,255,255]
+[150,200,255]
 # 13 # DIFF bias finevalue (coarse is 4)
 [39,39,39]
 # 14 # OFF bias finevalue (coarse is 4)
-[1,5,10]
+[10,20,30]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
-[20,25,30]
+[30,35,40]
 # #########################################################
 # Photon transfer curve parameters (no spaces, comma separated)
 # #########################################################
