@@ -55,12 +55,10 @@ class load_files:
         spec_type_tot =[]
         spec_ts_tot = []
         frame_tot = []
-        while(1>0):
-            #raise Exception
-            data = file_read.read(28)
-            if(not(data)):
+        while True:
+            data = file_read.read(self.header_length)
+            if not data or len(data) != self.header_length:
                 break
-        
             # read header
             eventtype = struct.unpack('H', data[0:2])[0]
             eventsource = struct.unpack('H', data[2:4])[0]
