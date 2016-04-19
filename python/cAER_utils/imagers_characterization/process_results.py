@@ -60,7 +60,7 @@ if(do_contrast_sensitivity):
     sine_freq = 1.0
     num_oscillations = 10.0
     single_pixels_analysis = True
-    rmse_reconstruction = False
+    rmse_reconstruction = True
 
 ################### 
 # END PARAMETERS
@@ -190,63 +190,6 @@ if do_ptc:
     else:
         ADC_range = ADC_range_ext
     aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
-
-if do_fpn:
-    #######################
-    # FIXED PATTERN NOISE
-    #######################
-    fpn_dir = directory_meas
-    figure_dir = fpn_dir + '/figures/'
-    if(not os.path.exists(figure_dir)):
-        os.makedirs(figure_dir)
-    # select test pixels areas only two are active
-    aedat = aedat3_process.aedat3_process()
-    delta_up, delta_dn, rms = aedat.fpn_analysis(fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
-    delta_up_thr, delta_dn_thr, signal_rec_tot, ts_t_tot = aedat.fpn_analysis_delta(fpn_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq=0.3)
-    sensor_up = np.zeros(camera_dim)
-    sensor_dn = np.zeros(camera_dim)
-    counter  = 0
-    current_x = 0
-    current_y = 0
-    for slice_num in range(len(delta_up_thr)):
-        slice_dim_x, slice_dim_y = np.shape(delta_up_thr[slice_num])            
-        sensor_up[current_x:slice_dim_x+current_x,current_y:slice_dim_y+current_y] = delta_up_thr[slice_num]
-        sensor_dn[current_x:slice_dim_x+current_x,current_y:slice_dim_y+current_y] = delta_dn_thr[slice_num]
-        current_x = slice_dim_x+current_x
-        current_y = current_y 
-    plt.figure()
-    plt.subplot(3,2,1)
-    plt.title("UP thresholds")
-    plt.imshow(sensor_up.T)
-    plt.colorbar()
-    plt.subplot(3,2,2)
-    plt.title("DN thresholds")          
-    plt.imshow(sensor_dn.T)
-    plt.colorbar()
-    plt.subplot(3,2,3)
-    plt.plot(np.sum(sensor_up.T,axis=0), label='up dim'+str( len(np.sum(sensor_up.T,axis=0)) ))
-    plt.legend(loc='best')    
-    plt.xlim([0,camera_dim[0]])
-    plt.subplot(3,2,4)
-    plt.plot(np.sum(sensor_dn.T,axis=0), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=0)) ))
-    plt.xlim([0,camera_dim[0]])
-    plt.legend(loc='best')    
-    plt.subplot(3,2,5)
-    plt.plot(np.sum(sensor_up.T,axis=1), label='up dim'+str( len(np.sum(sensor_up.T,axis=1)) ))
-    plt.legend(loc='best')    
-    plt.xlim([0,camera_dim[1]])
-    plt.subplot(3,2,6)
-    plt.plot(np.sum(sensor_dn.T,axis=1), label='dn dim'+str( len(np.sum(sensor_dn.T,axis=1)) ))
-    plt.xlim([0,camera_dim[1]])  
-    plt.legend(loc='best')    
-    plt.savefig(figure_dir+"threshold_mismatch_map.pdf",  format='PDF')
-    plt.savefig(figure_dir+"threshold_mismatch_map.png",  format='PNG')
-    for j in range(len(delta_up_thr)):
-        plt.figure()
-        for i in range(len(signal_rec_tot[j])):
-            plt.plot(ts_t_tot[j][i], signal_rec_tot[j][i])
-            plt.xlabel('time us')
-            plt.ylabel('arb units')
 
 if do_latency_pixel:
     #######################
