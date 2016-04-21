@@ -22,6 +22,7 @@ import matplotlib as mpl
 sys.path.append('utils/')
 import load_files
 import operator
+from scipy.fftpack import fft, ifft
 
 class DVS_contrast_sensitivity:
     def cs_analysis(self, sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 100.0, single_pixels_analysis=False, rmse_reconstruction=False):
@@ -227,6 +228,7 @@ class DVS_contrast_sensitivity:
                         fig.tight_layout()     
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
+                        plt.close("all")
                         
                         # Confidence interval = error metric                    
                         err_off = self.confIntMean(reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1],frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]], dim1*dim2)/(num_oscillations))
@@ -350,8 +352,16 @@ class DVS_contrast_sensitivity:
                                 # Fit
                                 try:
                                     fit = curve_fit(self.my_log_sin, tnew, signal_rec, p0=p0)
+#                                    fit, pcov = curve_fit(self.my_log_sin, tnew, signal_rec, p0=p0)
+#                                    perr = np.sqrt(np.diag(pcov))                                    
+#                                    print "Err: " + str(perr)
                                     data_fit = self.my_log_sin(tnew, *fit[0])
-                                    rms = self.rms(signal_rec, data_fit) 
+                                    rms = self.rms(signal_rec-10, data_fit-10)                     
+                                    #######
+                                    
+                                    snr = self.snr(signal_rec-10, data_fit-10, tnew, figure_dir)
+                                    
+                                    #######
                                     fit_done = True
                                 except RuntimeError:
                                     fit_done = False
@@ -384,8 +394,8 @@ class DVS_contrast_sensitivity:
                                 plt.savefig(reconstructions_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".pdf",  format='PDF')
                                 plt.savefig(reconstructions_dir+"reconstruction_pixel_area_x"+str(frame_x_divisions[this_div_x][0])+"_"+str(frame_x_divisions[this_div_x][1])+"_"+str(this_file)+".png",  format='PNG', dpi=1000)
                                 print(stringa)
+                                plt.close("all")
                     
-                    plt.close("all")   
                     print "Delta OFF: " + str(delta_off_average)
                     print "Delta ON: " + str(delta_on_average)
                     print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
@@ -407,6 +417,7 @@ class DVS_contrast_sensitivity:
             plt.ylabel(" RMSE ")
             plt.savefig(reconstructions_dir+"contrast_level_vs_rmse.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(reconstructions_dir+"contrast_level_vs_rmse.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
         
             plt.figure()
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
@@ -428,6 +439,7 @@ class DVS_contrast_sensitivity:
 #            plt.ylim((0,100))
             plt.savefig(reconstructions_dir+"contrast_sensitivity_vs_rmse.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(reconstructions_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
         
         plt.figure()
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
@@ -449,6 +461,7 @@ class DVS_contrast_sensitivity:
 #        plt.ylim((0,100))
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        plt.close("all")
 
         plt.figure()
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
@@ -470,6 +483,7 @@ class DVS_contrast_sensitivity:
 #        plt.ylim((0,100))
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_off_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_off_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        plt.close("all")        
         
         if(single_pixels_analysis):
             plt.figure()
@@ -485,7 +499,8 @@ class DVS_contrast_sensitivity:
             plt.ylabel("95% conf interval in percentage from median")
             plt.savefig(contrast_sensitivities_dir+"error_off_vs_off_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(contrast_sensitivities_dir+"error_off_vs_off_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-    
+            plt.close("all")
+            
             plt.figure()
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)))
             color_tmp = 0
@@ -499,6 +514,7 @@ class DVS_contrast_sensitivity:
             plt.ylabel("95% conf interval in percentage from median")
             plt.savefig(contrast_sensitivities_dir+"error_on_vs_on_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(contrast_sensitivities_dir+"error_on_vs_on_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
         
         if(sensor == 'DAVIS208Mono'):
             plt.figure()
@@ -521,6 +537,7 @@ class DVS_contrast_sensitivity:
 #            plt.ylim((0,100))
             plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             
         # FPN plots
         if(single_pixels_analysis):
@@ -546,7 +563,8 @@ class DVS_contrast_sensitivity:
             plt.draw()
             plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".png",  format='png', dpi=1000)
             plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
-
+            plt.close("all")
+            
             # Deltas
             sensor_on = np.zeros([frame_x_divisions[-1][1], frame_y_divisions[-1][1]])
             sensor_off = np.zeros([frame_x_divisions[-1][1], frame_y_divisions[-1][1]])
@@ -588,6 +606,7 @@ class DVS_contrast_sensitivity:
             fig.tight_layout()  
             plt.savefig(fpn_dir+"threshold_mismatch_map.pdf",  format='PDF')
             plt.savefig(fpn_dir+"threshold_mismatch_map.png",  format='PNG', dpi=1000)
+            plt.close("all")
             
         # Tell best parameters
         for this_div_x in range(len(frame_x_divisions)) :
@@ -631,17 +650,35 @@ class DVS_contrast_sensitivity:
         return mean - m*sem, mean + m*sem
 
     def rms(self, predictions, targets):
-        return np.sqrt(np.mean((predictions-targets)**2))
+#        return np.sqrt(np.mean((predictions-targets)**2))
+        return np.sqrt(np.mean(((predictions-targets)/targets)**2))
 
-    def ismember(self, a, b):
-        '''
-        as matlab: ismember
-        '''
-        # tf = np.in1d(a,b) # for newer versions of numpy
-        tf = np.array([i in b for i in a])
-        u = np.unique(a[tf])
-        index = np.array([(np.where(b == i))[0][-1] if t else 0 for i,t in zip(a,tf)])
-        return tf, index
+    def snr(self, reconstructed, fit, time, figure_dir):
+        # FFT        
+    
+        t = np.arange(256)
+        sp = np.fft.fft(np.sin(t))
+        freq = np.fft.fftfreq(t.shape[-1])
+        plt.plot(freq, sp.real, freq, sp.imag)
+
+        freq = np.fft.fftfreq(time.shape[-1])
+        fft_reconstructed = np.fft.fft(reconstructed) 
+        fft_fit = np.fft.fft(fit)
+        fig = plt.figure()
+        # Plot them        
+        plt.subplot(2,1,1)
+        plt.title("Reconstruction FFT")
+        plt.plot(freq, np.sqrt(fft_reconstructed.real**2 + fft_reconstructed.imag**2))
+        plt.subplot(2,1,2)
+        plt.title("Fit FFT")
+        plt.plot(freq, np.sqrt(fft_fit.real**2 + fft_fit.imag**2))
+        fig.tight_layout()  
+        plt.savefig(figure_dir+"fft.pdf",  format='PDF')
+        plt.savefig(figure_dir+"fft.png",  format='PNG', dpi=1000)
+        plt.close("all")
+        # Get SNR        
+        signal_to_noise_ratio = np.sum(fft_reconstructed-fft_fit)
+        return signal_to_noise_ratio
 
     def my_log_sin(self, x, freq, amplitude, phase, offset_in, offset_out):# log(sine) wave to fit
         return np.log(-np.sin( 2*np.pi* x * freq + phase) * amplitude + offset_in ) + offset_out
