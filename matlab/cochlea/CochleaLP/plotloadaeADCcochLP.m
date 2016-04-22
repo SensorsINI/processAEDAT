@@ -32,7 +32,7 @@ neuronmask = hex2dec('0300'); %
 
 % TODO: Fix it
 % Temporary remove all StartOfConversion events
-adcSamplesIdx = find(allAddrT ~= hex2dec('3024') & allAddrT ~= hex2dec('3025'));
+adcSamplesIdx = find(allAddrT ~= hex2dec('302C') & allAddrT ~= hex2dec('302D'));
 allAddrT = allAddrT(adcSamplesIdx);
 allTsT = allTsT(adcSamplesIdx);
 
