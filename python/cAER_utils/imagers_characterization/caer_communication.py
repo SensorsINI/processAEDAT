@@ -479,13 +479,13 @@ class caer_communication:
             print("All DVS arrays of PixelParade are OFF")
         print("DVS array is OFF")
         return        
-
-    def get_data_fpn(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2"):
+        
+    def get_data_frequency_response(self, sensor, folder = 'contrast sensitivity', oscillations = 10.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 0.5, base_level = 1000.0):
         '''
-           Fixed Pattern Noise
-            - global shutter is off
+           Frequency response
+            - aps is off
         '''
-        #make ptc directory
+        #make frequency response directory
         try:
             os.stat(folder)
         except:
@@ -493,20 +493,69 @@ class caer_communication:
         #loop over exposures and save data
         self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
         print("APS array is OFF")
+        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
+        print("DVS array is ON")
+        # For PixelParade Only
+        if (sensor == 'DAVIS208Mono'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+            print("All DVS arrays of PixelParade are ON")
         self.send_command('put /1/2-BAFilter/ shutdown bool true')
         print("BackGroundActivity Filter is OFF")
+        recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Recording for " + str(recording_time))                
-        time.sleep(0.5)
+        time.sleep(2.0)
         self.open_communication_data()
-        filename = folder + '/fpn_recording_time_'+format(int(recording_time), '07d')+'.aedat' 
+        filename = folder + '/frequency_response_recording_time_'+format(int(recording_time), '07d')+\
+        '_contrast_level_'+format(int(contrast_level*100),'03d')+\
+        '_base_level_'+str(format(int(base_level),'03d'))+\
+        '_frequency_'+str(format(int(frequency),'03d'))+\
+        '.aedat'
         self.start_logging(filename)    
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
         self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
         print("APS array is ON")
-
-        return
+        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+        # For PixelParade Only
+        if (sensor == 'DAVIS208Mono'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+            print("All DVS arrays of PixelParade are OFF")
+        print("DVS array is OFF")
+        return        
+        
+#    def get_data_fpn(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2"):
+#        '''
+#           Fixed Pattern Noise
+#            - global shutter is off
+#        '''
+#        #make ptc directory
+#        try:
+#            os.stat(folder)
+#        except:
+#            os.mkdir(folder) 
+#        #loop over exposures and save data
+#        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
+#        print("APS array is OFF")
+#        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
+#        print("Recording for " + str(recording_time))                
+#        time.sleep(0.5)
+#        self.open_communication_data()
+#        filename = folder + '/fpn_recording_time_'+format(int(recording_time), '07d')+'.aedat' 
+#        self.start_logging(filename)    
+#        time.sleep(recording_time)
+#        self.stop_logging()
+#        self.close_communication_data()
+#        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+#        print("APS array is ON")
+#
+#        return
 
     def get_data_ptc(self, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
         '''

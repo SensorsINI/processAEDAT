@@ -9,15 +9,24 @@ import matplotlib
 from pylab import *
 import time, os
 import shutil
-
-# import caer communication and control gpib/usb instrumentations
 import caer_communication
 import gpio_usb
 
 ###############################################################################
-# CAMERA SELECTION and SETUP PARAMETERS
+# CAMERA AND TEST SELECTION
 ###############################################################################
 camera_file = 'cameras/davis208Mono_parameters.txt'
+
+do_contrast_sensitivity = True # And DVS-FPN too
+do_ptc = False
+do_frequency_response = True
+do_latency_pixel_led_board = False
+do_latency_pixel_big_led = False
+do_oscillations = False
+
+###############################################################################
+# PARAMETERS
+###############################################################################
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
 sensor_type = info[1]
@@ -27,28 +36,14 @@ if(info[3] == 'False'):
 elif(info[3] == 'True'):
     dvs128xml == True
 host_ip = info[4]
-
-###############################################################################
-# TEST SELECTIONS
-###############################################################################
-do_contrast_sensitivity = True
-do_ptc = False
-do_fpn = False
-do_latency_pixel_led_board = False
-do_latency_pixel_big_led = False
-do_oscillations = False
-
-###############################################################################
-# PARAMETERS
-###############################################################################
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
 
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
     oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    contrast_base_levels = [500, 1000, 2000] #contrast sensitivity base level sweeps
-    contrast_level = [0.5]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    contrast_base_levels = [1000] #contrast sensitivity base level sweeps
+    contrast_level = [0.2]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
     for x in range(len(info[12].split(','))):
@@ -68,7 +63,7 @@ if(do_ptc):
     base_level = 1000.0 #  1 klux
     frame_number = 100
     recording_time = 5
-    start_exp = int(info[17].split(',')[0].strip('[').strip(']'))
+    start_exp = int(info[16].split(',')[0].strip('[').strip(']'))
     end_exp = int(info[16].split(',')[1].strip('[').strip(']'))
     num_points_exp = int(info[16].split(',')[2].strip('[').strip(']'))
     exposures = np.linspace(start_exp, end_exp, num_points_exp)
@@ -81,6 +76,15 @@ if(do_ptc):
     elif(info[18] == 'True'):
         global_shutter == True    
         
+if(do_frequency_response):
+    start_freq = int(info[19].split(',')[0].strip('[').strip(']'))
+    end_freq = int(info[19].split(',')[1].strip('[').strip(']'))
+    num_points_freq = int(info[19].split(',')[2].strip('[').strip(']'))
+    freq_fr = np.linspace(start_freq, end_freq, num_points_freq)
+    base_level_fr = [500, 1000, 2000] # 3 points are fine
+    contrast_level_fr = [0.3]
+    oscillations_fr = 10.0
+    
 if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     oscillations = 100.0
     freq_square = 10.0
@@ -175,19 +179,19 @@ if do_ptc:
     control.close_communication_command()    
     print "Data saved in " +  folder
 
-# 2 - Fixed Pattern Noise - data
-# setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
-# + we slowly generate a sine wave 
-if do_fpn:
-    control.open_communication_command()
-    folder = datadir + '/'+ sensor + '_fpn_sensitivity_' +  current_date
-    setting_dir = folder + str("/settings/")
-    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-    print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
-    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
-    raw_input("Press Enter to continue...")
-    control.get_data_fpn(folder = folder, recording_time=20)
-    control.close_communication_command()       
+## 2 - Fixed Pattern Noise - data
+## setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
+## + we slowly generate a sine wave 
+#if do_fpn:
+#    control.open_communication_command()
+#    folder = datadir + '/'+ sensor + '_fpn_sensitivity_' +  current_date
+#    setting_dir = folder + str("/settings/")
+#    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+#    print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
+#    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
+#    raw_input("Press Enter to continue...")
+#    control.get_data_fpn(folder = folder, recording_time=20)
+#    control.close_communication_command()       
 
 if do_contrast_sensitivity:
     control.open_communication_command()
@@ -235,6 +239,40 @@ if do_contrast_sensitivity:
                         control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
                     control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
+    # Zero the Function Generator
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
+    control.close_communication_command()        
+
+if do_frequency_response:
+    control.open_communication_command()
+    folder = datadir + '/'+ sensor + '_frequency_response_' +  current_date
+    setting_dir = folder + str("/settings/")
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    copyFile(bias_file, setting_dir+str("biases_frequency_response.xml") )
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+    print "we are doing frequency response measurements, please put homogeneous light source (integrating sphere)."
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    for this_base in range(len(base_level_fr)):
+        print("Base level: "+str(base_level_fr[this_base]))
+        for this_contrast in range(len(contrast_level_fr)):
+            print("Contrast level: "+str(contrast_level_fr[this_contrast]))            
+            perc_low = contrast_base_levels[this_base]-(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
+            perc_hi = contrast_base_levels[this_base]+(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
+            v_hi = (perc_hi - inter) / slope
+            v_low = (perc_low - inter) / slope 
+            offset = np.mean([v_hi,v_low])
+            amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+            print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            for this_freq in range(len(freq_fr)):
+                print("Frequency: "+str(freq_fr[this_freq]))+" Hz"
+                gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_fr[this_freq])+", "+str(amplitude)+",0")
+                gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+                gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+                control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+                sine_freq = freq_fr[this_freq]
+                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level_fr, base_level = base_level_fr[this_base])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        

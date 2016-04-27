@@ -162,7 +162,7 @@
                         <attr key="type" type="string">Normal</attr>
                     </node>
                     <node name="OffBn" path="/1/1-DAVISFX3/bias/OffBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
+                        <attr key="coarseValue" type="byte">3</attr>
                         <attr key="currentLevel" type="string">Normal</attr>
                         <attr key="enabled" type="bool">true</attr>
                         <attr key="fineValue" type="short">1</attr>
