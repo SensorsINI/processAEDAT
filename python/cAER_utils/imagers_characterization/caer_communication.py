@@ -528,34 +528,6 @@ class caer_communication:
             print("All DVS arrays of PixelParade are OFF")
         print("DVS array is OFF")
         return        
-        
-#    def get_data_fpn(self, folder = 'fpn', recording_time = 15, sensor_type="DAVISFX2"):
-#        '''
-#           Fixed Pattern Noise
-#            - global shutter is off
-#        '''
-#        #make ptc directory
-#        try:
-#            os.stat(folder)
-#        except:
-#            os.mkdir(folder) 
-#        #loop over exposures and save data
-#        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
-#        print("APS array is OFF")
-#        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-#        print("BackGroundActivity Filter is OFF")
-#        print("Recording for " + str(recording_time))                
-#        time.sleep(0.5)
-#        self.open_communication_data()
-#        filename = folder + '/fpn_recording_time_'+format(int(recording_time), '07d')+'.aedat' 
-#        self.start_logging(filename)    
-#        time.sleep(recording_time)
-#        self.stop_logging()
-#        self.close_communication_data()
-#        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
-#        print("APS array is ON")
-#
-#        return
 
     def get_data_ptc(self, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
         '''
@@ -670,18 +642,3 @@ class caer_communication:
                                         cear_command = base_aa + " " + base_ab + " " + base_ac + " " + base_ad + " " + final_v
                                         print cear_command
                                         self.send_command(cear_command)                  
-
-if __name__ == "__main__":
-    # init control class and open communication
-    import numpy as np
-    control = caer_communication(host='localhost')
-
-    control.open_communication_command()
-    control.load_biases()    
-    control.get_data_fpn(folder='fpn', recording_time=3)
-    control.get_data_ptc(folder='ptc', recording_time=3, exposures=np.linspace(100,500,3))
-    control.close_communication_command()    
-
-    
-
-

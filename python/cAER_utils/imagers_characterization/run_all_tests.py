@@ -145,11 +145,8 @@ def copyFile(src, dest):
         print('Error: %s' % e.strerror)
 
 ##############################################################################
-## CONDITION 1 - Homegeneous light source
-## Homegeneous light source (integrating sphere, need to measure the luminosity)
-## also use the hp33120 to generate sine wave at .1 Hz for FPN measurements
+## TESTS
 ##############################################################################
-
 # 1 - Photon Transfer Curve - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
 if do_ptc:
@@ -177,22 +174,10 @@ if do_ptc:
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
     control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
-    print "Data saved in " +  folder
+    print "Data saved in " +  folder     
 
-## 2 - Fixed Pattern Noise - data
-## setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
-## + we slowly generate a sine wave 
-#if do_fpn:
-#    control.open_communication_command()
-#    folder = datadir + '/'+ sensor + '_fpn_sensitivity_' +  current_date
-#    setting_dir = folder + str("/settings/")
-#    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-#    print "we are doing fpn measurements, please put homogeneous light source (integrating sphere)."
-#    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN 0.3, 10, 0") #10 Vpp sine wave at 0.1 Hz with a 0 volt offset - 48-51lux
-#    raw_input("Press Enter to continue...")
-#    control.get_data_fpn(folder = folder, recording_time=20)
-#    control.close_communication_command()       
-
+# 2 - Contrast sensitivity - data
+# setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
 if do_contrast_sensitivity:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_contrast_sensitivity_' +  current_date
@@ -243,6 +228,8 @@ if do_contrast_sensitivity:
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()        
 
+# 3 - Frequency response - data
+# setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
 if do_frequency_response:
     control.open_communication_command()
     folder = datadir + '/'+ sensor + '_frequency_response_' +  current_date
@@ -275,8 +262,10 @@ if do_frequency_response:
                 control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level_fr, base_level = base_level_fr[this_base])
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
-    control.close_communication_command()        
-
+    control.close_communication_command()
+        
+# 4 - Oscillations - data
+# setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)
 if do_oscillations:
     print "\n"
     print "we are doing oscillations measurements. ..\n \
@@ -320,7 +309,9 @@ if do_oscillations:
             control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=oscillations_base_level[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
     control.close_communication_command()    
     print "Data saved in " +  folder
-  
+
+# 5 - Latency small led on board with all colored leds - data
+# setup is in conditions -> flashing LED
 if do_latency_pixel_big_led:
     print "\n"
     print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
@@ -363,6 +354,8 @@ if do_latency_pixel_big_led:
     control.close_communication_command()    
     print "Data saved in " +  folder
  
+# 6 - Latency fiber pointing at the sensor - data
+# setup is in conditions -> flashing LED
 if do_latency_pixel_led_board:
     print "\n"
     print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
