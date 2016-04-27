@@ -17,6 +17,8 @@ import gpio_usb
 ###############################################################################
 camera_file = 'cameras/davis208Mono_parameters.txt'
 
+do_set_bias = True
+
 do_contrast_sensitivity = True # And DVS-FPN too
 do_ptc = False
 do_frequency_response = True
@@ -38,6 +40,9 @@ elif(info[3] == 'True'):
 host_ip = info[4]
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 datadir = 'measurements'
+
+if(do_set_bias):
+    dvs_use = True; # If false use APS
 
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
@@ -143,6 +148,33 @@ def copyFile(src, dest):
     # eg. source or destination doesn't exist
     except IOError as e:
         print('Error: %s' % e.strerror)
+
+##############################################################################
+## FIND GOOD PARAMETERS
+##############################################################################
+if(do_set_bias):
+    print "Debugging biases: apply 1klux 0.4 contrast sinewave at 1 Hz"
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    sine_freq = 1.0;
+    base_level = 1000;
+    contrast_level = 0.4;
+    oscillations = 1000;
+    perc_low = base_level-(contrast_level/2.0)*base_level
+    perc_hi = base_level+(contrast_level/2.0)*base_level
+    v_hi = (perc_hi - inter) / slope
+    v_low = (perc_low - inter) / slope 
+    offset = np.mean([v_hi,v_low])
+    amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+    print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
+    gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+    gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+    control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+    control.simple_test(sensor, dvs_use = dvs_use, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level, base_level = base_level)
+    # Zero the Function Generator
+    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
+    control.close_communication_command()        
 
 ##############################################################################
 ## TESTS

@@ -581,6 +581,54 @@ class caer_communication:
         print("Done with PTC measurements")
         return   
 
+    def simple_test(self, sensor, dvs_use = True, oscillations = 1000.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 1.0, base_level = 1000.0):
+        if(dvs_use):        
+            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
+            print("APS array is OFF")
+            self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
+            print("DVS array is ON")
+            # For PixelParade Only
+            if (sensor == 'DAVIS208Mono'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+                print("All DVS arrays of PixelParade are ON")
+        else:
+            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+            print("APS array is ON")
+            self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false') 
+            print("DVS array is OFF")
+            # For PixelParade Only
+            if (sensor == 'DAVIS208Mono'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool false') 
+                print("All DVS arrays of PixelParade are OFF")
+                
+        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+        print("BackGroundActivity Filter is OFF")
+        recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
+        print("Going on for " + str(recording_time))                
+        time.sleep(2.0)
+        self.open_communication_data()
+        time.sleep(recording_time)
+        self.close_communication_data()
+        print "Done"
+        
+        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+        print("APS array is ON")
+        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+        # For PixelParade Only
+        if (sensor == 'DAVIS208Mono'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+            print("All DVS arrays of PixelParade are OFF")
+        print("DVS array is OFF")
+        return 
+
     def load_biases(self, xml_file = 'cameras/davis240c.xml', dvs128xml = False):
         '''
             load default biases as defined in the xml file
