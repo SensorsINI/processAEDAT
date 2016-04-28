@@ -1,4 +1,3 @@
-import aedat3_process
 import sys
 sys.path.append('utils/')
 import load_files
@@ -25,7 +24,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "Z:/Characterizations/Measurements/TEST/"
+directory_meas = "Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_25_04_16-13_49_00/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
 camera_file = 'cameras/davis208Mono_parameters.txt'
@@ -60,7 +59,7 @@ if(do_contrast_sensitivity):
     sine_freq = 1.0
     num_oscillations = 10.0
     single_pixels_analysis = True
-    rmse_reconstruction = True
+    rmse_reconstruction = False
 
 ################### 
 # END PARAMETERS
@@ -76,9 +75,9 @@ if do_contrast_sensitivity:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = DVS_contrast_sensitivity.DVS_contrast_sensitivity()
-    rmse_tot, contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, \
+    contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, \
     contrast_sensitivity_on_average_array, contrast_sensitivity_off_median_array, contrast_sensitivity_on_median_array, \
-    err_on_percent_array, err_off_percent_array, delta_on_tot, delta_off_tot = aedat.cs_analysis(sensor, cs_dir, \
+    err_on_percent_array, err_off_percent_array = aedat.cs_analysis(sensor, cs_dir, \
     figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, \
     single_pixels_analysis = single_pixels_analysis, rmse_reconstruction = rmse_reconstruction)
 #    contrast_level = np.reshape(contrast_level,[len(contrast_level),len(frame_x_divisions),len(frame_y_divisions)])

@@ -1,5 +1,5 @@
 # #########################################################
-# General parameters
+# General parameters (no spaces, comma separated, always)
 # #########################################################
 # 0 # Sensor name
 DAVIS208Mono
@@ -11,9 +11,9 @@ cameras/davis208Mono_contrast_sensitivity.xml
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
 127.0.0.1
-# 5 # Camera dimensions [X,Y] (no spaces, comma separated)
+# 5 # Camera dimensions [X,Y] 
 [208,192]
-# 6 # Camera selected dimensions [X,Y] (no spaces, comma separated)
+# 6 # Camera selected dimensions [X,Y]
 [208,192]
 # 7 # Internal ADC range internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
 1.290
@@ -27,7 +27,7 @@ False
 [[0,191]]
 
 # #########################################################
-# Contrast sensitivity parameters (no spaces, comma separated)
+# Contrast sensitivity parameters
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
 [150,200,255]
@@ -39,7 +39,7 @@ False
 [30,35,40]
 
 # #########################################################
-# Photon transfer curve parameters (no spaces, comma separated)
+# Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures
 [1,1000000,100]
@@ -49,7 +49,7 @@ False
 True
 
 # #########################################################
-# Frequency response parameters (no spaces, comma separated)
+# Frequency response parameters
 # #########################################################
 # 19 # start, end and number of points for frequencies
 [1,100000,1000]
