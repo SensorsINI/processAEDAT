@@ -153,8 +153,8 @@ if do_oscillations:
         starting = len(current_ts)-len(ts_folded)
         dn_index = current_pol[starting::] == 0
         up_index = current_pol[starting::] == 1    
-        valuesPos = np.histogram( ts_folded[up_index], bins=binss)
-        valuesNeg = np.histogram( ts_folded[dn_index], bins=binss)
+        valuesPos = np.histogram(ts_folded[up_index], bins=binss)
+        valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
         
         #plot in the 2d grid space of biases vs lux
         n_lux = []
