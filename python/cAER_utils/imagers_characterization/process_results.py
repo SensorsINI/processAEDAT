@@ -24,7 +24,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_25_04_16-13_49_00/"
+directory_meas = "Z:/Characterizations/Measurements/TEST/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
 camera_file = 'cameras/davis208Mono_parameters.txt'
@@ -201,4 +201,4 @@ if do_latency_pixel:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = DVS_latency.DVS_latency()
-    all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, file_type="cAER",confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
+    all_latencies_mean_up, all_latencies_mean_dn, all_latencies_std_up, all_latencies_std_dn = aedat.pixel_latency_analysis(latency_pixel_dir, figure_dir, frame_y_divisions, frame_x_divisions, camera_dim = camera_dim, size_led = 2, file_type="cAER",confidence_level=0.95) #pixel size of the led pixel_sel = [362,160],
