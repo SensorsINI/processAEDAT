@@ -22,7 +22,7 @@ import load_files
 import string as stra
 
 class DVS_frequency_response:
-    def fr_analysis(self, fr_dir, figure_dir, frame_y_divisions, frame_x_divisions, num_oscillations = 10.0, camera_dim = [190,180], size_led = 2, pixel_sel = False, dvs128xml = False):
+    def fr_analysis(self, fr_dir, figure_dir, frame_y_divisions, frame_x_divisions, num_oscillations = 10.0, camera_dim = [190,180], size_led = 2):
         
         '''
             Frequency response analisys. Input signal is a sine wave from the led flashing
@@ -98,23 +98,13 @@ class DVS_frequency_response:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
                 continue
 
-            if do_plot:
-                fig = plt.figure()
-                plt.subplot(4,1,1)
-            dx = plt.hist(xaddr,camera_dim[0])
-            dy = plt.hist(yaddr,camera_dim[1])
-            if(pixel_sel == False):
-                ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
-                ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
-                for this_div_x in range(len(frame_x_divisions)) :
-                    for this_div_y in range(len(frame_y_divisions)):
-                        if(not(not frame_x_divisions[(ind_x_max>=frame_x_divisions[0]) and (ind_x_max<=frame_x_divisions[-1])])):
-                            print "Selected pixel [" + str(ind_x_max) + "," + str(ind_y_max) + "] belonging to area X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
-            else:
-                print("Using pixels selected from user x,y: "+str(pixel_sel))
-                ind_x_max = pixel_sel[0]
-                ind_y_max = pixel_sel[1]
-                              
+            ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
+            ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+                    if(not(not frame_x_divisions[(ind_x_max>=frame_x_divisions[0]) and (ind_x_max<=frame_x_divisions[-1])])):
+                        print "Selected pixel [" + str(ind_x_max) + "," + str(ind_y_max) + "] belonging to area X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+                          
             x_to_get = np.linspace(ind_x_max-size_led,ind_x_max+size_led,pixel_box)
             y_to_get = np.linspace(ind_y_max-size_led,ind_y_max+size_led,pixel_box)
             matrix_count_off = np.zeros([len(x_to_get),len(y_to_get)])
@@ -190,13 +180,10 @@ class DVS_frequency_response:
 
             if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0): # Not even ON or OFF!!
                 print "Not even a single spike.. skipping."
-                if(single_pixels_analysis):
-                    contrast_sensitivity_off_median_array[this_file] = -1
-                    contrast_sensitivity_on_median_array[this_file] = -1
+                contrast_sensitivity_off_median_array[this_file] = -1
+                contrast_sensitivity_on_median_array[this_file] = -1
                 contrast_sensitivity_off_average_array[this_file] = np.nan
                 contrast_sensitivity_on_average_array[this_file] = -1
-                if(rmse_reconstruction):
-                    rmse_tot[this_file] = np.nan
             else:
                 # Get contrast sensitivity
                 # For 0.20 contrast / ((5 events on average per pixel) / 5 oscillations) = CS = 0.2

@@ -5,6 +5,7 @@ sys.path.append('analysis/')
 import DVS_contrast_sensitivity
 import DVS_latency
 import DVS_oscillations
+import DVS_frequency_response
 import APS_photon_transfer_curve
 import matplotlib as plt
 from pylab import *
@@ -16,7 +17,7 @@ ioff()
 # ANALYSIS
 ##############################################################################
 do_ptc = False
-do_fpn = False
+do_frequency_response = True
 do_latency_pixel = False
 do_contrast_sensitivity = True
 do_oscillations = False
@@ -61,6 +62,10 @@ if(do_contrast_sensitivity):
     single_pixels_analysis = True
     rmse_reconstruction = False
 
+if(do_frequency_response):
+    num_oscillations = 10.0
+    size_led = 3.0
+
 ################### 
 # END PARAMETERS
 ###################
@@ -80,25 +85,26 @@ if do_contrast_sensitivity:
     err_on_percent_array, err_off_percent_array = aedat.cs_analysis(sensor, cs_dir, \
     figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = sine_freq, num_oscillations = num_oscillations, \
     single_pixels_analysis = single_pixels_analysis, rmse_reconstruction = rmse_reconstruction)
-#    contrast_level = np.reshape(contrast_level,[len(contrast_level),len(frame_x_divisions),len(frame_y_divisions)])
-#    base_level = np.reshape(base_level,[len(base_level),len(frame_x_divisions),len(frame_y_divisions)])
-#    rmse_tot = np.reshape(rmse_tot,[len(rmse_tot),len(frame_x_divisions),len(frame_y_divisions)])
-#
-#    for j in range(len(rmse_tot)):
-#        for i in range(1):
-#            plot(rmse_tot[j][i], base_level[j][i], 'x')
-#
-#    from mpl_toolkits.mplot3d import Axes3D
-#    from matplotlib import cm
-#    from matplotlib.ticker import LinearLocator, FormatStrFormatter
-#    import matplotlib.pyplot as plt
-#    import numpy as np
-#    fig = plt.figure()
-#    ax = fig.gca(projection='3d')
-#    surf = ax.plot_surface(rms, constrasts, bases, rstride=1, cstride=1, cmap=cm.coolwarm,
-#                       linewidth=0, antialiased=False)
-#    fig.colorbar(surf, shrink=0.5, aspect=5)
 
+if do_frequency_response:
+    #####################
+    # FREQUENCY RESPONSE
+    #####################
+    fr_dir = directory_meas
+    figure_dir = fr_dir + 'figures/'
+    if(not os.path.exists(figure_dir)):
+        os.makedirs(figure_dir)
+    # select test pixels areas only two are active
+    aedat = DVS_frequency_response.DVS_frequency_response()
+    contrast_level, base_level, frequency, contrast_sensitivity_off_average_array, \
+    off_event_count_median_per_pixel, on_event_count_median_per_pixel, \
+    off_event_count_average_per_pixel, on_event_count_average_per_pixel, \
+    contrast_sensitivity_on_average_array, contrast_sensitivity_off_median_array, \
+    contrast_sensitivity_on_median_array, err_on_percent_array, err_off_percent_array = \
+    aedat.fr_analysis(fr_dir, figure_dir, frame_y_divisions = frame_y_divisions, \
+    frame_x_divisions = frame_x_divisions, num_oscillations = num_oscillations, \
+    camera_dim = camera_dim, size_led = size_led)
+        
 if do_oscillations:
     ################### 
     # OSCILLATIONS EXP
