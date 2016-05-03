@@ -480,7 +480,7 @@ class caer_communication:
         print("DVS array is OFF")
         return        
         
-    def get_data_frequency_response(self, sensor, folder = 'contrast sensitivity', oscillations = 10.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 0.5, base_level = 1000.0):
+    def get_data_frequency_response(self, sensor, folder = 'frequency response', oscillations = 10.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 0.5, base_level = 1000.0, ndfilter = 2.0):
         '''
            Frequency response
             - aps is off
@@ -512,6 +512,7 @@ class caer_communication:
         '_contrast_level_'+format(int(contrast_level*100),'03d')+\
         '_base_level_'+str(format(int(base_level),'03d'))+\
         '_frequency_'+str(format(int(frequency),'03d'))+\
+        '_ndfilter_'+str(format(int(ndfilter),'03d'))+\
         '.aedat'
         self.start_logging(filename)    
         time.sleep(recording_time)

@@ -89,6 +89,7 @@ if(do_frequency_response):
     base_level_fr = [500, 1000, 2000] # 3 points are fine
     contrast_level_fr = [0.3]
     oscillations_fr = 10.0
+    ndfilter_fr = 2.0
     
 if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     oscillations = 100.0
@@ -270,7 +271,7 @@ if do_frequency_response:
         os.makedirs(setting_dir)
     copyFile(bias_file, setting_dir+str("biases_frequency_response.xml") )
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
-    print "we are doing frequency response measurements, please put homogeneous light source (integrating sphere)."
+    print "we are doing frequency response measurements, please put big led setup."
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     for this_base in range(len(base_level_fr)):
@@ -291,7 +292,7 @@ if do_frequency_response:
                 gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
                 control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                 sine_freq = freq_fr[this_freq]
-                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level_fr, base_level = base_level_fr[this_base])
+                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level_fr, base_level = base_level_fr[this_base], ndfilter_fr = ndfilter_fr)
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()
