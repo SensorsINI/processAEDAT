@@ -53,4 +53,5 @@ True
 # #########################################################
 # 19 # start, end and number of points for frequencies
 [1,100000,1000]
-
+# 20 # Neutral Density Filter used NDF, write x (as 10^x attenuation)
+2

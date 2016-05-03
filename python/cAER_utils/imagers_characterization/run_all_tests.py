@@ -89,7 +89,7 @@ if(do_frequency_response):
     base_level_fr = [500, 1000, 2000] # 3 points are fine
     contrast_level_fr = [0.3]
     oscillations_fr = 10.0
-    ndfilter_fr = 2.0
+    ndfilter_fr = info[20]
     
 if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     oscillations = 100.0

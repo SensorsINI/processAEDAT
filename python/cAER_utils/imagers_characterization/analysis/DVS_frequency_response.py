@@ -85,11 +85,11 @@ class DVS_frequency_response:
                 this_frequency = float(files_in_dir[this_file].strip(".aedat").strip("frequency_response_recording_time_").split("_")[8])
                 this_ndfilter = float(files_in_dir[this_file].strip(".aedat").strip("frequency_response_recording_time_").split("_")[10])
                 
-                contrast_level[this_file] = this_rec_time
-                base_level[this_file] = this_contrast
-                rec_time[this_file] = this_base_level
-                frequency[this_file] = this_frequency
                 ndfilter[this_file] = this_ndfilter
+                rec_time[this_file] = this_rec_time
+                contrast_level[this_file] = this_contrast
+                base_level[this_file] = this_base_level*10**(this_ndfilter) # attenuate
+                frequency[this_file] = this_frequency
 
                 loader = load_files.load_files()
                 [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = loader.load_file(directory+files_in_dir[this_file])
