@@ -39,7 +39,7 @@ This function expects a structure "info" with the following fields:
 		- davis640mono 
 		- hdavis640mono 
 		- hdavis640rgbw (davis640rgbw, cdavis640 accepted as equivalent)
-		- cochleaams1c (das1 accepted as equivalent)
+		- das1 (cochleaams1c accepted as equivalent)
 		If class is not provided and the file does not specify the class, dvs128 is assumed.
 		If the file specifies the class then this input is ignored. 
 	- startTime (optional) - if provided, any data with a timeStamp lower
@@ -100,7 +100,7 @@ while line(1)=='#'
 	
     fprintf('%s\n',line(1:end-2)); % Debugging only, or could perhaps be used in a verbose mode - print line using \n for newline, discarding CRLF written by java under windows
 
-	% When exiting the while loop, this pointer points to the start of the actual data
+	% When exiting the while loop, this pointer points to the byte before the start of the actual data
     info.beginningOfDataPointer = ftell(info.fileHandle); 
 	
 	% Strip off # and initial spaces, and trailing /r/n

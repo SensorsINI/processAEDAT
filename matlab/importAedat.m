@@ -8,6 +8,17 @@ The .aedat file format is documented here:
 
 http://inilabs.com/support/software/fileformat/
 
+This function implements most of the functionality of the "loadaerdat" function 
+	plus chip-specific interpretation functions, such as "getDVSeventsDavis".
+Some data-type-specific functionality are removed, such as a spatial
+	region-of-interest (ROI) parameter. 
+Addresses and polarities from DAVIS are exactly what is encoded in the file 
+	- no messing about with arbitrary inversions and subtractions.
+It extends functionality to the new aedat format 3.0. Importantly, data
+	from earlier versions are separated as if they had been encoded in version
+	3.0 - there are separate output data structures for retina address-events vs
+	aps samples, etc. 
+
 This function supports incremental readout, through these methods: 
 	- Blocks of time can be read out.
 	- Alternatively, for fileformats 1.0-2.1, blocks of events (as counted 
@@ -44,16 +55,18 @@ This function expects a single input, which is a structure with the following fi
 		- davis640mono 
 		- hdavis640mono 
 		- hdavis640rgbw (davis640rgbw, cdavis640 accepted as equivalent)
-		- cochleaams1c (das1 accepted as equivalent)
+		- das1 (cochleaams1c accepted as equivalent)
 		If class is not provided and the file does not specify the class, dvs128 is assumed.
 		If the file specifies the class then this input is ignored. 
 	- startTime (optional) - if provided, any data with a timeStamp lower
-		than this will not be returned.
+		than this will not be returned. This is in seconds, not
+		microseconds.
 	- endTime (optional) - if provided, any data with a timeStamp higher than 
-		this time will not be returned.
+		this time will not be returned. This is in seconds, not
+		microseconds. 
 	- startEvent (optional) Only accepted for fileformats 1.0-2.1. If
 		provided, any events with a lower count that this will not be returned.
-		APS samples, if present, are counted as events. 
+		APS samples, if present, are counted individually as events. 
 	- endEvent (optional) Only accepted for fileformats 1.0-2.1. If
 		provided, any events with a higher count that this will not be returned.
 		APS samples, if present, are counted as events. 
@@ -61,6 +74,13 @@ This function expects a single input, which is a structure with the following fi
 		provided, any packets with a lower count that this will not be returned.
 	- endPacket (optional) Only accepted for fileformat 3.0. If
 		provided, any packets with a higher count that this will not be returned.
+	-dataTypes (optional) cellarray. If present, only data types specified 
+		in this cell array are returned. Options are: 
+		special; polarity; frame; imu6; imu9; sample; ear; config.
+	When using startEvent and endEvent, any events excluded
+	because of the time window or dataType are not replaced, so the amount
+	of data returned may be much less than the difference between
+	startEvent and endEvent.
 		
 The output is a structure with the following fields:
 	- info - structure containing informational fields. This starts life as the 
@@ -96,7 +116,9 @@ The output is a structure with the following fields:
 		Within each of these structures, there are typically a set of column 
 			vectors containing timeStamp, a valid bit and then other data fields, 
 			where each vector has the same number of elements. 
-			There are some exceptionss to this. 
+			There are some exceptions to this. 
+			The valid bit is not constructed for recordings where 
+			fileFormat < 3 (where all events are assumed to be valid).
 			In detail the contents of these structures are:
 		- special
 			- valid (colvector bool)
@@ -159,36 +181,33 @@ The output is a structure with the following fields:
 
 dbstop if error
 
-% Create the output structure
-output = struct;
-
 % If the input variable doesn't exist, create a dummy one.
 if nargin==0
-	output.info = struct;
+	info = struct;
 else
-	output.info = varargin{1};
+	info = varargin{1};
 end
 
 % Open the file
-if ~isfield(output.info, 'filePath')
+if ~isfield(info, 'filePath')
 	[fileName path ~] = uigetfile('*.aedat','Select aedat file');
     if fileName==0
 		disp('File to import not specified')
 		return
 	end
-	output.info.filePath = [path fileName];
+	info.filePath = [path fileName];
 end
 
-output.info.fileHandle = fopen(output.info.filePath, 'r');
+info.fileHandle = fopen(info.filePath, 'r');
 
 % Process the headers
-output.info = importAedat_processHeaders(output.info);
+info = importAedat_processHeaders(info);
 
 % Process the data - different subfunctions handle fileFormat 2 vs 3
-if output.info.fileFormat < 3
-	output.data = importAedat_processDataFormat1or2(output.info);
+if info.fileFormat < 3
+	output = importAedat_processDataFormat1or2(info);
 else
-	output.data = importAedat_processDataFormat3(output.info);	
+	output = importAedat_processDataFormat3(info);	
 end
 
 fclose(output.info.fileHandle);
