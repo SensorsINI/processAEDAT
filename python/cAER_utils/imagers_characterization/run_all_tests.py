@@ -205,7 +205,7 @@ if do_ptc:
         os.makedirs(setting_dir)
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
     copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-    control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
+    control.get_data_ptc(sensor, folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
     control.close_communication_command()    
     print "Data saved in " +  folder     
 
@@ -247,13 +247,13 @@ if do_contrast_sensitivity:
                 print "on finevalue " + str(onthr[this_bias_index]) 
                 print "diff finevalue" + str(diffthr[this_bias_index]) 
                 print "off finevalue" + str(offthr[this_bias_index]) 
-                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
-                control.send_command('put /1/1-'+str(sensor_type)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
-                control.send_command('put /1/1-'+str(sensor_type)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
+                control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
+                control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
+                control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                 if (sensor == 'DAVIS208Mono'):
                     for this_refss in range(len(refss)):
                         print"refss finevalue" + str(refss[this_refss])
-                        control.send_command('put /1/1-'+str(sensor_type)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
+                        control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
                         control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
                     control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
@@ -336,10 +336,10 @@ if do_oscillations:
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
             if(dvs128xml):
-                control.send_command("put /1/1-DVS128/bias/ pr int "+str(int(prbpvalues[this_bias])))
+                control.send_command('put /1/1-DVS128/'+str(sensor)+'/bias/ pr int '+str(int(prbpvalues[this_bias])))
             else:
-                control.send_command("put /1/1-DAVISFX2/bias/RefrBp/ fineValue short "+str(prbpvalues[this_bias]))
-            control.get_data_oscillations( folder = folder, recording_time = recording_time, num_measurement = i, lux=oscillations_base_level[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
+                control.send_command('put /1/1-DAVISFX2/'+str(sensor)+'/bias/RefrBp/ fineValue short '+str(prbpvalues[this_bias]))
+            control.get_data_oscillations(sensor, folder = folder, recording_time = recording_time, num_measurement = i, lux=oscillations_base_level[i], filter_type=filter_type, sensor_type = sensor_type, prbias = prbpvalues[this_bias], dvs128xml = dvs128xml)
     control.close_communication_command()    
     print "Data saved in " +  folder
 
@@ -383,7 +383,7 @@ if do_latency_pixel_big_led:
         control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
-        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+        control.get_data_latency(sensor, folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
  

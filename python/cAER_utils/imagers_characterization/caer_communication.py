@@ -95,7 +95,7 @@ class caer_communication:
     def parse_command(self, command):
         '''
           parse string command
-            es string: put /1/1-DAVISFX2/aps/ Exposure int 10
+            es string: put /1/1-DAVISFX2/'+str(sensor)+'/aps/ Exposure int 10
         '''    
         databuffer = bytearray(b'\x00' * self.data_buffer_size)
         node_length = 0
@@ -340,7 +340,7 @@ class caer_communication:
         '''
             parse input command and send it to the device
             print the answer
-                input string - ie. 'put /1/1-DAVISFX2/aps/ Exposure int 100'
+                input string - ie. 'put /1/1-DAVISFX2/'+str(sensor)+'/aps/ Exposure int 100'
         '''    
         cmd = self.parse_command(string)    
         self.s_commands.sendall(cmd)
@@ -351,7 +351,7 @@ class caer_communication:
         print('action='+str(action)+' type='+str(second)+' message='+msg_packet)
         return
 
-    def get_data_latency(self, folder = 'latency', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2"):
+    def get_data_latency(self, sensor, folder = 'latency', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2"):
         '''
            Pixel Latency
         '''
@@ -361,15 +361,15 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #switch on edge detector for special event
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectFallingEdges bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectRisingEdges bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectPulses bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ RunDetector bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectFallingEdges bool true')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectRisingEdges bool true')
         #loop over exposures and save data
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
         print("APS array is OFF")
-        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-        print("BackGroundActivity Filter is OFF")
+#        self.send_command('put /1/2-BAFilter/'+str(sensor)+'/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
         print("Recording for " + str(recording_time))                
         time.sleep(0.5)
         self.open_communication_data()
@@ -380,7 +380,7 @@ class caer_communication:
         self.close_communication_data()
         return        
 
-    def get_data_oscillations(self, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2", prbias = 0, dvs128xml = False):
+    def get_data_oscillations(self, sensor, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2", prbias = 0, dvs128xml = False):
         '''
            Oscillations measurements,
             for NW
@@ -398,15 +398,15 @@ class caer_communication:
             print("no detector needed, special events will be 4")
         else:
             #switch on edge detector
-            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectPulses bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ RunDetector bool true')
-            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectFallingEdges bool true')
-            self.send_command('put /1/1-'+str(sensor_type)+'/externalInput/ DetectRisingEdges bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectPulses bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ RunDetector bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectFallingEdges bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectRisingEdges bool true')
             #loop over exposures and save data
-            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false')  #switch off APS
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
             print("APS array is OFF")
-        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-        print("BackGroundActivity Filter is OFF")
+#        self.send_command('put /1/2-BAFilter/'+str(sensor)+'/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
         print("wait for biases to stabilize...")
         time.sleep(3)
         print("Recording for " + str(recording_time))                
@@ -435,19 +435,19 @@ class caer_communication:
         self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
         print("DVS array is ON")
         # For PixelParade Only
-        if (sensor == 'DAVIS208Mono'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
             print("All DVS arrays of PixelParade are ON")
-        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-        print("BackGroundActivity Filter is OFF")
+#        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
         recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Recording for " + str(recording_time))                
         time.sleep(2.0)
         self.open_communication_data()
-        if(sensor == 'DAVIS208Mono'):
+        if(sensor == 'DAVIS208'):
             filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+\
             '_contrast_level_'+format(int(contrast_level*100),'03d')+\
             '_base_level_'+str(format(int(base_level),'03d'))+\
@@ -468,14 +468,14 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
         print("APS array is ON")
-        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
         # For PixelParade Only
-        if (sensor == 'DAVIS208Mono'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
             print("All DVS arrays of PixelParade are OFF")
         print("DVS array is OFF")
         return        
@@ -491,19 +491,19 @@ class caer_communication:
         except:
             os.mkdir(folder) 
         #loop over exposures and save data
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false') 
         print("APS array is OFF")
-        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool true') 
         print("DVS array is ON")
         # For PixelParade Only
-        if (sensor == 'DAVIS208Mono'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
             print("All DVS arrays of PixelParade are ON")
-        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-        print("BackGroundActivity Filter is OFF")
+#        self.send_command('put /1/2-BAFilter/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
         recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Recording for " + str(recording_time))                
         time.sleep(2.0)
@@ -518,19 +518,19 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
         print("APS array is ON")
-        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
         # For PixelParade Only
-        if (sensor == 'DAVIS208Mono'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
             print("All DVS arrays of PixelParade are OFF")
         print("DVS array is OFF")
         return        
 
-    def get_data_ptc(self, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
+    def get_data_ptc(self, sensor, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
         '''
             this function get the data for the Photon Transfer Curve measure - 
             it requires an APS camera
@@ -550,25 +550,25 @@ class caer_communication:
                 print "exposure == 0 is not valid, skipping this step..."
             else:
                 if useinternaladc :
-                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool true')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ UseInternalADC bool true')
                 else:
-                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ UseInternalADC bool false')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ UseInternalADC bool false')
 
                 if global_shutter :
-                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool true')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ GlobalShutter bool true')
                     shutter_type = 'global' 
                 else:
-                    self.send_command('put /1/1-'+str(sensor_type)+'/aps/ GlobalShutter bool false')
+                    self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ GlobalShutter bool false')
                     shutter_type = 'rolling'
                     
-                self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
-                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false') 
                 exp_time = np.round(exposures[this_exp]) 
-                string_control = 'put /1/1-'+str(sensor_type)+'/aps/ Exposure int '+str(exp_time)
+                string_control = 'put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Exposure int '+str(exp_time)
                 filename = folder + '/ptc_shutter_'+str(shutter_type)+'_'+format(int(exp_time), '07d')+'.aedat' 
                 #set exposure
                 self.send_command(string_control)    
-                self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true')  
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true')  
                 recording_time = (frame_number*(exp_time + 10000))/(10.0**6)          
                 print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
                 time.sleep(0.5)
@@ -584,32 +584,32 @@ class caer_communication:
 
     def simple_test(self, sensor, dvs_use = True, oscillations = 1000.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 1.0, base_level = 1000.0):
         if(dvs_use):        
-            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false') 
             print("APS array is OFF")
-            self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool true') 
             print("DVS array is ON")
             # For PixelParade Only
-            if (sensor == 'DAVIS208Mono'):
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool true') 
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool true')
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool true') 
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool true') 
+            if (sensor == 'DAVIS208'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool true') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool true')
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
                 print("All DVS arrays of PixelParade are ON")
         else:
-            self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
             print("APS array is ON")
-            self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false') 
             print("DVS array is OFF")
             # For PixelParade Only
-            if (sensor == 'DAVIS208Mono'):
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
-                self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectBiasRefSS bool false') 
+            if (sensor == 'DAVIS208'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool false') 
                 print("All DVS arrays of PixelParade are OFF")
                 
-        self.send_command('put /1/2-BAFilter/ shutdown bool true')
-        print("BackGroundActivity Filter is OFF")
+#        self.send_command('put /1/2-BAFilter/'+str(sensor)+'/ shutdown bool true')
+#        print("BackGroundActivity Filter is OFF")
         recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Going on for " + str(recording_time))                
         time.sleep(2.0)
@@ -618,14 +618,14 @@ class caer_communication:
         self.close_communication_data()
         print "Done"
         
-        self.send_command('put /1/1-'+str(sensor_type)+'/aps/ Run bool true') 
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
         print("APS array is ON")
-        self.send_command('put /1/1-'+str(sensor_type)+'/dvs/ Run bool false')
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
         # For PixelParade Only
-        if (sensor == 'DAVIS208Mono'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectHighPass bool false') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectPosFb bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/chip/ SelectSense bool false') 
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
             print("All DVS arrays of PixelParade are OFF")
         print("DVS array is OFF")
         return 
