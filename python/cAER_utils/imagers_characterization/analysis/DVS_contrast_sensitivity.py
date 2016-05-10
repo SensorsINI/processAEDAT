@@ -100,7 +100,7 @@ class DVS_contrast_sensitivity:
                 this_on_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[8])
                 this_diff_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[10])
                 this_off_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[12])
-                if(sensor == 'DAVIS208Mono'):
+                if(sensor == 'DAVIS208'):
                     this_refss_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[14])
                                
                 loader = load_files.load_files()
@@ -142,7 +142,7 @@ class DVS_contrast_sensitivity:
                     on_level[this_file,this_div_x,this_div_y] = this_on_level  
                     diff_level[this_file,this_div_x,this_div_y] = this_diff_level  
                     off_level[this_file,this_div_x,this_div_y] = this_off_level  
-                    if(sensor == 'DAVIS208Mono'):
+                    if(sensor == 'DAVIS208'):
                         refss_level[this_file,this_div_x,this_div_y] = this_refss_level  
                     
                     print ""
@@ -191,7 +191,7 @@ class DVS_contrast_sensitivity:
                     print "This on level: " + str(this_on_level)
                     print "This diff level: " + str(this_diff_level)
                     print "This off level: " + str(this_off_level)  
-                    if(sensor == 'DAVIS208Mono'):
+                    if(sensor == 'DAVIS208'):
                         print "This refss level: " + str(this_refss_level) 
                     if(single_pixels_analysis):
                         print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
@@ -542,7 +542,7 @@ class DVS_contrast_sensitivity:
             plt.savefig(contrast_sensitivities_dir+"error_on_vs_on_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             plt.close("all")
         
-        if(sensor == 'DAVIS208Mono'):
+        if(sensor == 'DAVIS208'):
             plt.figure()
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
             color_tmp = 0
@@ -582,7 +582,7 @@ class DVS_contrast_sensitivity:
                 print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
                 print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
                 print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
-                if(sensor == 'DAVIS208Mono'):
+                if(sensor == 'DAVIS208'):
                     print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])       
                 
                 if(single_pixels_analysis):
@@ -597,7 +597,7 @@ class DVS_contrast_sensitivity:
                 print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
                 print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
                 print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
-                if(sensor == 'DAVIS208Mono'):
+                if(sensor == 'DAVIS208'):
                     print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])  
             
 #        return rmse_tot, contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, \
