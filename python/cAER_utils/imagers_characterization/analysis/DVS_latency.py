@@ -20,7 +20,7 @@ import scipy.stats as st
 import math
 
 class DVS_latency:
-    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", pixel_sel = False, dvs128xml = False):
+    def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, frame_y_divisions, frame_x_divisions, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", pixel_sel = False, dvs128xml = False):
         '''
             Pixel Latency, single pixel signal reconstruction
             ----
@@ -53,8 +53,24 @@ class DVS_latency:
             #exp_settings_bias_fine = string.split(exp_settings[10], ".")[0] 
             #exp_settings_bias_coarse = exp_settings[8]
 
-            print("Processing file " +str(this_file+1)+ " of " +str(len(files_in_dir)))
+            print ""
+            print "####################################################################"
+            print "FILE: " + str(this_file+1) + "/" + str(len(files_in_dir)) 
+            print "FILE NAME: " + files_in_dir[this_file]             
+            print "####################################################################"
 
+            '''               
+            REMEMBER:
+            filename = folder + '/contrast_sensitivity_recording_time_'+format(int(recording_time), '07d')+\
+            '_contrast_level_'+format(int(contrast_level*100),'03d')+\
+            '_base_level_'+str(format(int(base_level),'03d'))+\
+            '_on_'+str(format(int(onthr),'03d'))+\
+            '_diff_'+str(format(int(diffthr),'03d'))+\
+            '_off_'+str(format(int(offthr),'03d'))+\
+            '_refss_'+str(format(int(refss),'03d'))+\
+            '.aedat'
+                '''            
+            
             if not os.path.isdir(directory+files_in_dir[this_file]):
                 if( file_type == "cAER"):
                     [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
@@ -80,10 +96,12 @@ class DVS_latency:
             if(pixel_sel == False):
                 ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
                 ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
-                print("selected pixel x: "+str(ind_x_max))
-                print("selected pixel y: "+str(ind_y_max))
+                for this_div_x in range(len(frame_x_divisions)) :
+                    for this_div_y in range(len(frame_y_divisions)):
+                        if(not(not frame_x_divisions[(ind_x_max>=frame_x_divisions[0]) and (ind_x_max<=frame_x_divisions[-1])])):
+                            print "Selected pixel [" + str(ind_x_max) + "," + str(ind_y_max) + "] belonging to area X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
             else:
-                print("using pixels selected from user x,y: "+str(pixel_sel))
+                print("Using pixels selected from user x,y: "+str(pixel_sel))
                 ind_x_max = pixel_sel[0]
                 ind_y_max = pixel_sel[1]
     
