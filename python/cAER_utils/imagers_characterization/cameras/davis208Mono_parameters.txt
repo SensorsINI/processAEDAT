@@ -1,8 +1,9 @@
+# All items are used in recordings but the General Parameters #7, #8 #9 #10 and #11 are also used in the analysis (watch out not to change them unless you want to)
 # #########################################################
 # General parameters (no spaces, comma separated, always)
 # #########################################################
 # 0 # Sensor name
-DAVIS208Mono
+DAVIS208
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
@@ -11,9 +12,9 @@ cameras/davis208Mono_contrast_sensitivity.xml
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
 127.0.0.1
-# 5 # Camera dimensions [X,Y] 
+# 5 # Camera dimensions [X,Y] (Not used yet, just refer to X and Y division if you want to select the particular area of th array to be tested)
 [208,192]
-# 6 # Camera selected dimensions [X,Y]
+# 6 # Camera selected dimensions [X,Y] (Just used for oscillations)
 [208,192]
 # 7 # Internal ADC range internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
 1.290
@@ -21,13 +22,13 @@ False
 0.648
 # 9 # ADC levels
 1024
-# 10 # X divisions (no spaces, comma separated) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]] == [[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
+# 10 # X divisions (no spaces, comma separated, starting from 0) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]] == [[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
 [[0,187],[188,191],[194,195],[196,197],[198,199],[202,203],[204,207]]
 # 11 #  Y divisions (no spaces, comma separated)
 [[0,191]]
 
 # #########################################################
-# Contrast sensitivity parameters
+# Contrast sensitivity parameters (for biases it takes ON, DIFF and OFF in triplets (the first value of each, then the second and so on))
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
 [150,200,255]
@@ -41,7 +42,7 @@ False
 # #########################################################
 # Photon transfer curve parameters
 # #########################################################
-# 16 # start, end and number of points for exposures
+# 16 # start, end and number of points for exposures in us
 [1,1000000,100]
 # 17 # Use internal ADC?
 False
