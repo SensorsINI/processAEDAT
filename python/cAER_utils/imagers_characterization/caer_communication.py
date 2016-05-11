@@ -344,6 +344,7 @@ class caer_communication:
         '''    
         cmd = self.parse_command(string)    
         self.s_commands.sendall(cmd)
+        printf(cmd)
         msg_header = self.s_commands.recv(4)
         msg_packet = self.s_commands.recv(struct.unpack('H', msg_header[2:4])[0])
         action = struct.unpack('B',msg_header[0])[0]

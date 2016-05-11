@@ -19,9 +19,9 @@ camera_file = 'cameras/davis208Mono_parameters.txt'
 
 do_set_bias = True
 
-do_contrast_sensitivity = True # And DVS-FPN too
-do_ptc = False
-do_frequency_response = True
+do_contrast_sensitivity = False # And DVS-FPN too
+do_ptc = True
+do_frequency_response = False
 do_latency_pixel_led_board = False
 do_latency_pixel_big_led = False
 do_oscillations = False
@@ -79,7 +79,7 @@ if(do_ptc):
     if(info[18] == 'False'):
         global_shutter = False
     elif(info[18] == 'True'):
-        global_shutter == True    
+        global_shutter = True    
         
 if(do_frequency_response):
     start_freq = int(info[19].split(',')[0].strip('[').strip(']'))
