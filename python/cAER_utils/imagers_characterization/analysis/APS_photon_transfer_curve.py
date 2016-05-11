@@ -174,7 +174,14 @@ class APS_photon_transfer_curve:
                 max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                 this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
-                slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[0:max_ind_var])),1)
+                try: 
+                    #raise Exception
+                    slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[0:max_ind_var])),1)
+                    failed = False
+                except ValueError:
+                    print("Poly Fit Failed for this recording.. skipping")
+                    failed = True
+                    continue
                 #print("slope: "+str(slope))
                 Gain_uVe = -inter/slope;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
@@ -184,50 +191,51 @@ class APS_photon_transfer_curve:
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                 color_tmp = color_tmp+1
         color_tmp = 0;
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
-        plt.xlabel('log(Mean[DN])') 
-        plt.ylabel('log(STD[DN])')
-        plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        if(failed == False):
+            for this_area_x in range(len(frame_x_divisions)):
+                for this_area_y in range(len(frame_y_divisions)):
+                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+            plt.xlabel('log(Mean[DN])') 
+            plt.ylabel('log(STD[DN])')
+            plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
         
-        print("Linear fit...")
-        slope_tot = []
-        inter_tot = []
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        un, y_div, x_div = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-        color_tmp = 0;
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
-                max_var = np.max(sigma_fit)
-                max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
-                this_mean_values_lin = this_mean_values[0:max_ind_var]
-                slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
-                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
-                fit_fn = np.poly1d([slope, inter]) 
-                ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
-                ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
-                bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
-                color_tmp = color_tmp+1
-        color_tmp = 0;
-        for this_area_x in range(len(frame_x_divisions)):
-            for this_area_y in range(len(frame_y_divisions)):
-                ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
-        plt.xlabel('Mean[DN]') 
-        plt.ylabel('Var[DN^2]')
-        plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+            print("Linear fit...")
+            slope_tot = []
+            inter_tot = []
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                    max_var = np.max(sigma_fit)
+                    max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+                    this_mean_values = u_y_tot[:,this_area_y, this_area_x]
+                    this_mean_values_lin = this_mean_values[0:max_ind_var]
+                    slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+                    Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
+                    print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                    fit_fn = np.poly1d([slope, inter]) 
+                    ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                    ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
+                    bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                    color_tmp = color_tmp+1
+            color_tmp = 0;
+            for this_area_x in range(len(frame_x_divisions)):
+                for this_area_y in range(len(frame_y_divisions)):
+                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+            plt.xlabel('Mean[DN]') 
+            plt.ylabel('Var[DN^2]')
+            plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)

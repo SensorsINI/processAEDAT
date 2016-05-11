@@ -6,7 +6,7 @@ DAVISHet640
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
-cameras/cdavis640rgbw.xml
+cameras/cdavis640rgbw_PTC.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
@@ -22,9 +22,9 @@ False
 # 9 # ADC levels
 1024
 # 10 # X divisions (no spaces, comma separated)
-[[0,640]]
+[[320,322]]
 # 11 #  Y divisions (no spaces, comma separated)
-[[0,480]]
+[[240,242]]
 
 # #########################################################
 # Contrast sensitivity parameters
@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures
-[1,2000000,100]
+[1,5000,100]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?

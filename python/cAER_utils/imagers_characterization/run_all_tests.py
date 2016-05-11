@@ -15,9 +15,9 @@ import gpio_usb
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/davis208Mono_parameters.txt'
+camera_file = 'cameras/cdavis_parameters.txt'
 
-do_set_bias = True
+do_set_bias = False
 
 do_contrast_sensitivity = False # And DVS-FPN too
 do_ptc = True
@@ -75,7 +75,7 @@ if(do_ptc):
     if(info[17] == 'False'):
         useinternaladc = False
     elif(info[17] == 'True'):
-        useinternaladc == True
+        useinternaladc = True
     if(info[18] == 'False'):
         global_shutter = False
     elif(info[18] == 'True'):

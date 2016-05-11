@@ -157,9 +157,9 @@ class caer_communication:
         # create dgram udp socket
         try:
             self.s_data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.s_data.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 1)
-            self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 5)
+            #self.s_data.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            #self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 1)
+            #self.s_data.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 5)
             self.s_data.connect((self.host, self.port_data))
         except socket.error, msg:
             print 'Failed to create socket %s' % msg
@@ -271,7 +271,6 @@ class caer_communication:
 
         self.file.write('#!AER-DAT3.1\r\n')
         self.file.write('#Format: RAW\r\n')
-        # Add what you want here with format '#BLABLA\r\n'
         self.file.write('#!END-HEADER\r\n')        
         
         while self.caer_logging:
@@ -279,9 +278,10 @@ class caer_communication:
             #decode header
             [eventtype, eventsource, eventsize, eventoffset, eventtsoverflow, eventcapacity, eventnumber, eventvalid] = self.get_header(data)
             next_read =  eventcapacity*eventsize # we now read the full packet size
-            self.file.write(data) # write header
+            print("NEXT READ", next_read)
+            self.file.write(data) # write header packet
             data = self.receive_data(self.s_data, next_read)
-            self.file.write(data)
+            self.file.write(data)   #write data
             #if(self.data_buffer_size >= next_read):
             # data packet can be obtained in a single read
             #	data = self.s_data.recv(next_read,socket.MSG_WAITALL)         
@@ -344,7 +344,6 @@ class caer_communication:
         '''    
         cmd = self.parse_command(string)    
         self.s_commands.sendall(cmd)
-        printf(cmd)
         msg_header = self.s_commands.recv(4)
         msg_packet = self.s_commands.recv(struct.unpack('H', msg_header[2:4])[0])
         action = struct.unpack('B',msg_header[0])[0]
