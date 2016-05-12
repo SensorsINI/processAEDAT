@@ -66,7 +66,7 @@ if(do_contrast_sensitivity):
 
 if(do_ptc):
     base_level = 1000.0 #  1 klux
-    frame_number = 100
+    frame_number = 300
     recording_time = 5
     start_exp = int(info[16].split(',')[0].strip('[').strip(']'))
     end_exp = int(info[16].split(',')[1].strip('[').strip(']'))

@@ -25,7 +25,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/DAVISHet640_ADCint_ptc_11_05_16-15_40_49/"
+directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/DAVISHet640_ADCint_ptc_12_05_16-17_51_54/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
 camera_file = 'cameras/cdavis_parameters.txt'
@@ -194,7 +194,7 @@ if do_ptc:
         ADC_range = ADC_range_int
     else:
         ADC_range = ADC_range_ext
-    aedat.ptc_analysis(ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
+    aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
 
 if do_latency_pixel:
     #######################

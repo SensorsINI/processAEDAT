@@ -22,7 +22,7 @@ sys.path.append('utils/')
 import load_files
 
 class APS_photon_transfer_curve:
-    def ptc_analysis(self, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):
+    def ptc_analysis(self, sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):
         '''
             Photon transfer curve and sensitivity plot
          
@@ -59,8 +59,11 @@ class APS_photon_transfer_curve:
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :
-                for this_div_y in range(len(frame_y_divisions)):            
-                    frame_areas = [frame[this_frame][frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
+                for this_div_y in range(len(frame_y_divisions)): 
+                    if sensor == 'DAVISHet640':           
+                        frame_areas = [frame[this_frame][frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]:2, frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]:2] for this_frame in range(len(frame))]
+                    else:
+                        frame_areas = [frame[this_frame][frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1], frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]] for this_frame in range(len(frame))]
                     all_frames.append(frame_areas)
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)   
@@ -77,7 +80,8 @@ class APS_photon_transfer_curve:
                             temporal_mean[tx,ty] = np.mean(frame_areas[:,tx,ty])
                             temporal_variation[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/n_frames
                     sigma_y = np.mean(temporal_variation)
-
+                    print(str(n_frames) + " frames recorded.")
+                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = u_y
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
