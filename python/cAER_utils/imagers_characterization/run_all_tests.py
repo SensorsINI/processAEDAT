@@ -20,7 +20,7 @@ camera_file = 'cameras/cdavis_parameters.txt'
 do_set_bias = False
 
 do_contrast_sensitivity = False # And DVS-FPN too
-do_ptc = True
+do_ptc = False
 do_frequency_response = False
 do_latency_pixel_led_board = False
 do_latency_pixel_big_led = False
@@ -159,7 +159,7 @@ if(do_set_bias):
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     sine_freq = 1.0;
     base_level = 1000;
-    contrast_level = 0.4;
+    contrast_level = 0.5;
     oscillations = 1000;
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
@@ -233,9 +233,11 @@ if do_contrast_sensitivity:
             offset = np.mean([v_hi,v_low])
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON")
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
+            #raise Exception
             for this_bias_index in range(len(onthr)):
                 print("Bias combination: "+str(this_bias_index))
                 #set biases

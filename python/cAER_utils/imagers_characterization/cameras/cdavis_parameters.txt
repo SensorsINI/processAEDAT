@@ -6,7 +6,7 @@ DAVISHet640
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
-cameras/cdavis640rgbw_PTC.xml
+cameras/cdavis640rgbw_DVS_Sensitivity.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
@@ -29,20 +29,20 @@ False
 # #########################################################
 # Contrast sensitivity parameters
 # #########################################################
-# 12 # ON bias finevalue (coarse is 5)
-[150,200,255]
-# 13 # DIFF bias finevalue (coarse is 4)
-[39,39,39]
-# 14 # OFF bias finevalue (coarse is 3)
-[10,20,30]
+# 12 # ON bias finevalue (coarse is 6)
+[130]
+# 13 # DIFF bias finevalue (coarse is 3)
+[135]
+# 14 # OFF bias finevalue (coarse is 2)
+[109]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
-[30,35,40]
+[0]
 
 # #########################################################
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures
-[100,3000,70]
+[100,2400,70]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?
