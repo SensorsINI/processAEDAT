@@ -121,6 +121,7 @@ class DVS_contrast_sensitivity:
                     sync_ts.append(sp_t[this_sp])
                     counter_edge = counter_edge +1 
             sync_ts = np.array(sync_ts)
+            print("Sync timestamps: " + str(sync_ts))
 
             sine_phase = (1.0/(4.0*sine_freq))*(10.0**6)
 
@@ -138,6 +139,7 @@ class DVS_contrast_sensitivity:
                                 yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
                                     for this_sync_ts in range(len(sync_ts)):
                                         if ((this_sync_ts - sine_phase) <= ts[this_ev] < (this_sync_ts + sine_phase)): # rising half of the sine wave
+                                            raise Exception
                                             if(pol[this_ev] == 1):
                                                 matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
                                             if(pol[this_ev] == 0):
