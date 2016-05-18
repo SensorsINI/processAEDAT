@@ -1,10 +1,11 @@
-function plotloadaeADCcochams1c(allTsT, allAddrT)
-%function [tsleft, laddress, tsright, raddress]=plotloadaecochams1b(allTs, allAddr)
-%function [tsl laddr tsr raddr]=plotloadaedatret64cochaerb(allTs, allAddr)
+%function plotloadaeADCcochams1c(allTsT, allAddrT)
+
 %%
 %[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-04-22T09-50-33+0200-PROTOX01-0_test_record3.aedat');
-[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-04-22T11-38-11+0200-PROTOX01-0_test_record5.aedat');
-
+%[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-04-22T11-38-11+0200-PROTOX01-0_test_record5.aedat');
+%[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-05-01T14-39-42+0200-PROTOX01-0BeachsoundsRinging.aedat');
+%[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-05-01T14-38-56+0200-PROTOX01-0Beachsounds.aedat');
+[allAddrT, allTsT]=loadaerdat('CochleaLP-2016-05-02T14-01-04+0200-PROTOX01-0TestBeachwithADC.aedat');
 % plots spikes from cochleaams1b from a 64 channel binaural cochlea,
 %each channel has 2 banks of neurons, one from SOS, one from bpf output of SOS
 %Lower 8 bits for TX and higher 8 bits for TY, only 2 bits of5 8 used for TY
@@ -18,107 +19,128 @@ function plotloadaeADCcochams1c(allTsT, allAddrT)
 %
 % Compute cross-correlogram
 %      aeCochleaRetCorr(tl,laddr,tr,raddr)
+%%
 
-
-timewrapmask = hex2dec('80000000');
-ADCeventmask = hex2dec('2000'); %Mask tells if the address is from ADC or Cochlea spikes
-ADCchannelmask = hex2dec('0C00');  %Mask tells what is the ADC channel
-ADCMSBmask = hex2dec('0200');      %Mask tells where is the MSB flag of the ADC sample
-ADCvaluemask = hex2dec('01ff');    %Mask tells what the ADC bits are
-ADCsignmask = hex2dec('0100');    %Mask tells what the ADC bits are
-addrmask = hex2dec('00FC'); %
-neuronmask = hex2dec('0300'); %
-
+timewrapmask   = hex2dec('80000000');
+ADCeventmask   = hex2dec('2000');     % Mask tells if the address is from ADC or Cochlea spikes
+ADCchannelmask = hex2dec('0C00');     % Mask tells what is the ADC channel
+ADCMSBmask     = hex2dec('0200');     % Mask tells where is the MSB flag of the ADC sample
+ADCvaluemask   = hex2dec('01ff');     % Mask tells what the ADC bits are
+ADCsignmask    = hex2dec('0100');     % Mask tells where the ADC sign bit is (valid only for MSB)
+addrmask       = hex2dec('00FC');     %
+neuronmask     = hex2dec('0300');     % Not used in CochleaLP
+onoffmask      = hex2dec('0001');     % 0 - ON, 1 - OFF
 
 % TODO: Fix it
-% Temporary remove all StartOfConversion events
-adcSamplesIdx = find(allAddrT ~= hex2dec('302C') & allAddrT ~= hex2dec('302D'));
-allAddrT = allAddrT(adcSamplesIdx);
-allTsT = allTsT(adcSamplesIdx);
+% Temporarily remove all StartOfConversion events
+eventsWoStartOfCnv_idx = find((allAddrT ~= hex2dec('302C')) & (allAddrT ~= hex2dec('302D')));
+allAddrT = allAddrT(eventsWoStartOfCnv_idx);
+allTsT = allTsT(eventsWoStartOfCnv_idx);
 
 allTsd = double(allTsT-allTsT(1))/1e6;
   
-cochlea_id=find(~(bitand(allAddrT, ADCeventmask) | bitand(allAddrT, timewrapmask))); %cochleaid=0
-allAddr=allAddrT(cochlea_id==0);
-allTsc=allTsd(cochlea_id==0);
+% Find cochlea events
+cochleaEvents_idx=find(~(bitand(allAddrT, ADCeventmask) | bitand(allAddrT, timewrapmask)));
+allAddrCoch=allAddrT(cochleaEvents_idx);
+allTsCoch=allTsd(cochleaEvents_idx);
 
 % Separate ADC samples from spikes and timestamp wrap events
-adc_id = find(bitand(allAddrT, ADCeventmask));
+adcSamples_idx = find(bitand(allAddrT, ADCeventmask));
 
-% To Find ADC addresses for microphone output
-allAddrADC = allAddrT(adc_id);
-allTsADC2 = allTsd(adc_id);
+allTsADC0 = [];
+allTsADC1 = [];
+renorm_valueADC0 = [];
+renorm_valueADC1 = [];
 
-msbMask = logical(bitshift(bitand(allAddrADC, ADCMSBmask), -9));
-if msbMask(1) == 0
-    msbMask = msbMask(2:end);
-    allAddrADC = allAddrADC(2:end);
-    allTsADC2 = allTsADC2(2:end);
+if ~isempty(adcSamples_idx)
+
+    % To Find ADC addresses for microphone output
+    allAddrADC = allAddrT(adcSamples_idx);
+    allTsADC2 = allTsd(adcSamples_idx);
+
+    msbMask = logical(bitshift(bitand(allAddrADC, ADCMSBmask), -9));
+    if msbMask(1) == 0
+        msbMask = msbMask(2:end);
+        allAddrADC = allAddrADC(2:end);
+        allTsADC2 = allTsADC2(2:end);
+    end
+
+    if msbMask(end) == 1
+        msbMask = msbMask(1:end-1);
+        allAddrADC = allAddrADC(1:end-1);
+        allTsADC2 = allTsADC2(1:end-1);
+    end
+
+    MSBs = bitand(allAddrADC(msbMask), ADCvaluemask);
+    LSBs = bitand(allAddrADC(~msbMask), ADCvaluemask);
+
+    negativesIdx = find(bitand(MSBs, ADCsignmask));
+
+    allTsADC = allTsADC2(msbMask);
+    chanADC = allAddrADC(msbMask);
+    valueADC = int32(MSBs * 512 + LSBs);
+
+    valueADC(negativesIdx) = -(2^18 - valueADC(negativesIdx));
+
+    chanADC_mask = double(bitshift((bitand(chanADC, ADCchannelmask)), -10));
+    %valueADC=double(bitand(allAddrADC, ADCvaluemask));
+
+    valueADC0=valueADC(chanADC_mask==0);
+    allTsADC0=allTsADC(chanADC_mask==0);%allTsADC0 tells the time difference, divide by 1e6 to get time scales to match up
+
+    %same for chanADC=1, uncomment if need to plot for chanADC==1
+    valueADC1=valueADC(chanADC_mask==1);
+    allTsADC1=allTsADC(chanADC_mask==1);
+
+    if length(valueADC0) > length(valueADC1)
+        valueADC1 = [valueADC1; zeros(length(valueADC0) - length(valueADC1), 1)];
+    end
+
+    if length(valueADC0) < length(valueADC1)
+        valueADC0 = [valueADC0; zeros(length(valueADC1) - length(valueADC0), 1)];
+    end
+
+    renorm_valueADC0 = double(valueADC0 - mean(valueADC0));
+    renorm_valueADC0 = renorm_valueADC0*2500.0/2^18;
+
+    renorm_valueADC1 = double(valueADC1 - mean(valueADC1));
+    renorm_valueADC1 = renorm_valueADC1*2500.0/2^18;
+
+    renorm_valueADC = [renorm_valueADC0 / max(abs(renorm_valueADC0)), renorm_valueADC1 / max(abs(renorm_valueADC1))];
+
+    sampperiod = median(diff(allTsADC0));
+    %soundsc(renorm_valueADC0, 1/sampperiod);
+    audiowrite('TestBeachwithADC.wav', renorm_valueADC, int32(1/sampperiod));
 end
-
-MSBs = bitand(allAddrADC(msbMask), ADCvaluemask);
-LSBs = bitand(allAddrADC(~msbMask), ADCvaluemask);
-
-negativesIdx = find(bitand(MSBs, ADCsignmask));
-
-allTsADC = allTsADC2(msbMask);
-chanADC = allAddrADC(msbMask);
-valueADC = int32(MSBs * 512 + LSBs);
-
-valueADC(negativesIdx) = -(2^18 - valueADC(negativesIdx));
-
-chanADC_idx=double(bitshift((bitand(chanADC, ADCchannelmask)), -10));
-%valueADC=double(bitand(allAddrADC, ADCvaluemask));
-
-valueADC0=valueADC(chanADC_idx==0);
-allTsADC0=allTsADC(chanADC_idx==0);%allTsADC0 tells the time difference, divide by 1e6 to get time scales to match up
-
-%same for chanADC=1, uncomment if need to plot for chanADC==1
-valueADC1=valueADC(chanADC_idx==1);
-allTsADC1=allTsADC(chanADC_idx==1);
-
-if length(valueADC0) > length(valueADC1)
-    valueADC1 = [valueADC1; zeros(length(valueADC0) - length(valueADC1), 1)];
-end
-
-if length(valueADC0) < length(valueADC1)
-    valueADC0 = [valueADC0; zeros(length(valueADC1) - length(valueADC0), 1)];
-end
-
-renorm_valueADC0=valueADC0;%-min(valueADC0);
-renorm_valueADC0=double((2500/1024)*renorm_valueADC0);
-
-renorm_valueADC1=valueADC1-min(valueADC1);
-renorm_valueADC1=double((2500/1024)*renorm_valueADC1);
-
-
-renorm_valueADC = [renorm_valueADC0 - mean(renorm_valueADC0), renorm_valueADC1 - mean(renorm_valueADC1)];
-
-sampperiod=median(diff(allTsADC0));
-%soundsc(renorm_valueADC0, 1/sampperiod);
-audiowrite('Sample5.wav', renorm_valueADC/1000, int32(1/sampperiod));
-
 %%
 
 %%To find Cochlea AER output
-sosbpfid=double(bitand(allAddr,1)); %first bit, TX0
-% indsos=find(sosbpfid==1);
-% indbpf=find(sosbpfid==0);
-leftrightid=double(bitshift((bitand(allAddr,2)), -1));  %TX1
+leftrightid=double(bitshift((bitand(allAddrCoch,2)), -1));  %TX1
 indleft=find(leftrightid==0);
 indright=find(leftrightid==1);
-addr=double(bitshift((bitand(allAddr, addrmask)), -2)); %shift by 2
-neuronY=double(bitshift((bitand(allAddr, neuronmask)), -8)); %shift by 8, TY0,1
+addr=double(bitshift((bitand(allAddrCoch, addrmask)), -2)); %shift by 2
+%neuronY=double(bitshift((bitand(allAddrCoch, neuronmask)), -8)); %shift by 8, TY0,1
 
 %FIND RIGHT AND LEFT COCHLEA ADDR AND TIMESTAMPS
   %NOTE, SOS and BPF index not used
 %  allTsd=double(allTs-allTs(1))/1e6;
 
-aeleft=addr(indleft);  neuronleft= neuronY(indleft); tsleft=allTsc(indleft); %ae(:,indc);
-aeright=addr(indright);  neuronright=neuronY(indright); tsright=allTsc(indright); 
+addrl=addr(indleft);  tsleft=allTsCoch(indleft); %ae(:,indc);
+addrr=addr(indright); tsright=allTsCoch(indright); 
 
 
-    %plot cochlea
+onoffl=logical(bitand(allAddrCoch(indleft), onoffmask));
+onoffr=logical(bitand(allAddrCoch(indright), onoffmask));
+
+addrlon = addrl(onoffl == 0);
+addrloff = addrl(onoffl == 1);
+addrron = addrr(onoffr == 0);
+addrroff = addrr(onoffr == 1);
+
+tslefton = tsleft(onoffl == 0);
+tsleftoff = tsleft(onoffl == 1);
+tsrighton = tsright(onoffr == 0);
+tsrightoff = tsright(onoffr == 1);
 
 %    aec = bitand (aec, 63);
 %    aec(1,:) = bitand (aec(1,:), 63); %    ts = double(aec(2,:))/1E3;
@@ -137,85 +159,69 @@ if ((~isempty(tsleft)) || (~isempty(tsright)))
 %        tr = tsc(rchans);
 %        raddr = maddress(rchans)-32;
 
-%left channel, take addr * 4 then add neuronY
-
-lengthl=length(aeleft);
-laddress=aeleft*4+neuronleft; 
-
-
-%%look for indices where neuronleft=0
-indleftY0=find(neuronleft==0);
-laddressinteger=laddress(indleftY0);
-tsleftinteger=tsleft(indleftY0);
-
-
-%right channel, take addr * 4 then add neuronY
-
-lengthr=length(aeright);
-raddress=aeright*4+neuronright; 
-
-
-%%look for indices where neuronright=0
-
-indrightY0=find(neuronright==0);
-raddressinteger=raddress(indrightY0);
-tsrightinteger=tsright(indrightY0);
-
-offset=64*4; %64 channels by 4 neurons
 %%%PLOT COCHLEA SPIKES
-figure
-cla; 
-           
-hold off
+    figure
+    cla; 
 
-tsl=tsleft(neuronleft==0);
-addrl=aeleft(neuronleft==0);
-tsr=tsright(neuronright==0);
-addrr=aeright(neuronright==0);
+    hold off
 %rescaled down by 40 for display reasons
 
-%nplot=[500:7000];
-t_start=0;  t_end=allTsd(end);%1.6;
-nplot=find(allTsADC0>t_start & allTsADC0<t_end);
-subplot(212);
-%plot(allTsADC0(nplot),renorm_valueADC0(nplot), 'r-');
-plot(allTsADC1(nplot),renorm_valueADC1(nplot), 'g-');
+    %nplot=[500:7000];
+    t_start=0;  t_end=allTsd(end);%1.6;
+    nplot=find(allTsADC0>t_start & allTsADC0<t_end);
+    subplot(312);
+    plot(allTsADC0(nplot),renorm_valueADC0(nplot), 'r-');
+    xlim ([t_start t_end]);
+    xlabel('Left')
+    ylabel 'mV'
+    subplot(313);
+    plot(allTsADC1(nplot),renorm_valueADC1(nplot), 'g-');
+    xlim ([t_start t_end]);
+    xlabel('Right')
+    ylabel 'mV'
 
-%plot(234*[1:length(renorm_valueADC0(nplot))]/1e6,renorm_valueADC0(nplot), 'k.')
-%plot(234*[1:length(renorm_valueADC0)]/1e6,renorm_valueADC0/5, 'k')
-ylabel 'mV'
-xlabel 'Time (s)'
-xlim ([0 9]);
-% ylim ([350 850]);
-subplot(211);
+    %plot(234*[1:length(renorm_valueADC0(nplot))]/1e6,renorm_valueADC0(nplot), 'k.')
+    %plot(234*[1:length(renorm_valueADC0)]/1e6,renorm_valueADC0/5, 'k')
 
-nplot=find(tsl>t_start & tsl<t_end);
+    subplot(311);
+    xlabel 'Time (s)'
+    xlim ([t_start t_end]);
+    % ylim ([350 850]);
 
-hold on
-plot (tsl(nplot), addrl(nplot)+70, 'r.')
-%plot (tsl(nplot), addrl(nplot), '.', 'MarkerSize', 10, 'Color', [0.6 0 0])
+    hold on
+    %nplot=find(tsleft>t_start & tsleft<t_end);
+    %plot (tsleft(nplot), addrl(nplot)+70, 'r.')
 
-nplot=find(tsr>t_start & tsr<t_end);
-plot (tsr(nplot), addrr(nplot), 'g.')
-%plot (tsr(nplot), addrr(nplot)+70, '.', 'MarkerSize', 10, 'Color', [0 0.6 0])
-ylabel 'Channel'
-xlabel 'Time (s)'
-ylim ([0 140]);
-xlim ([0 9]);
-% hold on
-% plot (tsleft, laddress+60, '.', 'MarkerSize', 10, 'Color', [0.6 0 0])
-% hold on
-% plot (tsleftinteger, laddressinteger+60, '.', 'MarkerSize', 10, 'Color',[0.6 0 0])% [0.6 0.6 0.6])
-% hold on
-% 
-% offset=0;
-% plot (tsright, raddress+offset+60, '.', 'MarkerSize', 10, 'Color', [0 0.6 0])
-% hold on
-% plot (tsrightinteger,raddressinteger+offset+60, '.', 'MarkerSize', 10, 'Color',[0 0.6 0])% [0.6 0.6 0.6])
-% hold off
+    nplot=find(tslefton>t_start & tslefton<t_end);
+    plot (tslefton(nplot), addrlon(nplot)+70, 'g.')
+    nplot=find(tsleftoff>t_start & tsleftoff<t_end);
+    plot (tsleftoff(nplot), addrloff(nplot)+70, 'r.')
 
-            %xlim ([0 Time]);
-%            ylim ([0 33]);
+    %nplot=find(tsright>t_start & tsright<t_end);
+    %plot (tsright(nplot), addrr(nplot), 'g.')
+    nplot=find(tsrighton>t_start & tsrighton<t_end);
+    plot (tsrighton(nplot), addrron(nplot), 'g.')
+    nplot=find(tsrightoff>t_start & tsrightoff<t_end);
+    plot (tsrightoff(nplot), addrroff(nplot), 'r.')
+
+    ylabel 'Right Ch  Left Ch'
+    xlabel 'Time (s)'
+    ylim ([0 140]);
+
+    % hold on
+    % plot (tsleft, laddress+60, '.', 'MarkerSize', 10, 'Color', [0.6 0 0])
+    % hold on
+    % plot (tsleftinteger, laddressinteger+60, '.', 'MarkerSize', 10, 'Color',[0.6 0 0])% [0.6 0.6 0.6])
+    % hold on
+    % 
+    % offset=0;
+    % plot (tsright, raddress+offset+60, '.', 'MarkerSize', 10, 'Color', [0 0.6 0])
+    % hold on
+    % plot (tsrightinteger,raddressinteger+offset+60, '.', 'MarkerSize', 10, 'Color',[0 0.6 0])% [0.6 0.6 0.6])
+    % hold off
+
+    %xlim ([0 Time]);
+    %ylim ([0 33]);
 
  
 end
