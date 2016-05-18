@@ -17,9 +17,9 @@ import gpio_usb
 ###############################################################################
 camera_file = 'cameras/cdavis_parameters.txt'
 
-do_set_bias = False
+do_set_bias = True
 
-do_contrast_sensitivity = True # And DVS-FPN too
+do_contrast_sensitivity = False # And DVS-FPN too
 do_ptc = False
 do_frequency_response = False
 do_latency_pixel_led_board = False
@@ -154,14 +154,14 @@ def copyFile(src, dest):
 ## FIND GOOD PARAMETERS
 ##############################################################################
 if(do_set_bias):
-    print "Debugging biases: apply 1klux 0.4 contrast sinewave at 1 Hz"
+    print "Debugging biases: apply 1klux 0.5 contrast sinewave at 1 Hz"
     control.open_communication_command()    
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     sine_freq = 1.0;
     base_level = 1000;
-    contrast_level = 0.4;
-    oscillations = 1000;
+    contrast_level = 0.5;
+    oscillations = 300; # 5 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
     v_hi = (perc_hi - inter) / slope

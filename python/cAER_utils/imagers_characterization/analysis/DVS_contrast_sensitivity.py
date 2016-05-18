@@ -104,7 +104,7 @@ class DVS_contrast_sensitivity:
                     this_refss_level = float(files_in_dir[this_file].strip(".aedat").strip("constrast_sensitivity_recording_time_").split("_")[14])
                                
                 loader = load_files.load_files()
-                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = loader.load_file(directory+files_in_dir[this_file])
+                [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = loader.load_file(directory+files_in_dir[this_file])
                 print("Addresses extracted")
             else:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
@@ -114,6 +114,7 @@ class DVS_contrast_sensitivity:
 
             sync_ts = []
             counter_edge = 0
+            #raise Exception
 
             # get all the sync events            
             for this_sp in range(len(sp_t)):
