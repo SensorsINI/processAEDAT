@@ -139,8 +139,9 @@ class DVS_contrast_sensitivity:
                                 yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
                                 yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
                                     for this_sync_ts in range(len(sync_ts)):
-                                        if ((this_sync_ts - sine_phase) <= ts[this_ev] < (this_sync_ts + sine_phase)): # rising half of the sine wave
-                                            raise Exception
+                                        #raise Exception
+                                        if ((sync_ts[this_sync_ts] - sine_phase) <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase)): # rising half of the sine wave
+                                            #raise Exception
                                             if(pol[this_ev] == 1):
                                                 matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
                                             if(pol[this_ev] == 0):
@@ -151,8 +152,10 @@ class DVS_contrast_sensitivity:
                                             if(pol[this_ev] == 0):
                                                 matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
                 # FPN and separate contrast sensitivities
-                contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
-                contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
+                #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
+                #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
+                contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(contrast_matrix_on)) - 1.0
+                contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off))
                 
             # For every division in x and y at particular contrast and base level
             for this_div_x in range(len(frame_x_divisions)) :
@@ -190,7 +193,7 @@ class DVS_contrast_sensitivity:
                                     yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
                                     yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
                                     for this_sync_ts in range(len(sync_ts)):
-                                        if ((this_sync_ts - sine_phase) <= ts[this_ev] < (this_sync_ts + sine_phase)): # rising half of the sine wave
+                                        if ((sync_ts[this_sync_ts] - sine_phase) <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase)): # rising half of the sine wave
                                             if( pol[this_ev] == 1):
                                                 on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] + 1        
                                             if( pol[this_ev] == 0):
@@ -223,24 +226,24 @@ class DVS_contrast_sensitivity:
                     if(sensor == 'DAVIS208'):
                         print "This refss level: " + str(this_refss_level) 
                     if(single_pixels_analysis):
-                        print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
-                        print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]) 
-                    print "Off average per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
-                    print "On average per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+                        print "Off median events per pixel per cycle: " + str(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
+                        print "On median events per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]) 
+                    print "Off average events per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+                    print "On average events per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     
-                    # Plot histograms if Off and On counts
+                    # Plot histograms of Off and On counts
                     if(single_pixels_analysis):
                         fig= plt.figure()
                         ax = fig.add_subplot(121)
-                        ax.set_title('ON/pix/cycle')
-                        plt.xlabel ("ON per pixel per cycle")
-                        plt.ylabel ("Count")
+                        ax.set_title('ON events/pix/cycle histogram')
+                        plt.xlabel ("ON events per pixel per cycle")
+                        plt.ylabel ("Number of pixels")
                         line_on = np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations)
                         im = plt.hist(line_on[line_on < 20], 20)
                         ax = fig.add_subplot(122)
-                        ax.set_title('OFF/pix/cycle')
-                        plt.xlabel ("OFF per pixel per cycle")
-                        plt.ylabel ("Count")
+                        ax.set_title('OFF events/pix/cycle histogram')
+                        plt.xlabel ("OFF events per pixel per cycle")
+                        plt.ylabel ("Number of pixels")
                         line_off = np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations)
                         im = plt.hist(line_off[line_off < 20], 20)
                         fig.tight_layout()     
@@ -279,18 +282,18 @@ class DVS_contrast_sensitivity:
                         # Get contrast sensitivity
                         # For 0.20 contrast / ((5 events on average per pixel) / 5 oscillations) = CS = 0.2
                         if(single_pixels_analysis):
-                            contrast_sensitivity_on_median = (this_contrast)/(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
-                            contrast_sensitivity_off_median = (this_contrast)/(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
+                            contrast_sensitivity_on_median = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y])) - 1.0
+                            contrast_sensitivity_off_median = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y]))
                             contrast_sensitivity_off_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_off_median
                             contrast_sensitivity_on_median_array[this_file,this_div_x,this_div_y] = contrast_sensitivity_on_median   
 #                            ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
                         
                         if(not (on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] == 0.0)):
-                            contrast_sensitivity_on_average = (this_contrast)/(float(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]))
+                            contrast_sensitivity_on_average = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])) - 1.0
                         else: 
                             contrast_sensitivity_on_average = -1
                         if(not (off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] == 0.0)):    
-                            contrast_sensitivity_off_average = (this_contrast)/(float(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]))       
+                            contrast_sensitivity_off_average = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]))      
                         else: 
                             contrast_sensitivity_off_average = -1
 
