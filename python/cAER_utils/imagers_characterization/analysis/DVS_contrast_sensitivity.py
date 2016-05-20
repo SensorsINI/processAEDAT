@@ -138,19 +138,20 @@ class DVS_contrast_sensitivity:
                                 xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
                                 yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
                                 yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
-                                    for this_sync_ts in range(len(sync_ts)):
-                                        #raise Exception
-                                        if ((sync_ts[this_sync_ts] - sine_phase) <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase)): # rising half of the sine wave
+                                    for this_sync_ts in range(len(sync_ts)-1):
+                                        if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
                                             #raise Exception
-                                            if(pol[this_ev] == 1):
-                                                matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
-                                            if(pol[this_ev] == 0):
-                                                matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]-1
-                                        else: # falling half of the sine wave
-                                            if(pol[this_ev] == 1):
-                                                matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
-                                            if(pol[this_ev] == 0):
-                                                matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
+                                            if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
+                                                #raise Exception
+                                                if(pol[this_ev] == 1):
+                                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
+                                                if(pol[this_ev] == 0):
+                                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]-1
+                                            else: # falling half of the sine wave
+                                                if(pol[this_ev] == 1):
+                                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
+                                                if(pol[this_ev] == 0):
+                                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
@@ -192,17 +193,18 @@ class DVS_contrast_sensitivity:
                                     xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
                                     yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
                                     yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
-                                    for this_sync_ts in range(len(sync_ts)):
-                                        if ((sync_ts[this_sync_ts] - sine_phase) <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase)): # rising half of the sine wave
-                                            if( pol[this_ev] == 1):
-                                                on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] + 1        
-                                            if( pol[this_ev] == 0):
-                                                off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] - 1
-                                        else: # falling half of the sine wave
-                                            if(pol[this_ev] == 1):
-                                                matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
-                                            if(pol[this_ev] == 0):
-                                                matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
+                                    for this_sync_ts in range(len(sync_ts)-1):
+                                        if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
+                                            if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
+                                                if( pol[this_ev] == 1):
+                                                    on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] + 1        
+                                                if( pol[this_ev] == 0):
+                                                    off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] - 1
+                                            else: # falling half of the sine wave
+                                                if(pol[this_ev] == 1):
+                                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
+                                                if(pol[this_ev] == 0):
+                                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
                             on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/(num_oscillations*range_y*range_x)
                             off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/(num_oscillations*range_y*range_x)
                         print("Events counted")

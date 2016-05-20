@@ -17,9 +17,9 @@ import gpio_usb
 ###############################################################################
 camera_file = 'cameras/cdavis_parameters.txt'
 
-do_set_bias = True
+do_set_bias = False
 
-do_contrast_sensitivity = False # And DVS-FPN too
+do_contrast_sensitivity = True # And DVS-FPN too
 do_ptc = False
 do_frequency_response = False
 do_latency_pixel_led_board = False
@@ -161,7 +161,7 @@ if(do_set_bias):
     sine_freq = 1.0;
     base_level = 1000;
     contrast_level = 0.5;
-    oscillations = 300; # 5 minutes
+    oscillations = 120; # 2 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
     v_hi = (perc_hi - inter) / slope
