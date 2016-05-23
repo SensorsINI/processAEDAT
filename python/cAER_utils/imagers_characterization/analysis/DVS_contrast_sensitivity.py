@@ -202,9 +202,9 @@ class DVS_contrast_sensitivity:
                                                     off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] - 1
                                             else: # falling half of the sine wave
                                                 if(pol[this_ev] == 1):
-                                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
+                                                    on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]-1        
                                                 if(pol[this_ev] == 0):
-                                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
+                                                    off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]+1
                             on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/((num_oscillations-1.0)*range_y*range_x)
                             off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/((num_oscillations-1.0)*range_y*range_x)
                         print("Events counted")
