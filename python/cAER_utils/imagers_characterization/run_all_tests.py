@@ -46,9 +46,9 @@ if(do_set_bias):
 
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
-    oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    contrast_base_levels = [100,1000,2000] #contrast sensitivity base level sweeps
-    contrast_level = [0.5]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    oscillations = 16.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
+    contrast_base_levels = [100,200,400,800,1600,2400] #contrast sensitivity base level sweeps
+    contrast_level = [0.6]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
     for x in range(len(info[12].split(','))):
@@ -159,7 +159,7 @@ if(do_set_bias):
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     sine_freq = 1.0;
-    base_level = 1000;
+    base_level = 200;
     contrast_level = 0.5;
     oscillations = 120; # 2 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
@@ -234,7 +234,7 @@ if do_contrast_sensitivity:
             offset = np.mean([v_hi,v_low])
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
-            gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
@@ -291,6 +291,7 @@ if do_frequency_response:
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
             for this_freq in range(len(freq_fr)):
                 print("Frequency: "+str(freq_fr[this_freq]))+" Hz"
+                gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
                 gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_fr[this_freq])+", "+str(amplitude)+",0")
                 gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
                 gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
@@ -381,6 +382,7 @@ if do_latency_pixel_big_led:
         offset = np.mean([v_hi,v_low])
         amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
         print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude[0])+",0")
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
@@ -420,7 +422,8 @@ if do_latency_pixel_led_board:
         print("hi :", str(v_hi))
         print("low :", str(v_low))
         string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,string) #10 Vpp sine wave at 0.1 Hz with a 0 volt
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,string)
         control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)

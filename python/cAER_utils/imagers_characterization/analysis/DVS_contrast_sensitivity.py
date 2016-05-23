@@ -155,8 +155,8 @@ class DVS_contrast_sensitivity:
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
-                contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(contrast_matrix_on)) - 1.0
-                contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off))
+                contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(matrix_count_on/(num_oscillations-1.0))) - 1.0 # sensitivity is calculated based on theoretical model, ignoring refractory period, same for all the sensitivity calculation below
+                contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off/(num_oscillations-1.0)))
                 
             # For every division in x and y at particular contrast and base level
             for this_div_x in range(len(frame_x_divisions)) :
@@ -205,17 +205,17 @@ class DVS_contrast_sensitivity:
                                                     matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]-1        
                                                 if(pol[this_ev] == 0):
                                                     matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
-                            on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/(num_oscillations*range_y*range_x)
-                            off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/(num_oscillations*range_y*range_x)
+                            on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = on_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/((num_oscillations-1.0)*range_y*range_x)
+                            off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = off_event_count_average_per_pixel[this_file,this_div_x,this_div_y]/((num_oscillations-1.0)*range_y*range_x)
                         print("Events counted")
                     
                     # Calculate Median
                     if(single_pixels_analysis):         
                         [dim1, dim2] = np.shape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
-                        on_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations)
-                        off_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations)
-                        on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*num_oscillations)
-                        off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*num_oscillations)
+                        on_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
+                        off_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
+                        on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
+                        off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
     
                     print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
                     print "This contrast: " + str(this_contrast)
@@ -240,13 +240,13 @@ class DVS_contrast_sensitivity:
                         ax.set_title('ON events/pix/cycle histogram')
                         plt.xlabel ("ON events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
-                        line_on = np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations)
+                        line_on = np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
                         im = plt.hist(line_on[line_on < 20], 20)
                         ax = fig.add_subplot(122)
                         ax.set_title('OFF events/pix/cycle histogram')
                         plt.xlabel ("OFF events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
-                        line_off = np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations)
+                        line_off = np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
                         im = plt.hist(line_off[line_off < 20], 20)
                         fig.tight_layout()     
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
@@ -254,8 +254,8 @@ class DVS_contrast_sensitivity:
                         plt.close("all")
                         
                         # Confidence interval = error metric                    
-                        err_off = self.confIntMean(np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations))
-                        err_on = self.confIntMean(np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations))                    
+                        err_off = self.confIntMean(np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))
+                        err_on = self.confIntMean(np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))                    
 #                        print "Off confidence interval of 95%: " + str(err_off)
 #                        print "On confidence interval of 95%: " + str(err_on)
                         if(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] != 0.0):
@@ -386,8 +386,8 @@ class DVS_contrast_sensitivity:
                 ax = fig.add_subplot(121)
                 matrix_count_on = np.fliplr(np.transpose(matrix_count_on))##depend on camera orientation!!
                 matrix_count_off = np.fliplr(np.transpose(matrix_count_off))
-                matrix_count_off_div = matrix_count_off/num_oscillations
-                matrix_count_on_div = matrix_count_on/num_oscillations
+                matrix_count_off_div = matrix_count_off/(num_oscillations-1.0)
+                matrix_count_on_div = matrix_count_on/(num_oscillations-1.0)
                 matrix_count_on_div[matrix_count_on_div>20] = 20 # CLip to see properly!
                 matrix_count_off_div[matrix_count_off_div>20] = 20
                 ax.set_title('Count ON/pix/cycle')
