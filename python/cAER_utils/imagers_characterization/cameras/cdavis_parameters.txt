@@ -30,11 +30,11 @@ False
 # Contrast sensitivity parameters
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
-[160]
+[80]
 # 13 # DIFF bias finevalue (coarse is 3)
 [135]
 # 14 # OFF bias finevalue (coarse is 2)
-[120]
+[180]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
 [0]
 

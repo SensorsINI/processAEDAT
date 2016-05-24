@@ -19,10 +19,10 @@ camera_file = 'cameras/cdavis_parameters.txt'
 
 do_set_bias = False
 
-do_contrast_sensitivity = True # And DVS-FPN too
+do_contrast_sensitivity = False # And DVS-FPN too
 do_ptc = False
 do_frequency_response = False
-do_latency_pixel_led_board = False
+do_latency_pixel_led_board = True
 do_latency_pixel_big_led = False
 do_oscillations = False
 
@@ -46,8 +46,8 @@ if(do_set_bias):
 
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
-    oscillations = 16.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    contrast_base_levels = [100,200,400,800,1600,2400] #contrast sensitivity base level sweeps
+    oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
+    contrast_base_levels = [100,1000,2000] #contrast sensitivity base level sweeps
     contrast_level = [0.6]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
@@ -94,7 +94,8 @@ if(do_frequency_response):
 if(do_latency_pixel_led_board or do_latency_pixel_big_led):
     oscillations = 100.0
     freq_square = 10.0
-    base_level_latency_big_led = [1000, 1000]
+    base_level_latency_big_led = [3000]
+    contrast_level = 0.5
 
 if(do_oscillations):
     oscillations = 100.0
@@ -235,7 +236,7 @@ if do_contrast_sensitivity:
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
-            gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
+            #gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
             #raise Exception
@@ -256,10 +257,12 @@ if do_contrast_sensitivity:
                 control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
                 if (sensor == 'DAVIS208Mono'):
                     for this_refss in range(len(refss)):
+                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0") #enable sine wave
                         print"refss finevalue" + str(refss[this_refss])
                         control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
                         control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
                 else:
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0") #enable sine wave
                     control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = 0)
     # Zero the Function Generator
     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
@@ -337,6 +340,7 @@ if do_oscillations:
             offset = np.mean([v_hi,v_low])
             amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
             print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
+            gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
@@ -409,25 +413,32 @@ if do_latency_pixel_led_board:
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
 
-    base_level = lux
-    num_measurements = len(base_level) 
+    num_measurements = len(base_level_latency_big_led) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
-    recording_time = (1.0/freq_square)*oscillations #number of complete oscillations
+    recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
+    gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
+    gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
+    if(not os.path.exists(setting_dir)):
+        os.makedirs(setting_dir)
+    copyFile(bias_file, setting_dir+str("biases_latencies_all_exposures.xml") )
     for i in range(num_measurements):
-        perc_low = base_level[i]-base_level[i]*(contrast_level/2.0)
-        perc_hi = base_level[i]+base_level[i]*(contrast_level/2.0)
-        v_hi = perc_hi * slope + inter   
-        v_low= perc_low * slope + inter
-        print("hi :", str(v_hi))
-        print("low :", str(v_low))
-        string = "APPL:SQUARE "+str(freq_square)+", "+str(v_hi)+", "+str(v_low)+""
+        print("Base level: "+str(base_level_latency_big_led[i]))
+        perc_low = base_level_latency_big_led[i]-(contrast_level/2.0)*base_level_latency_big_led[i]
+        perc_hi = base_level_latency_big_led[i]+(contrast_level/2.0)*base_level_latency_big_led[i]
+        v_hi = (perc_hi - inter) / slope
+        v_low = (perc_low - inter) / slope 
+        offset = np.mean([v_hi,v_low])
+        amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
+        print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,string)
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
+        gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
         control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
-        control.get_data_latency( folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
+        control.get_data_latency(sensor, folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
     control.close_communication_command()    
     print "Data saved in " +  folder
 

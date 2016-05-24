@@ -15,6 +15,8 @@ import errno
 import numpy as np
 from xml.dom import minidom
 
+import gpio_usb
+
 class caer_communication:
     def __init__(self, host = '172.19.11.139',  port_control = 4040, port_data = 7777, inputbuffersize = 8000):
 
@@ -470,6 +472,10 @@ class caer_communication:
             '_off_'+str(format(int(offthr),'03d'))+\
             '.aedat'
         self.start_logging(filename)    
+        time.sleep(recording_time)
+        gpio_cnt = gpio_usb.gpio_usb()
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0") # turn off sine wave
+        print("Recording noise for " + str(recording_time))
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
