@@ -50,6 +50,9 @@ This function expects a single input, which is a dict with the following fields:
 		- cochleaams1c (das1 accepted as equivalent)
 		If class is not provided and the file does not specify the class, dvs128 is assumed.
 		If the file specifies the class then this input is ignored. 
+      - dataTypes (optional) a set of event type IDs which should be returned, 
+            e.g. [0 1] would return special events, polarity events, but not frames 
+            or any other type of event.  - if not provided, all dataTypes are returned.
 	- startTime (optional) - if provided, any data with a timeStamp lower
 		than this will not be returned.
 	- endTime (optional) - if provided, any data with a timeStamp higher than 
@@ -183,12 +186,12 @@ def ImportAedat(args = None) :
         output['info'] = args
 
     # If no file path has been specified, find one to work with
-    if 'filePathAndName' in output['info'] :
+    if not 'filePathAndName' in output['info'] :
         #NOT WRITTEN YET: pull out the first aedat file in the current directory, else fail
         pass
 
     # Open the file
-    with open(output['info']['filePath'], 'rb') as output['info']['fileHandle']:
+    with open(output['info']['filePathAndName'], 'rb') as output['info']['fileHandle']:
 
         # Process the headers
         output['info'] = ImportAedatHeaders.ImportAedatHeaders(output['info'])
@@ -199,7 +202,7 @@ def ImportAedat(args = None) :
 #            output[data] = importAedatDataVersion1or2(output[info])
             pass
         else :
-            output['data'] = ImportAedatDataVersion3(output['info'])
+            output['data'] = ImportAedatDataVersion3.ImportAedatDataVersion3(output['info'])
             
 
     return(output)
