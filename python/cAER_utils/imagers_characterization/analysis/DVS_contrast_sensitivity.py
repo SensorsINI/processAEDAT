@@ -3,6 +3,9 @@
 # and calculates CONTRAST SENSITIVITY of DVS
 # author  Federico Corradi - federico.corradi@inilabs.com
 # author  Diederik Paul Moeys - diederikmoeys@live.com
+#
+# 25th May 2016 - Tested by ChengHan NB: 
+#
 # ############################################################
 from __future__ import division
 import os

@@ -115,7 +115,7 @@ class load_files:
             else:
                 print("packet data type not understood")
                 raise Exception
-        print len(x_addr_tot)
+        print("Loaded a total of n: "+str(len(x_addr_tot))+" events")
         return np.array(frame_tot), np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot), np.array(spec_ts_tot)
 
 

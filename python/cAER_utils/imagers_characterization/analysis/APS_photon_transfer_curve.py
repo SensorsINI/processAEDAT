@@ -3,6 +3,9 @@
 # and calculates PHOTON TRANSFER CURVE of APS
 # author  Federico Corradi - federico.corradi@inilabs.com
 # author  Diederik Paul Moeys - diederikmoeys@live.com
+# 
+# 25th Mmay 2016 - Tested by ChengHan
+#
 # ############################################################
 from __future__ import division
 import os
@@ -55,7 +58,7 @@ class APS_photon_transfer_curve:
             shutter_type, exp = files_in_dir[this_file].strip(".aedat").strip("ptc_").strip("shutter_").split("_") # in us
             exp = float(exp)
             loader = load_files.load_files()
-            [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = loader.load_file(directory+files_in_dir[this_file])
+            [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = loader.load_file(directory+files_in_dir[this_file])
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :

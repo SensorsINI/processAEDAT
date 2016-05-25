@@ -18,8 +18,24 @@ import string
 from pylab import *
 import scipy.stats as st
 import math
+sys.path.append('utils/')
+import load_files
 
 class DVS_latency:
+    def __init__(self):
+        self.loader = load_files.load_files()
+        self.V3 = "aedat3"
+        self.V2 = "aedat" # current 32bit file format
+        self.V1 = "dat" # old format
+        self.header_length = 28
+        self.EVT_DVS = 0 # DVS event type
+        self.EVT_APS = 2 # APS event
+        self.file = []
+        self.x_addr = []
+        self.y_addr = []
+        self.timestamp = []
+        self.time_res = 1e-6
+
     def pixel_latency_analysis(self, latency_pixel_dir, figure_dir, frame_y_divisions, frame_x_divisions, camera_dim = [190,180], size_led = 2, confidence_level = 0.75, do_plot = True, file_type="cAER", pixel_sel = False, dvs128xml = False):
         '''
             Pixel Latency, single pixel signal reconstruction
@@ -72,18 +88,18 @@ class DVS_latency:
                 '''            
             
             if not os.path.isdir(directory+files_in_dir[this_file]):
-                if( file_type == "cAER"):
-                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_file(directory+files_in_dir[this_file])
+                if( file_type == "cAER"):               
+                    [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = self.loader.load_file(directory+files_in_dir[this_file])
                     current_lux = stra.split(files_in_dir[this_file], "_")[8]
                     filter_type = stra.split(files_in_dir[this_file], "_")[10]
                     all_lux.append(current_lux)
                     all_filters_type.append(filter_type)
-                elif( file_type == "jAER" ):
-                    [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_jaer_file(directory+files_in_dir[this_file])
-                    current_lux = 10
-                    filter_type = 0.0
-                    all_lux.append(current_lux)
-                    all_filters_type.append(filter_type)
+               # elif( file_type == "jAER" ):
+               #     [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = self.load_jaer_file(directory+files_in_dir[this_file])
+               #     current_lux = 10
+               #     filter_type = 0.0
+               #     all_lux.append(current_lux)
+               #     all_filters_type.append(filter_type)
             else:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
                 continue
@@ -452,92 +468,6 @@ class DVS_latency:
 
         return None, xaddr, yaddr, pol, timestamps, special_ts, special_types
 
-    def load_file(self, filename):
-        '''
-            load aedat file return
-            ----
-                frames  - 2d vector - frames over time (y,x,dim) - frames are flipped vertically
-                xaddr   - 1D vector
-                yaddr   - 1D vector
-                ts      - 1D vector - timestamps
-                pol     - 1D vector - polarity 
-        '''
-        x_addr_tot = []
-        y_addr_tot = []
-        pol_tot = []
-        ts_tot = []
-        frame_tot = []
-        special_ts = []
-        special_types = []
-        test_c = 0
-        with open(filename, "rb") as f:       
-            while True:
-                data = f.read(self.header_length)
-                if not data or len(data) != self.header_length:
-                    break
-                # read header
-                eventtype = struct.unpack('H',data[0:2])[0]
-                eventsource = struct.unpack('H',data[2:4])[0]
-                eventsize = struct.unpack('I',data[4:8])[0]
-                eventoffset = struct.unpack('I',data[8:12])[0]
-                eventtsoverflow = struct.unpack('I',data[12:16])[0]
-                eventcapacity = struct.unpack('I',data[16:20])[0]
-                eventnumber = struct.unpack('I',data[20:24])[0]
-                eventvalid = struct.unpack('I',data[24:28])[0]
-                next_read =  eventcapacity*eventsize # we now read the full packet
-                data = f.read(next_read) #we read exactly the N bytes 
-                # change behavior depending on event type      
-                if(eventtype == 1):  #something is wrong as we set in the cAER to send only polarity events
-                    counter = 0 #eventnumber[0]
-                    while(data[counter:counter+8]):  #loop over all event packets
-                        aer_data = struct.unpack('I',data[counter:counter+4])[0]
-                        timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
-                        x_addr = (aer_data >> 18) & 0x00003FFF
-                        y_addr = (aer_data >> 4) & 0x00003FFF
-                        x_addr_tot.append(x_addr)
-                        y_addr_tot.append(y_addr)
-                        pol = (aer_data >> 1) & 0x00000001
-                        pol_tot.append(pol)
-                        ts_tot.append(timestamp)
-                        #print (timestamp[0], x_addr, y_addr, pol)
-                        counter = counter + 8
-                elif(eventtype == 2): #aps event
-                    counter = 0 #eventnumber[0]
-                    while(data[counter:counter+eventsize]):  #loop over all event packets
-                        info = struct.unpack('I',data[counter:counter+4])[0]
-                        ts_start_frame = struct.unpack('I',data[counter+4:counter+8])[0]
-                        ts_end_frame = struct.unpack('I',data[counter+8:counter+12])[0]
-                        ts_start_exposure = struct.unpack('I',data[counter+12:counter+16])[0]
-                        ts_end_exposure = struct.unpack('I',data[counter+16:counter+20])[0]
-                        length_x = struct.unpack('I',data[counter+20:counter+24])[0]        
-                        length_y = struct.unpack('I',data[counter+24:counter+28])[0]
-                        pos_x = struct.unpack('I',data[counter+28:counter+32])[0]  
-                        pos_y = struct.unpack('I',data[counter+32:counter+36])[0]
-                        bin_frame = data[counter+36:counter+36+(length_x*length_y*2)]
-                        frame = struct.unpack(str(length_x*length_y)+'H',bin_frame)
-                        frame = np.reshape(frame,[length_y, length_x])
-                        frame_tot.append(frame)
-                        counter = counter + eventsize
-                elif(eventtype == 3): #imu event
-                    continue
-                elif(eventtype == 0):
-                    #special event
-                    counter = 0 #eventnumber[0]
-                    while(data[counter:counter+8]):  #loop over all event packets
-                        sdata = struct.unpack('I',data[counter:counter+4])[0]
-                        timestamp = struct.unpack('I',data[counter+4:counter+8])[0]
-                        special_type = (sdata >> 1) & 0x07F
-                        #print (timestamp[0], x_addr, y_addr, pol)
-                        special_ts.append(timestamp)
-                        special_types.append(special_type)
-                        counter = counter + 8
-                        #2 rising edge
-                        #3 falling edge
-                else:
-                    print("packet data type not understood")
-                    raise Exception
-                test_c+=1
-            return frame_tot, x_addr_tot, y_addr_tot, pol_tot, ts_tot, special_ts, special_types
 
     def rms(self, predictions, targets):
         return np.sqrt(np.mean((predictions-targets)**2))
@@ -556,48 +486,4 @@ class DVS_latency:
     def my_log_sin(self, x, freq, amplitude, phase, offset_in, offset_out):
         return np.log(-np.sin( 2*np.pi* x * freq + phase) * amplitude + offset_in ) + offset_out
 
-if __name__ == "__main__":
-    ##############################################################################
-    # WHAT SHOULD WE DO?
-    ##############################################################################
 
-    ################### 
-    # PARAMETERS
-    ###################
-    do_ptc = True
-    do_fpn = False
-    do_latency_pixel = False
-    do_contrast_sensitivity = False
-    do_oscillations = False      #for NW
-    directory_meas = 'measurements/DAVIS240C_signal_variation_ADCint_ptc_02_02_16-18_15_38/'
-    camera_dim = [240,180]
-    pixel_sel = [0,200]
-    #[208,192] #Pixelparade 208Mono 
-    #[240,180] #DAVSI240C
-    # http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
-    # 0.596 internal adcs 346B
-    # 1.501 external ADC 240C
-    # ? dvs external adc reference
-    # 1.290 internal adcs reference PixelParade 208Mono measure the voltage between E1 and F2
-    # 0.648 external adcs reference is the same for all chips
-    ADC_range = 1.29#0.648#240C 1.501
-    ADC_values = 1024
-    frame_x_divisions = [[0,200]]
-    #   Pixelparade 208 Mono since it is flipped sideways (don't include last number in python)
-    #   208Mono (Pixelparade)   [[207-3,207-0], [207-5,207-4], [207-9,207-8], [207-11,207-10], [207-13,207-12], [207-19,207-16], [207-207,207-20]] 
-    #   240C                    [[0,20], [20,190], [190,210], [210,220], [220,230], [230,240]]
-    #   128DVS                  [[0,128]]
-    frame_y_divisions = [[0,180]]
-    #   208Mono 	[[0,191]]
-    #   640Color 	[[121,122]] 
-    #   240C		[[0,180]]
-    #   128DVS      [[0,128]]
-    # 
-    # ###############################
-    # contrast sensitivity parameter
-    #################################
-    sine_freq = 1.0 # sine freq
-
-    ################### 
-    # END PARAMETERS
-    ###################
