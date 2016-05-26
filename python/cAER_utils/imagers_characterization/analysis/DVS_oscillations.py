@@ -138,7 +138,7 @@ class DVS_oscillations:
             if(dvs128xml == False):
                 index_up_jump = sp_type == 2
                 index_dn_jump = sp_type == 3
-            else:
+            else: # DVS128 only detects one edge
                 #we only have a single edge
                 index_up_jump = sp_type == 2
                 index_dn_jump = sp_type == 2
@@ -158,7 +158,7 @@ class DVS_oscillations:
 
             original = np.zeros(len(ts))
             this_index = 0
-            for i in range(len(ts)):
+            for i in range(len(ts)): # label all events with the high or low of the square wave
                 if(ts[i] < sp_t[this_index]):
                     original[i] = sp_type[this_index] 
                 elif(ts[i] >= sp_t[this_index]):      
@@ -197,7 +197,7 @@ class DVS_oscillations:
                     this_index_x = xaddr[final_index] == x_
                     this_index_y = yaddr[final_index] == y_
                     index_to_get = this_index_x & this_index_y
-                    
+                    # get the balance between up and down delta
                     if( delta_up_count[x_,y_] > delta_dn_count[x_,y_]):
                         delta_dn[x_,y_] = (delta_up_count[x_,y_] / np.double(delta_dn_count[x_,y_])) * (delta_up[x_,y_])
                     else:
@@ -221,7 +221,7 @@ class DVS_oscillations:
                                     this_neuron = [xaddr[final_index][index_to_get][this_ev],yaddr[final_index][index_to_get][this_ev]]
                                     if(this_latency > 0):
                                         latency_up_tot.append([this_latency, this_neuron])  
-                                        counter_transitions_up = counter_transitions_up +1    
+                                        counter_transitions_up = counter_transitions_up +1 # as soon as one on event is seen, move on to next sync edge
                         if( pol[final_index][index_to_get][this_ev] == 0):
                             tmp_rec.append(tmp)
                             tmp_t.append(ts[final_index][index_to_get][this_ev]-1)
@@ -274,22 +274,20 @@ class DVS_oscillations:
                 out_file.write("err latency dn: " +str(err_dn)  + " us\n")           
             out_file.close()
 
-
-            ts_changes = np.where(np.diff(original) != 0)
-            ts_folds = ts[ts_changes[0][0::edges]] #one every two edges
+            # folding all cycles into one for histogram
+            #ts_changes = np.where(np.diff(original) != 0)
+            #ts_folds = sp_t[index_up_jump]
             #fold ts 
-            ts_subtract = np.min(ts)
-            ts_folded = []
-            counter_fold = 0
-            for this_ts in range(len(ts)):
-                if(counter_fold < len(ts_folds)):
-                    if(ts[this_ts] >= ts_folds[counter_fold]):
-                        ts_subtract = ts[this_ts]
-                        counter_fold += 1
-                ts_folded.append(ts[this_ts] - ts_subtract)
+            #ts_folded = []
+            #counter_fold = 0
+            #for this_ts in range(len(ts)):
+            #    for this_fold in range(len(ts_folds) - 1):
+            #        if(ts[this_ts] >= ts_folds[this_fold] and ts[this_ts] < ts_folds[this_fold + 1]):
+            #            ts_folded.append(ts[this_ts] - ts_folds[this_fold])
 
-            ts_folded = np.array(ts_folded)
-            all_folded.append(ts_folded)       
+            #ts_folded = np.array(ts_folded)
+            #all_folded.append(ts_folded)
+       
             all_pol.append(pol)
             all_final_index.append(final_index)
 
@@ -386,10 +384,10 @@ class DVS_oscillations:
                     current_original = all_originals[this_file]
 
                     #now fold signal
-                    ts_changes_index = np.where(np.diff(current_original) != 0)[0]
-                    ts_folds = current_ts_original[ts_changes_index][0::edges] #one every two edges
+                    ts_folds = sp_t[index_dn_jump] #one every two edges
                     ts_subtract = 0
                     ts_folded = []
+                    pol_folded = []
                     counter_fold = 0
                     start_saving = False
                     for this_ts in range(len(current_ts)):
@@ -400,15 +398,28 @@ class DVS_oscillations:
                                 start_saving = True
                         if(start_saving):
                             ts_folded.append(current_ts[this_ts] - ts_subtract)
+                            pol_folded.append(current_pol[this_ts])
                     ts_folded = np.array(ts_folded)
-                    meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:]) / 2.0
-                    binss = np.linspace(np.min(ts_folded), np.max(ts_folded), 50)    
-                    starting = len(current_ts)-len(ts_folded)
-                    dn_index = current_pol[starting::] == 0
-                    up_index = current_pol[starting::] == 1    
+                    pol_folded = np.array(pol_folded)
+                    #raise Exception
+                    meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:]) #/ 2.0
+                    binss = np.linspace(0, meanPeriod, 100)    
+                    #starting = len(current_ts)-len(ts_folded)
+                    dn_index = pol_folded == 0
+                    up_index = pol_folded == 1    
                     valuesPos = np.histogram(ts_folded[up_index], bins=binss)
                     valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
-                    
+                    #raise Exception
+                    latency_off_hist_peak = binss[np.argmax(valuesNeg[0])]
+                    rising_edge = np.mean(sp_t[index_up_jump] - sp_t[index_dn_jump])
+                    latency_on_hist_peak = binss[np.argmax(valuesPos[0])] - rising_edge
+                    print ("On latency from histogram peak: " +str(latency_on_hist_peak) + " us")
+                    print ("Off latency from histogram peak: " +str(latency_off_hist_peak) + " us")
+                    latency_off_folded_mean = np.mean(ts_folded[dn_index])
+                    latency_on_folded_mean = np.mean(ts_folded[up_index]) - rising_edge
+                    print ("On latency from folded mean: " +str(latency_on_folded_mean) + " us")
+                    print ("Off latency from folded mean: " +str(latency_off_folded_mean) + " us")
+
                     #plot in the 2d grid space of biases vs lux
                     n_lux = []
                     for i in range(len(all_lux)):
@@ -420,9 +431,9 @@ class DVS_oscillations:
                     n_pr = np.array(n_pr)          
                     rows = int(np.where(n_lux[this_file] == np.unique(n_lux))[0])
                     cols = int(np.where(n_pr[this_file] == np.unique(n_pr))[0])
-                    axarr[rows, cols].bar(binss[1::], valuesPos[0], width=1000, color="g")
-                    axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=1000, color="r")
-                    axarr[rows, cols].plot([meanPeriod, meanPeriod],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
+                    axarr[rows, cols].bar(binss[1::], valuesPos[0], width=100, color="g")
+                    axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=100, color="r")
+                    axarr[rows, cols].plot([rising_edge, rising_edge],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
                     axarr[rows, cols].text(np.max(binss[1::])/4.0, -25,  'lux = '+str(all_lux[this_file])+'\n'+'PrBias = '+str(all_prvalues[this_file])+'\n', fontsize = 11, color = 'b')
                     plt.savefig(figure_dir+"all_latencies_hist"+str(this_file)+".pdf",  format='PDF')
                     plt.savefig(figure_dir+"all_latencies_hist"+str(this_file)+".png",  format='PNG')

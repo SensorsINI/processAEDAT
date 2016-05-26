@@ -132,6 +132,6 @@ if do_latency_pixel:
         os.makedirs(figure_dir)
     # select test pixels areas only two are active
     aedat = DVS_oscillations.DVS_oscillations()
-    all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index  = aedat.oscillations_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 2, confidence_level = 0.95, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False, pixel_sel = False)
+    all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index  = aedat.oscillations_latency_analysis(latency_pixel_dir, figure_dir, camera_dim = camera_dim, size_led = 8, confidence_level = 0.95, do_plot = True, file_type="cAER", edges = 2, dvs128xml = False, pixel_sel = False)
 
 
