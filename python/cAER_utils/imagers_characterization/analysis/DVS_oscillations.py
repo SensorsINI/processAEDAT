@@ -391,19 +391,24 @@ class DVS_oscillations:
                     counter_fold = 0
                     start_saving = False
                     for this_ts in range(len(current_ts)):
-                        if(counter_fold < len(ts_folds)):
-                            if(current_ts[this_ts] >= ts_folds[counter_fold]):
-                                ts_subtract = ts_folds[counter_fold]
-                                counter_fold += 1
-                                start_saving = True
-                        if(start_saving):
-                            ts_folded.append(current_ts[this_ts] - ts_subtract)
-                            pol_folded.append(current_pol[this_ts])
+                        for this_fold in range(len(ts_folds) - 1):
+                            if(current_ts[this_ts] >= ts_folds[this_fold] and current_ts[this_ts] < ts_folds[this_fold + 1]):
+                                ts_folded.append(current_ts[this_ts] - ts_folds[this_fold])
+                                pol_folded.append(current_pol[this_ts])
+                    #for this_ts in range(len(current_ts)):
+                    #    if(counter_fold < len(ts_folds)):
+                    #        if(current_ts[this_ts] >= ts_folds[counter_fold]):
+                    #            ts_subtract = ts_folds[counter_fold]
+                    #            counter_fold += 1
+                    #            start_saving = True
+                    #    if(start_saving):
+                    #        ts_folded.append(current_ts[this_ts] - ts_subtract)
+                    #        pol_folded.append(current_pol[this_ts])
                     ts_folded = np.array(ts_folded)
                     pol_folded = np.array(pol_folded)
                     #raise Exception
                     meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:]) #/ 2.0
-                    binss = np.linspace(0, meanPeriod, 100)    
+                    binss = np.linspace(0, meanPeriod, 1000)    
                     #starting = len(current_ts)-len(ts_folded)
                     dn_index = pol_folded == 0
                     up_index = pol_folded == 1    
@@ -431,8 +436,8 @@ class DVS_oscillations:
                     n_pr = np.array(n_pr)          
                     rows = int(np.where(n_lux[this_file] == np.unique(n_lux))[0])
                     cols = int(np.where(n_pr[this_file] == np.unique(n_pr))[0])
-                    axarr[rows, cols].bar(binss[1::], valuesPos[0], width=100, color="g")
-                    axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=100, color="r")
+                    axarr[rows, cols].bar(binss[1::], valuesPos[0], width=10, color="g")
+                    axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=10, color="r")
                     axarr[rows, cols].plot([rising_edge, rising_edge],[-np.max(valuesNeg[0]),np.max(valuesPos[0])])
                     axarr[rows, cols].text(np.max(binss[1::])/4.0, -25,  'lux = '+str(all_lux[this_file])+'\n'+'PrBias = '+str(all_prvalues[this_file])+'\n', fontsize = 11, color = 'b')
                     plt.savefig(figure_dir+"all_latencies_hist"+str(this_file)+".pdf",  format='PDF')
