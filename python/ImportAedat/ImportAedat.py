@@ -203,7 +203,34 @@ def ImportAedat(args = None) :
             pass
         else :
             output['data'] = ImportAedatDataVersion3.ImportAedatDataVersion3(output['info'])
-            
+    
+
+    # Put some high level information about the data into info
+    specialEventTypeMeanings = {
+        0: 'TIMESTAMP_WRAP',
+        1: 'TIMESTAMP_RESET',
+        2: 'EXTERNAL_INPUT_RISING_EDGE',
+        3: 'EXTERNAL_INPUT_FALLING_EDGE',
+        4: 'EXTERNAL_INPUT_PULSE',
+        5: 'DVS_ROW_ONLY',
+        6: 'EXTERNAL_INPUT1_RISING_EDGE',
+        7: 'EXTERNAL_INPUT1_FALLING_EDGE',
+        8: 'EXTERNAL_INPUT1_PULSE',
+        9: 'EXTERNAL_INPUT2_RISING_EDGE',
+        10: 'EXTERNAL_INPUT2_FALLING_EDGE',
+        11: 'EXTERNAL_INPUT2_PULSE',
+        12: 'EXTERNAL_GENERATOR_RISING_EDGE',
+        13: 'EXTERNAL_GENERATOR_FALLING_EDGE',
+        14: 'APS_FRAME_START',
+        15: 'APS_FRAME_END',
+        16: 'APS_EXPOSURE_START',
+        17: 'APS_EXPOSURE_END'}
+        
+    if 'special' in output['data'] :
+        specialEventTypesPresentCodes = set(output['data']['special']['address'])
+        output['info']['specialEventTypesPresent'] = {}
+        for specialEventType in specialEventTypesPresentCodes :
+            output['info']['specialEventTypesPresent'][specialEventType] = specialEventTypeMeanings.get(specialEventType)
 
     return(output)
 

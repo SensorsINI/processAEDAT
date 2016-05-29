@@ -98,10 +98,8 @@ def ImportAedatDataVersion3(info):
             'x' : polAddrXAll, 
             'y' : polAddrYAll, 
             'polarity' : polPolAll}
+
     return output
-
-
-
 
 
 
