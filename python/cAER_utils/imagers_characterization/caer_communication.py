@@ -580,9 +580,10 @@ class caer_communication:
                 #set exposure
                 self.send_command(string_control)    
                 self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true')  
-                recording_time = (frame_number*(exp_time + 10000))/(10.0**6)          
-                print("Recording for " + str(recording_time) + " with exposure time " + str(exp_time) )                
-                time.sleep(1)
+                safety_margin = 10000.0
+                recording_time = (frame_number*(float(exp_time) + safety_margin))/(10.0**6)          
+                print("Recording for " + str(recording_time) + " s" + " with exposure time " + str(exp_time) + " us")                
+                time.sleep(1.0)
                 self.open_communication_data()
                 self.start_logging(filename)    
                 time.sleep(recording_time)

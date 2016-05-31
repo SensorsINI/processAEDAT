@@ -22,8 +22,8 @@ do_set_bias = False
 do_contrast_sensitivity = False # And DVS-FPN too
 do_ptc = False
 do_frequency_response = False
-do_latency_pixel_led_board = True
-do_latency_pixel_big_led = False
+do_latency_pixel_multiple_led_board = True
+do_latency_pixel_with_fiber = False
 do_oscillations = False
 
 ###############################################################################
@@ -66,8 +66,8 @@ if(do_contrast_sensitivity):
 
 if(do_ptc):
     base_level = 1000.0 #  1 klux
-    frame_number = 300
-    recording_time = 5
+    frame_number = 300.0
+#    recording_time = 5
     start_exp = int(info[16].split(',')[0].strip('[').strip(']'))
     end_exp = int(info[16].split(',')[1].strip('[').strip(']'))
     num_points_exp = int(info[16].split(',')[2].strip('[').strip(']'))
@@ -91,10 +91,10 @@ if(do_frequency_response):
     oscillations_fr = 10.0
     ndfilter_fr = info[20]
     
-if(do_latency_pixel_led_board or do_latency_pixel_big_led):
+if(do_latency_pixel_multiple_led_board or do_latency_pixel_with_fiber):
     oscillations = 100.0
     freq_square = 10.0
-    base_level_latency_big_led = [3000]
+    base_level_latency_with_fiber = [3000]
     contrast_level = 0.5
 
 if(do_oscillations):
@@ -108,10 +108,12 @@ if(do_oscillations):
 # SETUP LIGHT CONDITIONS -- MEASURED --
 ##############################################################################
 saturation_level = 3500 # LED saturates at 3.5 klux
-volt =np.array([0.001,0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.010,0.011,0.012,0.013,0.014,0.015,0.016,0.017,0.018,0.019,0.020,0.040,0.08,0.100,0.2,0.15,0.120,0.180,0.17,0.500,0.400,0.3,0.25,0.28,0.2,0.15,0.27,0.26,0.22,0.21,0.215,0.22,0.217,0.218,0.03,0.05,0.06,0.14,0.0225,0.225,0.235])
-lux = np.array([2.29,17.78,34.460,52.870,71.280,90.740,109.400,128.900,148.000,167.600,186.100,205.600,225.100,244.200,263.300,283.800,302.400,323.400,341.900,361.100,740.900,1467.000,1815.000,3399.000,2633,2152,3105,2950,3861,3861,3861,3861,3861,3378,2627,3861,3861,3663,3531,3597,3663,3601,3634,549.5,917.4,1102,2467,407.9,3729,3795])
-voltage_divider = 0.99 #voltage divider DC
-volt = volt*voltage_divider
+volt_applied =np.array([0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070,0.0080,0.0090,0.0100,0.0110,0.0120,0.0130,0.0140,0.0150,0.0160,0.0170,0.0180,0.0190,0.0200,0.0400,0.0800,0.1000,0.1200,0.1500,0.1700,0.1800,0.2000,0.2200,0.2500,0.3000,0.4000,0.5000])
+lux = np.array([24,44,65,86,107.6,129.5,151.3,172.9,194,216.7,238.9,260.5,283.8,305.1,328.5,349.8,372.4,394.7,416.1,439.1,869.6,1709,2110,2488,3053,3399,3581,3927,4191,4455,4414,4389,4455])
+R1 = 100.0 # variable but fixed to this (NEVER change the board)
+R2 = 10000.0 # fixed value
+voltage_divider = R2/(R1+R2) #voltage divider DC
+volt = volt_applied*voltage_divider
 index_linear = np.where(lux < saturation_level)[0]
 slope, inter = np.polyfit(volt[index_linear],lux[index_linear],1)
 plot_setup_characterization = False
@@ -354,7 +356,7 @@ if do_oscillations:
 
 # 5 - Latency small led on board with all colored leds - data
 # setup is in conditions -> flashing LED
-if do_latency_pixel_big_led:
+if do_latency_pixel_with_fiber:
     print "\n"
     print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
@@ -368,7 +370,7 @@ if do_latency_pixel_big_led:
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
 
-    num_measurements = len(base_level_latency_big_led) 
+    num_measurements = len(base_level_latency_with_fiber) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
     recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
@@ -378,9 +380,9 @@ if do_latency_pixel_big_led:
         os.makedirs(setting_dir)
     copyFile(bias_file, setting_dir+str("biases_latencies_all_exposures.xml") )
     for i in range(num_measurements):
-        print("Base level: "+str(base_level_latency_big_led[i]))
-        perc_low = base_level_latency_big_led[i]-(contrast_level/2.0)*base_level_latency_big_led[i]
-        perc_hi = base_level_latency_big_led[i]+(contrast_level/2.0)*base_level_latency_big_led[i]
+        print("Base level: "+str(base_level_latency_with_fiber[i]))
+        perc_low = base_level_latency_with_fiber[i]-(contrast_level/2.0)*base_level_latency_with_fiber[i]
+        perc_hi = base_level_latency_with_fiber[i]+(contrast_level/2.0)*base_level_latency_with_fiber[i]
         v_hi = (perc_hi - inter) / slope
         v_low = (perc_low - inter) / slope 
         offset = np.mean([v_hi,v_low])
@@ -399,7 +401,7 @@ if do_latency_pixel_big_led:
  
 # 6 - Latency fiber pointing at the sensor - data
 # setup is in conditions -> flashing LED
-if do_latency_pixel_led_board:
+if do_latency_pixel_multiple_led_board:
     print "\n"
     print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
@@ -413,7 +415,7 @@ if do_latency_pixel_led_board:
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
 
-    num_measurements = len(base_level_latency_big_led) 
+    num_measurements = len(base_level_latency_with_fiber) 
     #base_level_v = 1.5
     #base_level = [base_level_v+step_level*i for i in range(num_measurements)]
     recording_time = (1.0/freq_square)*oscillations # number of complete oscillations
@@ -423,9 +425,9 @@ if do_latency_pixel_led_board:
         os.makedirs(setting_dir)
     copyFile(bias_file, setting_dir+str("biases_latencies_all_exposures.xml") )
     for i in range(num_measurements):
-        print("Base level: "+str(base_level_latency_big_led[i]))
-        perc_low = base_level_latency_big_led[i]-(contrast_level/2.0)*base_level_latency_big_led[i]
-        perc_hi = base_level_latency_big_led[i]+(contrast_level/2.0)*base_level_latency_big_led[i]
+        print("Base level: "+str(base_level_latency_with_fiber[i]))
+        perc_low = base_level_latency_with_fiber[i]-(contrast_level/2.0)*base_level_latency_with_fiber[i]
+        perc_hi = base_level_latency_with_fiber[i]+(contrast_level/2.0)*base_level_latency_with_fiber[i]
         v_hi = (perc_hi - inter) / slope
         v_low = (perc_low - inter) / slope 
         offset = np.mean([v_hi,v_low])
