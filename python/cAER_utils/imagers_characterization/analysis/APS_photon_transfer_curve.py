@@ -83,12 +83,22 @@ class APS_photon_transfer_curve:
                             temporal_mean[tx,ty] = np.mean(frame_areas[:,tx,ty])
                             temporal_variation[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/n_frames
                     sigma_y = np.mean(temporal_variation)
+                    spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
+                    spatio_var_temporal_mean = 0.0
+                    for tx in range(xdim_f):
+                        for ty in range(ydim_f):
+                            spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
+                    spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
+                    FPN = spatio_var_temporal_mean**0.5
+                    #raise Exception                    
+                    print("FPN: " + str(FPN) + "DN")
+                    print("Temporal var: " + str(sigma_y) + "DN")
                     print(str(n_frames) + " frames recorded.")
                     print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = u_y
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
-                    u_y_mean_frames.append(np.mean(np.mean(frame_areas,0),0)) #average DN over time
+                    u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
         
         #just remove entry that corresponds to files that are not measurements
         files_num, y_div, x_div = np.shape(exposures)

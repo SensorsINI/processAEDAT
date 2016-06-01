@@ -20,9 +20,9 @@ camera_file = 'cameras/cdavis_parameters.txt'
 do_set_bias = False
 
 do_contrast_sensitivity = False # And DVS-FPN too
-do_ptc = False
+do_ptc = True
 do_frequency_response = False
-do_latency_pixel_multiple_led_board = True
+do_latency_pixel_multiple_led_board = False
 do_latency_pixel_with_fiber = False
 do_oscillations = False
 
@@ -109,7 +109,7 @@ if(do_oscillations):
 ##############################################################################
 saturation_level = 3500 # LED saturates at 3.5 klux
 volt_applied =np.array([0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070,0.0080,0.0090,0.0100,0.0110,0.0120,0.0130,0.0140,0.0150,0.0160,0.0170,0.0180,0.0190,0.0200,0.0400,0.0800,0.1000,0.1200,0.1500,0.1700,0.1800,0.2000,0.2200,0.2500,0.3000,0.4000,0.5000])
-lux = np.array([24,44,65,86,107.6,129.5,151.3,172.9,194,216.7,238.9,260.5,283.8,305.1,328.5,349.8,372.4,394.7,416.1,439.1,869.6,1709,2110,2488,3053,3399,3581,3927,4191,4455,4414,4389,4455])
+lux = np.array([24.0,44.0,65.0,86.0,107.6,129.5,151.3,172.9,194.0,216.7,238.9,260.5,283.8,305.1,328.5,349.8,372.4,394.7,416.1,439.1,869.6,1709.0,2110.0,2488.0,3053.0,3399.0,3581.0,3927.0,4191.0,4455.0,4414.0,4389.0,4455.0])
 R1 = 100.0 # variable but fixed to this (NEVER change the board)
 R2 = 10000.0 # fixed value
 voltage_divider = R2/(R1+R2) #voltage divider DC
@@ -162,7 +162,7 @@ if(do_set_bias):
     gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
     gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     sine_freq = 1.0;
-    base_level = 200;
+    base_level = 1000;
     contrast_level = 0.5;
     oscillations = 120; # 2 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level

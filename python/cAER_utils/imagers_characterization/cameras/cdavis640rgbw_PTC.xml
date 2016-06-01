@@ -358,7 +358,7 @@
                         <attr key="GyroZStandby" type="bool">false</attr>
                         <attr key="LowPowerCycle" type="bool">false</attr>
                         <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
-                        <attr key="Run" type="bool">true</attr>
+                        <attr key="Run" type="bool">false</attr>
                         <attr key="SampleRateDivider" type="short">0</attr>
                         <attr key="TempStandby" type="bool">false</attr>
                     </node>
