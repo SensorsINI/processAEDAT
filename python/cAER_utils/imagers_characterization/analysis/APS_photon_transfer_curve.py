@@ -42,6 +42,7 @@ class APS_photon_transfer_curve:
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         u_y_mean_frames = []
         all_frames = []
         done = False
@@ -70,11 +71,11 @@ class APS_photon_transfer_curve:
                     all_frames.append(frame_areas)
                     frame_areas = np.right_shift(frame_areas,6)
                     n_frames, ydim, xdim = np.shape(frame_areas)   
-                    avr_all_frames = []
-                    for this_frame in range(n_frames):
-                        avr_all_frames.append(np.mean(frame_areas[this_frame]))
-                    avr_all_frames = np.array(avr_all_frames)       
-                    u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
+                    #avr_all_frames = []
+                    #for this_frame in range(n_frames):
+                    #    avr_all_frames.append(np.mean(frame_areas[this_frame]))
+                    #avr_all_frames = np.array(avr_all_frames)       
+                    #u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
                     xdim_f , ydim_f = np.shape(frame_areas[0])
                     temporal_mean = np.zeros([xdim_f, ydim_f])
                     temporal_variation = np.zeros([xdim_f, ydim_f])
@@ -95,10 +96,11 @@ class APS_photon_transfer_curve:
                     print("Temporal var: " + str(sigma_y) + "DN")
                     print(str(n_frames) + " frames recorded.")
                     print(str(np.shape(all_frames)) + " all_frames.")
-                    u_y_tot[this_file, this_div_y, this_div_x] = u_y
+                    u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
-                    u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
+                    FPN_all[this_file, this_div_y, this_div_x] = FPN
+                    #u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
         
         #just remove entry that corresponds to files that are not measurements
         files_num, y_div, x_div = np.shape(exposures)
@@ -253,6 +255,22 @@ class APS_photon_transfer_curve:
             plt.ylabel('Var[DN^2]')
             plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+
+        #open report file
+        report_file = figure_dir+"Report_results_APS"+".txt"
+        out_file = open(report_file,"w")
+        #raise Exception
+        for this_file in range(len(exposures)):
+            out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    out_file.write("Division (x,y) " + str(this_area_x) + "," + str(this_area_y) + ":\n")
+                    out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("FPN (DN): " + str(FPN_all[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("FPN (%): " + str(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+                    out_file.write("Temporal variation (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+        out_file.close()
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
