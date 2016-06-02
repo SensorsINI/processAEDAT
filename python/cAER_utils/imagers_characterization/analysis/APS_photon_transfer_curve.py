@@ -78,12 +78,17 @@ class APS_photon_transfer_curve:
                     #u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
                     xdim_f , ydim_f = np.shape(frame_areas[0])
                     temporal_mean = np.zeros([xdim_f, ydim_f])
-                    temporal_variation = np.zeros([xdim_f, ydim_f])
+                    temporal_variance = np.zeros([xdim_f, ydim_f])
+                    #temporal_variance_EMVA = 0
+                    #factor = (1.0/(2.0*float(xdim_f*ydim_f)))
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
                             temporal_mean[tx,ty] = np.mean(frame_areas[:,tx,ty])
-                            temporal_variation[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/n_frames
-                    sigma_y = np.mean(temporal_variation)
+                            temporal_variance[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/n_frames
+                            #temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[10,tx,ty]- frame_areas[11,tx,ty])**2.0
+                    #temporal_variance_EMVA = factor*temporal_variance_EMVA
+                    sigma_y = np.mean(temporal_variance)
+                    #sigma_y = temporal_variance_EMVA
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
                     spatio_var_temporal_mean = 0.0
                     for tx in range(xdim_f):
@@ -167,7 +172,8 @@ class APS_photon_transfer_curve:
         color_tmp = 0;
         for this_area_x in range(x_div):
             for this_area_y in range(y_div):
-                plt.plot( u_y_tot[:,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                #raise Exception
+                plt.plot( u_y_tot[:,this_area_y,this_area_x]-u_y_tot[0,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                 color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         ax.set_xscale("log", nonposx='clip')
@@ -188,10 +194,10 @@ class APS_photon_transfer_curve:
         color_tmp = 0;
         for this_area_x in range(x_div):
             for this_area_y in range(y_div):
-                sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                sigma_fit = sigma_tot[1:-1,this_area_y, this_area_x]
                 max_var = np.max(sigma_fit)
                 max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                this_mean_values = u_y_tot[:,this_area_y, this_area_x]
+                this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
                 this_mean_values_lin = this_mean_values[0:max_ind_var]
                 try: 
                     #raise Exception
@@ -205,7 +211,7 @@ class APS_photon_transfer_curve:
                 Gain_uVe = -inter/slope;
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
-                ax.plot( log(u_y_tot[:,this_area_y, this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
                 ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                 color_tmp = color_tmp+1
@@ -268,7 +274,7 @@ class APS_photon_transfer_curve:
                     out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("FPN (DN): " + str(FPN_all[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("FPN (%): " + str(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
-                    out_file.write("Temporal variation (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("Temporal variance (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
         out_file.close()
 

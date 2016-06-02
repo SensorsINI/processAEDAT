@@ -15,7 +15,7 @@ import gpio_usb
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/davis208_parameters.txt'
+camera_file = 'cameras/davis346_parameters.txt'
 
 do_set_bias = False
 
