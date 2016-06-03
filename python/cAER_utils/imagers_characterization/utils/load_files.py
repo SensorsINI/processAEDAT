@@ -40,13 +40,16 @@ class load_files:
                 pol     - 1D vector - polarity 
         '''
         file_read = open(filename, "rb")
-        ''' skip header '''
-        line = file_read.readline()
-        while line.startswith("#"):
-            if ( line == '#!END-HEADER\r\n'):
-                break
-            else:
-                line = file_read.readline()
+        newformat = True
+        if(newformat == True):
+            ''' skip header '''
+            line = file_read.readline()
+            while line.startswith("#"):
+                if ( line == '#!END-HEADER\r\n'):
+                    break
+                else:
+                    line = file_read.readline()
+        
         #return arrays
         x_addr_tot = []
         y_addr_tot = []
@@ -75,8 +78,13 @@ class load_files:
                 while(data[counter:counter + eventsize]):  # loop over all event packets
                     aer_data = struct.unpack('I', data[counter:counter + 4])[0]
                     timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
-                    x_addr = (aer_data >> 18) & 0x00003FFF
-                    y_addr = (aer_data >> 4) & 0x00003FFF
+                    
+                    if(newformat == True):                    
+                        x_addr = (aer_data >> 18) & 0x00003FFF
+                        y_addr = (aer_data >> 4) & 0x00003FFF
+                    else:
+                        x_addr = (aer_data >> 17) & 0x00007FFF
+                        y_addr = (aer_data >> 2) & 0x00007FFF
                     pol = (aer_data >> 1) & 0x00000001
                     x_addr_tot.append(x_addr)
                     y_addr_tot.append(y_addr)
