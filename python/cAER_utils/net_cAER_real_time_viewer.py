@@ -16,7 +16,7 @@ matplotlib.use('GTKAgg')
 from matplotlib import pyplot as plt
 
 # PARAMETERS
-host = "127.0.0.1"
+host = "172.19.12.140"
 port = 7777
 xdim = 240
 ydim = 180
@@ -49,36 +49,40 @@ def ind2sub(array_shape, ind):
 def read_events():
     """ A simple function that read events from cAER tcp"""
 
-    data = sock.recv(28)  # we read the header of the packet
+    data = sock.recv(28, socket.MSG_WAITALL)  # we read the header of the packet
 
     # read header
     eventtype = struct.unpack('H', data[0:2])[0]
-    if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
-        eventsource = struct.unpack('H', data[2:4])[0]
-        eventsize = struct.unpack('I', data[4:8])[0]
-        eventoffset = struct.unpack('I', data[8:12])[0]
-        eventtsoverflow = struct.unpack('I', data[12:16])[0]
-        eventcapacity = struct.unpack('I', data[16:20])[0]
-        eventnumber = struct.unpack('I', data[20:24])[0]
-        eventvalid = struct.unpack('I', data[24:28])[0]
-        next_read = eventcapacity * eventsize  # we now read the full packet
-        # this sock.recv function reads exactly next_read bytes, thanks to the  socket.MSG_WAITALL option that works under Unix, if you want to use a different system than you need to repeat reading until you read exactly next_read bytes
-        data = sock.recv(next_read, socket.MSG_WAITALL)  # we read exactly the N bytes (works in Unix)
+    eventsource = struct.unpack('H', data[2:4])[0]
+    eventsize = struct.unpack('I', data[4:8])[0]
+    eventoffset = struct.unpack('I', data[8:12])[0]
+    eventtsoverflow = struct.unpack('I', data[12:16])[0]
+    eventcapacity = struct.unpack('I', data[16:20])[0]
+    eventnumber = struct.unpack('I', data[20:24])[0]
+    eventvalid = struct.unpack('I', data[24:28])[0]
+    next_read = eventcapacity * eventsize  # we now read the full packet
+    data = sock.recv(next_read, socket.MSG_WAITALL) 
+    
+    if(eventtype == 1):  
         counter = 0  # eventnumber[0]
         x_addr_tot = []
         y_addr_tot = []
         pol_tot = []
         while(data[counter:counter + eventsize]):  # loop over all event packets
             aer_data = struct.unpack('I', data[counter:counter + 4])[0]
-            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
-            x_addr = (aer_data >> 17) & 0x00007FFF
-            y_addr = (aer_data >> 2) & 0x00007FFF
+            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]                    
+            x_addr = (aer_data >> 18) & 0x00003FFF
+            y_addr = (aer_data >> 4) & 0x00003FFF
             x_addr_tot.append(x_addr)
             y_addr_tot.append(y_addr)
             pol = (aer_data >> 1) & 0x00000001
             pol_tot.append(pol)
             # print (timestamp, x_addr, y_addr, pol)
-            counter = counter + eventsize
+            counter = counter + eventsize  
+    else:
+        x_addr_tot = []
+        y_addr_tot = []
+        pol_tot	 = []          
 
     return x_addr_tot, y_addr_tot, pol_tot
 
@@ -87,6 +91,31 @@ def run(doblit=True):
     Display the simulation using matplotlib, optionally using blit for speed
     """
 
+    ## as in http://inilabs.com/support/software/fileformat/#h.kbta1pm6k3qt
+    data = sock.recv(20, socket.MSG_WAITALL)
+    network = struct.unpack("<Q", data[0:8])[0]
+    sequence_number = struct.unpack("<Q", data[8:16])[0]
+    aedat_ver = struct.unpack("B", data[16])[0]
+    format_number = struct.unpack("B", data[17])[0]
+    source_number = struct.unpack("H", data[18:20])[0]
+    if(network != 2105305046418351704):
+        print("Error in network please retry")
+        raise Exception
+    if(sequence_number != 0 ):
+        print("Error in network please retry, sequence number not zero.")
+        raise Exception        
+    if(aedat_ver != 1):
+        print("Aedat version not implemented -> " + str(aedat_ver))
+        raise Exception                 
+    if(format_number != 0 ):   
+        print("Format Number version not implemented -> " + str(format_number))
+        raise Exception   
+    if(source_number != 1 ):
+        print("Source Number version not implemented -> " + str(source_number))
+        raise Exception
+        
+    #raise Exception
+        
     fig, ax = plt.subplots(1, 1)
     ax.set_aspect('equal')
     ax.set_xlim(0, xdim)

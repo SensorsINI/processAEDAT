@@ -16,10 +16,10 @@ matplotlib.use('GTKAgg')
 from time import sleep
 from matplotlib import pyplot as plt
 
-filename = '/home/federico/space/inilabs/data/caer_out-2016-04-06_15_49_08.aedat'
+filename = '/home/federico/NAS/Characterizations/Measurements_final/DAVIS240C/DAVIS240C_thresholds__thresholds_16_03_16-15_36_56/thresholds_sensitivity_recording_time_0000045_contrast_level_020_base_level_2000_onbias_100_ofbias_060.aedat'
 file_read = open(filename, "rb")
-xdim = 346
-ydim = 260
+xdim = 240
+ydim = 180
 
 def matrix_active(x, y, pol):
     matrix = np.zeros([ydim, xdim])
@@ -84,8 +84,8 @@ def read_events():
         while(data[counter:counter + eventsize]):  # loop over all event packets
             aer_data = struct.unpack('I', data[counter:counter + 4])[0]
             timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
-            x_addr = (aer_data >> 18) & 0x00003FFF
-            y_addr = (aer_data >> 4) & 0x00003FFF
+            x_addr = (aer_data >> 17) & 0x00007FFF
+            y_addr = (aer_data >> 2) & 0x00007FFF
             x_addr_tot.append(x_addr)
             y_addr_tot.append(y_addr)
             pol = (aer_data >> 1) & 0x00000001
@@ -119,7 +119,7 @@ def run(doblit=True):
     ax.set_xlim(0, xdim)
     ax.set_ylim(0, ydim)
     ax.hold(True)
-    skip_header()
+    #skip_header()
     x, y, p, ts_tot, sp_t, sp_ts = read_events()
 
 
