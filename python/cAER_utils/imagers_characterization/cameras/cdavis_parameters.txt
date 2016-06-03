@@ -15,8 +15,8 @@ False
 [640,480]
 # 6 # Camera selected dimensions [X,Y]
 [640,480]
-# 7 # Internal ADC range internal adcs reference CDAVIS between E2 (0.219) and D1 (1.998)
-1.779
+# 7 # Internal ADC range internal adcs reference CDAVIS between E2 (4: 0.36) and D1 (44: 2.189)
+1.827
 # 8 # External ADC range external adcs reference is the same for all chips, http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
 0.648
 # 9 # ADC levels
@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures
-[100,2000,80]
+[200,2200,80]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?

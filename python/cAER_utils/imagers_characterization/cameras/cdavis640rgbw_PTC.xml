@@ -18,7 +18,7 @@
                         <attr key="EndRow2" type="short">480</attr>
                         <attr key="EndRow3" type="short">480</attr>
                         <attr key="Exposure" type="int">4000</attr>
-                        <attr key="FrameDelay" type="int">100</attr>
+                        <attr key="FrameDelay" type="int">1000</attr>
                         <attr key="GSFDResetTime" type="short">1000</attr>
                         <attr key="GSPDResetTime" type="short">1000</attr>
                         <attr key="GSResetFallTime" type="short">1000</attr>

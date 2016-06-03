@@ -71,20 +71,20 @@
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="AdcCompBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcCompBp/">
-                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="coarseValue" type="byte">6</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">159</attr>
+                            <attr key="fineValue" type="short">160</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="AdcRefHigh" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcRefHigh/">
                             <attr key="currentValue" type="byte">7</attr>
-                            <attr key="voltageValue" type="byte">56</attr>
+                            <attr key="voltageValue" type="byte">44</attr>
                         </node>
                         <node name="AdcRefLow" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcRefLow/">
                             <attr key="currentValue" type="byte">7</attr>
-                            <attr key="voltageValue" type="byte">3</attr>
+                            <attr key="voltageValue" type="byte">4</attr>
                         </node>
                         <node name="AdcTestVoltage" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcTestVoltage/">
                             <attr key="currentValue" type="byte">0</attr>
