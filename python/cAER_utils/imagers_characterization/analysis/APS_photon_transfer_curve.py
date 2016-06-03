@@ -100,7 +100,7 @@ class APS_photon_transfer_curve:
                     print("FPN: " + str(FPN) + "DN")
                     print("Temporal var: " + str(sigma_y) + "DN")
                     print(str(n_frames) + " frames recorded.")
-                    print(str(np.shape(all_frames)) + " all_frames.")
+#                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
@@ -145,7 +145,7 @@ class APS_photon_transfer_curve:
         plt.xlabel('exposure time [us]') 
         plt.ylabel('Mean[DN]') 
         plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+        plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
     
         # photon transfer curve 
         plt.figure()
@@ -161,8 +161,7 @@ class APS_photon_transfer_curve:
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('Var[DN^2] ')
         plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-
+        plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         # photon transfer curve log 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -181,7 +180,7 @@ class APS_photon_transfer_curve:
         plt.xlabel('Mean[DN] ') 
         plt.ylabel('STD[DN] ')
         plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 
         print("Log fit...")
         slope_tot = []
@@ -225,7 +224,7 @@ class APS_photon_transfer_curve:
             plt.xlabel('log(Mean[DN])') 
             plt.ylabel('log(STD[DN])')
             plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+            plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         
             print("Linear fit...")
             slope_tot = []
@@ -260,7 +259,7 @@ class APS_photon_transfer_curve:
             plt.xlabel('Mean[DN]') 
             plt.ylabel('Var[DN^2]')
             plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+            plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"
