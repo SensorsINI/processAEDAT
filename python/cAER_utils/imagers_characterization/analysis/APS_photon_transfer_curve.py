@@ -45,6 +45,8 @@ class APS_photon_transfer_curve:
         i_dark = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])  
         FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         u_y_tot_50perc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        Gain_uVe_log = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        Gain_uVe_lin = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         all_frames = []
         done = False
 
@@ -236,10 +238,10 @@ class APS_photon_transfer_curve:
                         failed = True
                         continue
                     e_log = 2.71828183
-                    Gain_uVe_log = e_log**(-inter/slope_log);
-                    print("Conversion gain: "+str(format(Gain_uVe_log, '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                    Gain_uVe_log[this_area_y,this_area_x] = e_log**(-inter/slope_log);
+                    print("Conversion gain: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                     fit_fn = np.poly1d([slope_log, inter]) 
-                    ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log, '.2f')) + ' uV/e')
+                    ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f')) + ' uV/e')
                     this_mean_values_lin = this_mean_values[0:max_ind_var] # Plot for all points
                     ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
                     bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
@@ -271,10 +273,10 @@ class APS_photon_transfer_curve:
                         this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                         this_mean_values_lin = this_mean_values[0:max_ind_var]
                         slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                        Gain_uVe_lin = ((ADC_range*slope)/ADC_values)*1000000;
-                        print("Conversion gain: "+str(format(Gain_uVe_lin, '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                        Gain_uVe_lin[this_area_y,this_area_x] = ((ADC_range*slope)/ADC_values)*1000000;
+                        print("Conversion gain: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                         fit_fn = np.poly1d([slope, inter]) 
-                        ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin, '.2f')) + ' uV/e')
+                        ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f')) + ' uV/e')
                         ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                         bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                         color_tmp = color_tmp+1
@@ -304,8 +306,8 @@ class APS_photon_transfer_curve:
 #                out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
 #                out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
                 if(ptc_dir.lower().find('dark') < 0):                
-                    out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin, '.4f'))+" uV/e\n")
-                    out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log, '.4f'))+" uV/e\n")
+                    out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.4f'))+" uV/e\n")
+                    out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
                 if(ptc_dir.lower().find('dark') >= 0):
                     out_file.write("Dark current is: " + str(format(i_dark[this_area_y,this_area_x], '.4f')) + " e/s\n")
