@@ -40,13 +40,14 @@ class APS_photon_transfer_curve:
         files_in_dir.sort()
         u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
-        std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        i_dark =  np.zeros([len(frame_y_divisions),len(frame_x_divisions)])        
-        u_y_mean_frames = []
+        i_dark = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])  
+        FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        u_y_tot_50perc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         all_frames = []
         done = False
+
         for this_file in range(len(files_in_dir)):
             print("processing gray values from file ", str(files_in_dir[this_file]))
             while( not files_in_dir[this_file].endswith(".aedat")):
@@ -97,17 +98,27 @@ class APS_photon_transfer_curve:
                             spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
                     spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
                     FPN = spatio_var_temporal_mean**0.5
-                    #raise Exception                    
-                    print("FPN: " + str(FPN) + "DN")
-                    print("Temporal var: " + str(sigma_y) + "DN")
-                    print(str(n_frames) + " frames recorded.")
+#                    print("FPN: " + str(FPN) + "DN")
+#                    print("Temporal var: " + str(sigma_y) + "DN")
+#                    print(str(n_frames) + " frames recorded.")
 #                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
                     FPN_all[this_file, this_div_y, this_div_x] = FPN
                     #u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
-        
+                    
+        #FPN 50% sat level
+        for this_div_x in range(len(frame_x_divisions)) :
+            for this_div_y in range(len(frame_y_divisions)):
+                range_u_y_tot = np.max(u_y_tot[:, this_div_y, this_div_x])-np.min(u_y_tot[:, this_div_y, this_div_x])
+                u_y_tot_50perc[this_div_y, this_div_x] = np.min(u_y_tot[:, this_div_y, this_div_x]) + range_u_y_tot/2.0
+                indu_y_tot_50perc = np.where(u_y_tot[:,this_div_y,this_div_x]  >= u_y_tot_50perc[this_div_y, this_div_x])[0][0]
+                FPN_50[this_div_y, this_div_x] = FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+                print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + ""
+                print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
+                
         #just remove entry that corresponds to files that are not measurements
         files_num, y_div, x_div = np.shape(exposures)
         to_remove = len(np.unique(np.where(exposures == 0)[0]))
@@ -148,20 +159,21 @@ class APS_photon_transfer_curve:
         plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 
-        # Dark current
-        capacitance = 18.0*10**(-15)    
-        echarge = 1.6*10**(-19)
-        percentage_margin = 0.2
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
-                max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
-                indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
-                min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
-                indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
-                slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
-                i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
-                print "If the recording was made in the dark, then the dark current is: " + str(i_dark[this_area_y,this_area_x]) + "e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+        if(ptc_dir.find('dark') >= 0):
+            # Dark current
+            capacitance = 18.0*10**(-15)    
+            echarge = 1.6*10**(-19)
+            percentage_margin = 0.2
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
+                    max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
+                    indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
+                    min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
+                    indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
+                    slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
+                    i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
+                    print "Dark current is: " + str(i_dark[this_area_y,this_area_x]) + "e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
     
         # photon transfer curve 
         plt.figure()
@@ -199,8 +211,6 @@ class APS_photon_transfer_curve:
         plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 
         print("Log fit...")
-        slope_tot = []
-        inter_tot = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -218,18 +228,17 @@ class APS_photon_transfer_curve:
                 this_mean_values_lin = this_mean_values[start_index:max_ind_var]
                 try: 
                     #raise Exception
-                    slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var])),1)
+                    slope_log, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var])),1)
                     failed = False
                 except ValueError:
                     print("Poly Fit Failed for this recording.. skipping")
                     failed = True
                     continue
-                #print("slope: "+str(slope))
                 e_log = 2.71828183
-                Gain_uVe = e_log**(-inter/slope);
-                print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
-                fit_fn = np.poly1d([slope, inter]) 
-                ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                Gain_uVe_log = e_log**(-inter/slope_log);
+                print("Conversion gain: "+str(format(Gain_uVe_log, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                fit_fn = np.poly1d([slope_log, inter]) 
+                ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log, '.2f')) + ' uV/e')
                 this_mean_values_lin = this_mean_values[0:max_ind_var] # Plot for all points
                 ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
@@ -238,7 +247,7 @@ class APS_photon_transfer_curve:
         if(failed == False):
             for this_area_x in range(len(frame_x_divisions)):
                 for this_area_y in range(len(frame_y_divisions)):
-                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope:'+str(format(slope_log, '.3f'))+' Intercept:'+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
             plt.xlabel('log(Mean[DN])') 
@@ -247,8 +256,6 @@ class APS_photon_transfer_curve:
             plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         
             print("Linear fit...")
-            slope_tot = []
-            inter_tot = []
             fig = plt.figure()
             ax = fig.add_subplot(111)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -263,10 +270,10 @@ class APS_photon_transfer_curve:
                     this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                     this_mean_values_lin = this_mean_values[0:max_ind_var]
                     slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                    Gain_uVe = ((ADC_range*slope)/ADC_values)*1000000;
-                    print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                    Gain_uVe_lin = ((ADC_range*slope)/ADC_values)*1000000;
+                    print("Conversion gain: "+str(format(Gain_uVe_lin, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                     fit_fn = np.poly1d([slope, inter]) 
-                    ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                    ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin, '.2f')) + ' uV/e')
                     ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                     bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                     color_tmp = color_tmp+1
@@ -285,17 +292,21 @@ class APS_photon_transfer_curve:
         report_file = figure_dir+"Report_results_APS"+".txt"
         out_file = open(report_file,"w")
         #raise Exception
-        for this_file in range(len(exposures)):
-            out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
-            for this_area_x in range(x_div):
-                for this_area_y in range(y_div):
-                    out_file.write("Division (x,y) " + str(this_area_x) + "," + str(this_area_y) + ":\n")
-                    out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
-                    out_file.write("FPN (DN): " + str(FPN_all[this_file, this_area_y, this_area_x]) + "\n")
-                    out_file.write("FPN (%): " + str(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
-                    out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
-                    out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
-                    out_file.write("If the recording was made in the dark, then the dark current is: " + str(i_dark[this_area_y,this_area_x]) + "e/s\n")
+#        for this_file in range(len(exposures)):
+#        out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
+#                out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
+                out_file.write("FPN at 50% sat level (DN): " + str(FPN_50[this_area_y, this_area_x]) + "\n")
+                out_file.write("FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x])) + " %\n")
+#                out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
+#                out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+                out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin, '.2f'))+" uV/e\n")
+                out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log, '.2f'))+" uV/e\n")
+                out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
+                if(ptc_dir.find('dark') >= 0):
+                    out_file.write("Dark current is: " + str(i_dark[this_area_y,this_area_x]) + " e/s\n")
         out_file.close()
 
     def confIntMean(self, a, conf=0.95):
