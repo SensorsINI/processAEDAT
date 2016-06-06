@@ -197,10 +197,12 @@ class APS_photon_transfer_curve:
                 max_var = np.max(sigma_fit)
                 max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                 this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
-                this_mean_values_lin = this_mean_values[0:max_ind_var]
+                percentage_fit = 0.45 # Last percentage to fit
+                start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
+                this_mean_values_lin = this_mean_values[start_index:max_ind_var]
                 try: 
                     #raise Exception
-                    slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[0:max_ind_var])),1)
+                    slope, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var])),1)
                     failed = False
                 except ValueError:
                     print("Poly Fit Failed for this recording.. skipping")
@@ -211,6 +213,7 @@ class APS_photon_transfer_curve:
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
                 ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
+                this_mean_values_lin = this_mean_values[0:max_ind_var] # Plot for all points
                 ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
                 bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                 color_tmp = color_tmp+1
