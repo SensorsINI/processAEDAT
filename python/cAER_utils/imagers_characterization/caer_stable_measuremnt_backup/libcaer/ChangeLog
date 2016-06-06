@@ -1,0 +1,95 @@
+Release 1.0.3 - 28.03.2016
+INCOMPATIBLE CHANGES
+- davis_fx2.c: removed specific FX2 code, now uses same backend as FX3
+  for sending all configuration values, due to new firmware version 3
+  for FX2 DAVIS small-board cameras. A firmware update is required,
+  please follow the instructions at http://inilabs.com/support/reflashing/.
+
+NEW FEATURES
+- frame.h: add function caerFrameEventGetPixelArrayCGFormat() to
+  Frame Event, allows to get a copy of the pixels array in the
+  standard computer graphics format (pixel (0, 0) in upper left
+  corner) efficently.
+- davis.h: add DAVIS_CONFIG_APS_ADC_TEST_MODE parameter to APS module.
+
+Release 1.0.2 - 08.01.2016
+IMCOMPATIBLE CHANGES
+- frame.h: rename channel number to color channels and add color
+  filter information, to better specify the information needed
+  to reconstruct color frames. The 'enum caer_frame_event_color_channels'
+  and 'enum caer_frame_event_color_filter' hold the possible values.
+  This change is backwards-compatible with older frame format!
+- davis.h, dvs128.h: changed info data structure's integers to be
+  signed for better cross-language compatibility. Also 'deviceID'
+  can now be compared directly with 'sourceID' from event packets.
+- davis.h: changed type of 'apsColorFilter' in info data structure
+  to take advantage of new 'enum caer_frame_event_color_filter'.
+
+NEW FEATURES
+- common.h: add generic functions for event packet copying, with
+  support for packet size reductions (copy only valid).
+- libcaer.h: add generic clear, get and set functions for bitfields,
+  and use them in all the event functions to avoid errors.
+- config.h: add device configuration event type, for tracking
+  of device configuration changes in the event stream.
+- log.c: add timezone information to log message time information.
+- dvs128_simple.cpp, davis_simple.cpp: add C++11 example variants.
+- Enable more Clang compiler warnings.
+
+BUG FIXES
+- davis_common.c: only update the ROI size information if ROI
+  updates actually came in from the device.
+- Fix and improve documentation, especially for the frame event.
+- Fix off-by-one in event's GetEvent() function's warning log message.
+- device.c: mark global function pointer arrays static.
+- common.h, frame.h: fix compilation of inline functions in
+  strict C++11 mode.
+
+
+Release 1.0.1 - 06.11.2015
+INCOMPATIBLE CHANGES
+- Requires firmware version 2 and logic revision 7449.
+- usb.h: improved caerDeviceDataStart() API to also allow for
+  notification of data acquisition shutdown, to be able to react
+  to abnormal shutdown cases, like when a device is unplugged.
+- frame.h: changed in-memory format for easier handling and compatibility
+  with the other event formats (all-in-one memory block).
+- davis.h: rename DAVIS240 APSOVERFLOWLEVEL to APSOVERFLOWLEVELBN.
+
+NEW FEATURES
+- Headers are C++ compatible and stand-alone now.
+- MacOS X support.
+- Added pkg-config file for library.
+- Full API documentation (see docs/ for PDF).
+- Various cmake/build improvements. Support out-of-tree builds.
+- Add iterator macros for EventPackets.
+- frame.h: added ROI region ID tracking, as well as ROI position.
+  Added caerFrameEventGetExposureLength() and caerFrameEventGetTimestamp(),
+  which is defined as the median of the exposure times.
+  Added caerFrameEventPacketGetPixelsSize() and caerFrameEventPacketGetPixelsMaxIndex()
+  for EventPacket-level size information.
+  Added caerFrameEventGetPixelsSize() and caerFrameEventGetPixelsMaxIndex()
+  for Event-level size information.
+- log.h: added caerLogFileDescriptorsSet() to allow logging to
+  up to two different file descriptors (defaults to STDERR only).
+- davis.h: added chipID check macros.
+- davis.h: added DAVIS_CONFIG_APS_SNAPSHOT to take one frame snapshots.
+- dvs128.h: added DVS128_CONFIG_DVS_TS_MASTER to select timestamp
+  master or slave behavior (timestamp synchronization).
+- davis_common.c: added support for outputting only reset read or
+  signal read frames, for debugging purposes.
+- c11threads_posix.h: C11-compatible thread abstraction, for
+  both Linux and MacOS X, based on POSIX Threads.
+
+BUG FIXES
+- Relaxed atomic operations memory constraints for better
+  performance on weakly-ordered architectures (like ARM).
+- log.c: call tzset() before localtime_r(), as per standard.
+- davis_common.c: improved Region of Interest support (APS).
+- davis_fx2.c: keep GlobalShutter flag correctly in-sync.
+- davis_fx3.c: fixed support for new FX3 devices.
+- packetContainer.h: handle container being NULL by returning NULL.
+
+
+Release 1.0.0 - 02.10.2015
+- Initial release.

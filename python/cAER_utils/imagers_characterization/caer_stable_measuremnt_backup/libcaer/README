@@ -1,0 +1,56 @@
+libcaer
+====
+
+Minimal C library to access, configure and get data out of AER sensors,
+such as the Dynamic Vision Sensor (DVS) or DAVIS cameras.
+
+REQUIREMENTS:
+
+cmake >= 2.6
+gcc >= 4.9 or clang >= 3.6
+libusb >= 1.0.17
+
+Please make sure that you have the various development packages installed
+for the above dependencies. They are usually called PKG-dev or PKG-devel.
+
+INSTALLATION:
+
+1) configure:
+
+$ cmake -DCMAKE_INSTALL_PREFIX=/usr .
+
+2) build:
+
+$ make
+
+3) install:
+
+$ make install
+
+DOCUMENTATION:
+
+The API documentation for a release can be found at docs/libcaer_api_manual.pdf.
+Also check the examples/ directory and the iniLabs Support website.
+
+For the development tree, you can generate the documentation using:
+
+$ make doc    - to generate docs/latex/ and docs/html/ documentation files.
+$ make pdf    - to generate a PDF from the LaTeX sources at docs/latex/refman.pdf.
+
+USAGE:
+
+See examples/ directory. Usual usage is (simplified):
+
+h = caerDeviceOpen(TYPE);
+caerDeviceSendDefaultConfig(h);
+caerDeviceDataStart(h);
+
+loop:
+	c = caerDeviceDataGet(h);
+	work with c (container) and its event packets
+
+caerDeviceDataStop(h);
+caerDeviceClose(&h);
+
+All configuration parameters and event types are specified in the
+public headers and documented there.

@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+
+Name: libcaer
+Description: Minimal C API for low-level access to DVS128, DAVIS devices. 
+Version: 2.0.0
+Requires.private: libusb-1.0 >= 1.0.17
+Libs: -L${libdir} -lcaer
+Libs.private: -lpthread 
+Cflags: -I${includedir}
