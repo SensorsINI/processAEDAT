@@ -302,9 +302,10 @@ class APS_photon_transfer_curve:
                 out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
 #                out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
 #                out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
-                out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin, '.4f'))+" uV/e\n")
-                out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log, '.4f'))+" uV/e\n")
-                out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
+                if(ptc_dir.find('dark') < 0):                
+                    out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin, '.4f'))+" uV/e\n")
+                    out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log, '.4f'))+" uV/e\n")
+                    out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
                 if(ptc_dir.find('dark') >= 0):
                     out_file.write("Dark current is: " + str(format(i_dark[this_area_y,this_area_x], '.4f')) + " e/s\n")
         out_file.close()
