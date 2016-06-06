@@ -100,9 +100,10 @@ class APS_photon_transfer_curve:
                             spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
                     spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
                     FPN = spatio_var_temporal_mean**0.5
-                    print("FPN: " + str(FPN) + "DN")
-                    print("Temporal var: " + str(sigma_y) + "DN")
-                    print(str(n_frames) + " frames recorded.")
+                    if(ptc_dir.lower().find('debug') >= 0):
+                        print("FPN: " + str(FPN) + "DN")
+                        print("Temporal var: " + str(sigma_y) + "DN")
+                        print(str(n_frames) + " frames recorded.")
 #                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
@@ -120,145 +121,101 @@ class APS_photon_transfer_curve:
                 print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
                 print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
                 print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
-                
-        #just remove entry that corresponds to files that are not measurements
-        files_num, y_div, x_div = np.shape(exposures)
-        to_remove = len(np.unique(np.where(exposures == 0)[0]))
-        exposures_real = exposures[exposures != 0]
-        exposures = np.reshape(exposures_real, [files_num-to_remove, y_div, x_div])
-        u_y_tot_real = u_y_tot[u_y_tot != -1]
-        u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div, x_div])
-        sigma_tot_real = sigma_tot[sigma_tot != -1]
-        sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])   
-        exposures = exposures[:,0]
-        #all_frames = np.array(all_frames)
-        #plt.figure()
-        #plt.title("all frames values")
-        #for i in range(len(all_frames)):
-        #    this_ff = np.reshape(all_frames[i], len(all_frames[i]))
-        #    this_dn_f = np.right_shift(this_ff,6)
-        #    plot(this_dn_f) 
-        #plt.xlabel("frame number")   
-        #plt.legend(loc='best')
-        #plt.xlabel('frame number') 
-        #plt.ylabel('DN value single pixel') 
-        #plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
-        #plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
-    
-        # sensitivity plot 
-        plt.figure()
-        plt.title("Sensitivity APS")
-        un, y_div, x_div = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-        color_tmp = 0;
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                plt.plot( exposures[:,0], u_y_tot[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.xlabel('Exposure time [us]') 
-        plt.ylabel('Mean[DN]') 
-        plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-
-        if(ptc_dir.lower().find('dark') >= 0):
-            # Dark current
-            capacitance = 18.0*10**(-15)    
-            echarge = 1.6*10**(-19)
-            percentage_margin = 0.2
-            for this_area_x in range(x_div):
-                for this_area_y in range(y_div):
-                    range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
-                    max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
-                    indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
-                    min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
-                    indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
-                    slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
-                    i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
-                    print "Dark current is: " + str(i_dark[this_area_y,this_area_x]) + " e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
-    
-        # photon transfer curve 
-        plt.figure()
-        plt.title("Photon Transfer Curve")
-        un, y_div, x_div = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-        color_tmp = 0;
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.xlabel('Mean[DN] ') 
-        plt.ylabel('Var[$\mathregular{DN^2}$] ')
-        plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-        # photon transfer curve log 
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.title("Photon Transfer Curve")
-        un, y_div, x_div = np.shape(u_y_tot)
-        colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-        color_tmp = 0;
-        for this_area_x in range(x_div):
-            for this_area_y in range(y_div):
-                #raise Exception
-                plt.plot( u_y_tot[:,this_area_y,this_area_x]-u_y_tot[0,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
-                color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
-        plt.xlabel('Mean[DN] ') 
-        plt.ylabel('STD[DN] ')
-        plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-        plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         
-        if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)): # Don't fit for dark current
-            print("Log fit...")
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        if(ptc_dir.lower().find('debug') < 0):        
+            #just remove entry that corresponds to files that are not measurements
+            files_num, y_div, x_div = np.shape(exposures)
+            to_remove = len(np.unique(np.where(exposures == 0)[0]))
+            exposures_real = exposures[exposures != 0]
+            exposures = np.reshape(exposures_real, [files_num-to_remove, y_div, x_div])
+            u_y_tot_real = u_y_tot[u_y_tot != -1]
+            u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div, x_div])
+            sigma_tot_real = sigma_tot[sigma_tot != -1]
+            sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])   
+            exposures = exposures[:,0]
+            #all_frames = np.array(all_frames)
+            #plt.figure()
+            #plt.title("all frames values")
+            #for i in range(len(all_frames)):
+            #    this_ff = np.reshape(all_frames[i], len(all_frames[i]))
+            #    this_dn_f = np.right_shift(this_ff,6)
+            #    plot(this_dn_f) 
+            #plt.xlabel("frame number")   
+            #plt.legend(loc='best')
+            #plt.xlabel('frame number') 
+            #plt.ylabel('DN value single pixel') 
+            #plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
+            #plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
+        
+            # sensitivity plot 
+            plt.figure()
+            plt.title("Sensitivity APS")
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    sigma_fit = sigma_tot[1:-1,this_area_y, this_area_x]
-                    max_var = np.max(sigma_fit)
-                    max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                    this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
-                    percentage_fit = 0.45 # Last percentage to fit
-                    start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
-                    this_mean_values_lin = this_mean_values[start_index:max_ind_var]
-                    try: 
-                        #raise Exception
-                        slope_log, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var])),1)
-                        failed = False
-                    except ValueError:
-                        print("Poly Fit Failed for this recording.. skipping")
-                        failed = True
-                        continue
-                    e_log = 2.71828183
-                    Gain_uVe_log[this_area_y,this_area_x] = e_log**(-inter/slope_log);
-                    print("Conversion gain: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
-                    fit_fn = np.poly1d([slope_log, inter]) 
-                    ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f')) + ' uV/e')
-                    this_mean_values_lin = this_mean_values[0:max_ind_var] # Plot for all points
-                    ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
-                    bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                    plt.plot( exposures[:,0], u_y_tot[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.xlabel('Exposure time [us]') 
+            plt.ylabel('Mean[DN]') 
+            plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+    
+            if(ptc_dir.lower().find('dark') >= 0):
+                # Dark current
+                capacitance = 18.0*10**(-15)    
+                echarge = 1.6*10**(-19)
+                percentage_margin = 0.2
+                for this_area_x in range(x_div):
+                    for this_area_y in range(y_div):
+                        range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
+                        max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
+                        indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
+                        min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
+                        indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
+                        slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
+                        i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
+                        print "Dark current is: " + str(i_dark[this_area_y,this_area_x]) + " e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+        
+            # photon transfer curve 
+            plt.figure()
+            plt.title("Photon Transfer Curve")
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
             color_tmp = 0;
-            if(failed == False):
-                for this_area_x in range(len(frame_x_divisions)):
-                    for this_area_y in range(len(frame_y_divisions)):
-                        ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope_log, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                        color_tmp = color_tmp+1
-                lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
-                plt.xlabel('log(Mean[DN])') 
-                plt.ylabel('log(STD[DN])')
-                plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-                plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.xlabel('Mean[DN] ') 
+            plt.ylabel('Var[$\mathregular{DN^2}$] ')
+            plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            # photon transfer curve log 
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.title("Photon Transfer Curve")
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    #raise Exception
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x]-u_y_tot[0,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            ax.set_xscale("log", nonposx='clip')
+            ax.set_yscale("log", nonposy='clip')
+            plt.xlabel('Mean[DN] ') 
+            plt.ylabel('STD[DN] ')
+            plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             
-                print("Linear fit...")
+            if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)): # Don't fit for dark current
+                print("Log fit...")
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
                 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -267,30 +224,91 @@ class APS_photon_transfer_curve:
                 color_tmp = 0;
                 for this_area_x in range(x_div):
                     for this_area_y in range(y_div):
-                        sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                        sigma_fit = sigma_tot[1:-1,this_area_y, this_area_x]
                         max_var = np.max(sigma_fit)
                         max_ind_var = np.where(sigma_fit  == max_var)[0][0]
-                        this_mean_values = u_y_tot[:,this_area_y, this_area_x]
-                        this_mean_values_lin = this_mean_values[0:max_ind_var]
-                        slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
-                        Gain_uVe_lin[this_area_y,this_area_x] = ((ADC_range*slope)/ADC_values)*1000000;
-                        print("Conversion gain: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
-                        fit_fn = np.poly1d([slope, inter]) 
-                        ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f')) + ' uV/e')
-                        ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
+                        this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
+                        percentage_fit = 0.45 # Last percentage to fit
+                        start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
+                        this_mean_values_lin = this_mean_values[start_index:max_ind_var]
+                        try: 
+                            #raise Exception
+                            slope_log, inter = np.polyfit(log(this_mean_values_lin.reshape(len(this_mean_values_lin))),log(np.sqrt(sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var])),1)
+                            failed = False
+                        except ValueError:
+                            print("Poly Fit Failed for this recording.. skipping")
+                            failed = True
+                            continue
+                        e_log = 2.71828183
+                        Gain_uVe_log[this_area_y,this_area_x] = e_log**(-inter/slope_log);
+                        print("Conversion gain: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                        fit_fn = np.poly1d([slope_log, inter]) 
+                        ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f')) + ' uV/e')
+                        this_mean_values_lin = this_mean_values[0:max_ind_var] # Plot for all points
+                        ax.plot(log(this_mean_values_lin.reshape(len(this_mean_values_lin))), fit_fn(log(this_mean_values_lin.reshape(len(this_mean_values_lin)))), '-*', markersize=4, color=colors[color_tmp])
                         bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                         color_tmp = color_tmp+1
                 color_tmp = 0;
-                for this_area_x in range(len(frame_x_divisions)):
-                    for this_area_y in range(len(frame_y_divisions)):
-                        ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                        color_tmp = color_tmp+1
-                lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
-                plt.xlabel('Mean[DN]') 
-                plt.ylabel('Var[$\mathregular{DN^2}$]')
-                plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-                plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-
+                if(failed == False):
+                    for this_area_x in range(len(frame_x_divisions)):
+                        for this_area_y in range(len(frame_y_divisions)):
+                            ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope_log, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                            color_tmp = color_tmp+1
+                    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+                    plt.xlabel('log(Mean[DN])') 
+                    plt.ylabel('log(STD[DN])')
+                    plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+                    plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                
+                    print("Linear fit...")
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                    un, y_div, x_div = np.shape(u_y_tot)
+                    colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+                    color_tmp = 0;
+                    for this_area_x in range(x_div):
+                        for this_area_y in range(y_div):
+                            sigma_fit = sigma_tot[:,this_area_y, this_area_x]
+                            max_var = np.max(sigma_fit)
+                            max_ind_var = np.where(sigma_fit  == max_var)[0][0]
+                            this_mean_values = u_y_tot[:,this_area_y, this_area_x]
+                            this_mean_values_lin = this_mean_values[0:max_ind_var]
+                            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+                            Gain_uVe_lin[this_area_y,this_area_x] = ((ADC_range*slope)/ADC_values)*1000000;
+                            print("Conversion gain: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                            fit_fn = np.poly1d([slope, inter]) 
+                            ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f')) + ' uV/e')
+                            ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
+                            bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                            color_tmp = color_tmp+1
+                    color_tmp = 0;
+                    for this_area_x in range(len(frame_x_divisions)):
+                        for this_area_y in range(len(frame_y_divisions)):
+                            ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                            color_tmp = color_tmp+1
+                    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+                    plt.xlabel('Mean[DN]') 
+                    plt.ylabel('Var[$\mathregular{DN^2}$]')
+                    plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+                    plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        else:
+            # Temporal noise of ADC 
+            plt.figure()
+            plt.title("Temporal Noise of ADC")
+            un, y_div, x_div = np.shape(sigma_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    plt.plot( exposures[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.ylabel('Temporal noise [DN]') 
+            plt.xlabel('Voltage value [bit]')
+            plt.savefig(figure_dir+"adc_test.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"adc_test.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"
         out_file = open(report_file,"w")
