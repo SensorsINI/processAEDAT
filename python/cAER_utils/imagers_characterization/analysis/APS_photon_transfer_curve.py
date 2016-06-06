@@ -146,6 +146,21 @@ class APS_photon_transfer_curve:
         plt.ylabel('Mean[DN]') 
         plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+
+        # Dark current
+        capacitance = 18.0*10**(-15)    
+        echarge = 1.6*10**(-19)
+        percentage_margin = 0.2
+        for this_area_x in range(x_div):
+            for this_area_y in range(y_div):
+                range_sensitivity = np.max(u_y_tot) - np.min(u_y_tot)
+                max80perc = np.max(u_y_tot) - range_sensitivity*percentage_margin
+                indmax80perc = np.where(u_y_tot  <= max80perc)[0][0]
+                min20perc = np.min(u_y_tot) + range_sensitivity*percentage_margin
+                indmin20perc = np.where(u_y_tot  >= min20perc)[0][0]
+                slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
+                i_dark = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
+                print "If the recording was made in the dark, then the dark current is: " + str(i_dark) + "e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
     
         # photon transfer curve 
         plt.figure()
