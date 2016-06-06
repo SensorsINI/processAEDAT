@@ -100,9 +100,9 @@ class APS_photon_transfer_curve:
                             spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
                     spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
                     FPN = spatio_var_temporal_mean**0.5
-#                    print("FPN: " + str(FPN) + "DN")
-#                    print("Temporal var: " + str(sigma_y) + "DN")
-#                    print(str(n_frames) + " frames recorded.")
+                    print("FPN: " + str(FPN) + "DN")
+                    print("Temporal var: " + str(sigma_y) + "DN")
+                    print(str(n_frames) + " frames recorded.")
 #                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
