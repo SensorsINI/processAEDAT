@@ -43,6 +43,7 @@ class APS_photon_transfer_curve:
         std_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        i_dark =  np.zeros([len(frame_y_divisions),len(frame_x_divisions)])        
         u_y_mean_frames = []
         all_frames = []
         done = False
@@ -159,8 +160,8 @@ class APS_photon_transfer_curve:
                 min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
                 indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
                 slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
-                i_dark = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
-                print "If the recording was made in the dark, then the dark current is: " + str(i_dark) + "e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+                i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
+                print "If the recording was made in the dark, then the dark current is: " + str(i_dark[this_area_y,this_area_x]) + "e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
     
         # photon transfer curve 
         plt.figure()
@@ -174,7 +175,7 @@ class APS_photon_transfer_curve:
                 color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel('Mean[DN] ') 
-        plt.ylabel('Var[DN^2] ')
+        plt.ylabel('Var[$\mathregular{DN^2}$] ')
         plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
         plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         # photon transfer curve log 
@@ -224,7 +225,8 @@ class APS_photon_transfer_curve:
                     failed = True
                     continue
                 #print("slope: "+str(slope))
-                Gain_uVe = -inter/slope;
+                e_log = 2.71828183
+                Gain_uVe = e_log**(-inter/slope);
                 print("Conversion gain: "+str(format(Gain_uVe, '.2f'))+"uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                 fit_fn = np.poly1d([slope, inter]) 
                 ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe, '.2f')) + ' uV/e')
@@ -275,7 +277,7 @@ class APS_photon_transfer_curve:
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
             plt.xlabel('Mean[DN]') 
-            plt.ylabel('Var[DN^2]')
+            plt.ylabel('Var[$\mathregular{DN^2}$]')
             plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 
@@ -291,8 +293,9 @@ class APS_photon_transfer_curve:
                     out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("FPN (DN): " + str(FPN_all[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("FPN (%): " + str(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
-                    out_file.write("Temporal variance (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+                    out_file.write("If the recording was made in the dark, then the dark current is: " + str(i_dark[this_area_y,this_area_x]) + "e/s\n")
         out_file.close()
 
     def confIntMean(self, a, conf=0.95):
