@@ -255,6 +255,7 @@ class APS_photon_transfer_curve:
                             ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope_log, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
                             color_tmp = color_tmp+1
                     lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+                    plt.title("Photon Transfer Curve log plot")
                     plt.xlabel('log(Mean[DN])') 
                     plt.ylabel('log(STD[DN])')
                     plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
@@ -288,11 +289,28 @@ class APS_photon_transfer_curve:
                             ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
                             color_tmp = color_tmp+1
                     lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
+                    plt.title("Photon Transfer Curve")
                     plt.xlabel('Mean[DN]') 
                     plt.ylabel('Var[$\mathregular{DN^2}$]')
                     plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                     plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         else:
+            # ADC level vs test signal 
+            plt.figure()
+            plt.title("ADC level vs signal")
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    plt.plot( exposures[:,this_area_y,this_area_x] , u_y_tot[:,this_area_y,this_area_x] , 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.ylabel('ADC level [DN]') 
+            plt.xlabel('Voltage value [bit]')
+            plt.savefig(figure_dir+"adc_test.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"adc_test.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            
             # Temporal noise of ADC 
             plt.figure()
             plt.title("Temporal Noise of ADC")
@@ -301,13 +319,14 @@ class APS_photon_transfer_curve:
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( exposures[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( exposures[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.ylim([0,1]) 
             plt.ylabel('Temporal noise [DN]') 
             plt.xlabel('Voltage value [bit]')
-            plt.savefig(figure_dir+"adc_test.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"adc_test.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.savefig(figure_dir+"adc_noise.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"adc_noise.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"
@@ -317,8 +336,8 @@ class APS_photon_transfer_curve:
 #        out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
         for this_area_x in range(x_div):
             for this_area_y in range(y_div):
-                out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
                 out_file.write("\n")
+                out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
 #                out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
                 out_file.write("FPN at 50% sat level (DN): " + str(format(FPN_50[this_area_y, this_area_x], '.4f')) + " DN\n")
                 out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
