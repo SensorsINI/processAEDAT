@@ -41,7 +41,7 @@ class APS_photon_transfer_curve:
         u_y_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
-        FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         i_dark = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])  
         FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         u_y_tot_50perc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
@@ -51,6 +51,7 @@ class APS_photon_transfer_curve:
         done = False
 
         for this_file in range(len(files_in_dir)):
+            print "####################################"
             print("processing gray values from file ", str(files_in_dir[this_file]))
             while( not files_in_dir[this_file].endswith(".aedat")):
                 print("not a valid data file ", str(files_in_dir[this_file]))
@@ -100,10 +101,12 @@ class APS_photon_transfer_curve:
                             spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
                     spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
                     FPN = spatio_var_temporal_mean**0.5
-                    if(ptc_dir.lower().find('debug') >= 0):
-                        print("FPN: " + str(FPN) + "DN")
-                        print("Temporal var: " + str(sigma_y) + "DN")
-                        print(str(n_frames) + " frames recorded.")
+#                    if(ptc_dir.lower().find('debug') >= 0):
+                    print "--------------------------------------------"
+                    print "X: " + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y])
+                    print "FPN: " + str(FPN) + "DN"
+                    print "Temporal var: " + str(sigma_y) + "DN"
+                    print str(n_frames) + " frames recorded." 
 #                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
@@ -131,7 +134,9 @@ class APS_photon_transfer_curve:
             u_y_tot_real = u_y_tot[u_y_tot != -1]
             u_y_tot =  np.reshape(u_y_tot_real, [files_num-to_remove, y_div, x_div])
             sigma_tot_real = sigma_tot[sigma_tot != -1]
-            sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])   
+            sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])
+            FPN_all_real = FPN_all[FPN_all != -1]
+            FPN_all = np.reshape(FPN_all_real, [files_num-to_remove, y_div, x_div]) 
             exposures = exposures[:,0]
             #all_frames = np.array(all_frames)
             #plt.figure()
@@ -178,7 +183,40 @@ class APS_photon_transfer_curve:
                         slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
                         i_dark[this_area_y,this_area_x] = slope_sensitivity*capacitance*(ADC_range/ADC_values)/echarge
                         print "Dark current is: " + str(i_dark[this_area_y,this_area_x]) + " e/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
-        
+            
+            # FPN vs signal in DN
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.title("FPN in DN vs signal")
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.xlabel('Mean [DN] ') 
+            plt.ylabel('FPN [DN] ')
+            plt.savefig(figure_dir+"fpn_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"fpn_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            # FPN vs signal as %
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.title("FPN in % vs signal")
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.xlabel('Mean [DN] ') 
+            plt.ylabel('FPN [%] ')
+            plt.savefig(figure_dir+"fpn_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"fpn_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            
             # photon transfer curve 
             plt.figure()
             plt.title("Photon Transfer Curve")
@@ -190,8 +228,8 @@ class APS_photon_transfer_curve:
                     plt.plot( u_y_tot[:,this_area_y,this_area_x] , sigma_tot[:,this_area_y,this_area_x] , 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            plt.xlabel('Mean[DN] ') 
-            plt.ylabel('Var[$\mathregular{DN^2}$] ')
+            plt.xlabel('Mean [DN] ') 
+            plt.ylabel('Var [$\mathregular{DN^2}$] ')
             plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             # photon transfer curve log 
@@ -209,8 +247,8 @@ class APS_photon_transfer_curve:
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             ax.set_xscale("log", nonposx='clip')
             ax.set_yscale("log", nonposy='clip')
-            plt.xlabel('Mean[DN] ') 
-            plt.ylabel('STD[DN] ')
+            plt.xlabel('Mean [DN] ') 
+            plt.ylabel('STD [DN] ')
             plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             
@@ -256,8 +294,8 @@ class APS_photon_transfer_curve:
                             color_tmp = color_tmp+1
                     lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
                     plt.title("Photon Transfer Curve log plot")
-                    plt.xlabel('log(Mean[DN])') 
-                    plt.ylabel('log(STD[DN])')
+                    plt.xlabel('log(Mean [DN])') 
+                    plt.ylabel('log(STD [DN])')
                     plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                     plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
                 
@@ -290,8 +328,8 @@ class APS_photon_transfer_curve:
                             color_tmp = color_tmp+1
                     lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  
                     plt.title("Photon Transfer Curve")
-                    plt.xlabel('Mean[DN]') 
-                    plt.ylabel('Var[$\mathregular{DN^2}$]')
+                    plt.xlabel('Mean [DN]') 
+                    plt.ylabel('Var [$\mathregular{DN^2}$]')
                     plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                     plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         else:
@@ -330,25 +368,32 @@ class APS_photon_transfer_curve:
             
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"
-        out_file = open(report_file,"w")
-        #raise Exception
-#        for this_file in range(len(exposures)):
-#        out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
+        out_file = open(report_file,"w")  
         for this_area_x in range(x_div):
             for this_area_y in range(y_div):
                 out_file.write("\n")
-                out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
-#                out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
+                out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")           
                 out_file.write("FPN at 50% sat level (DN): " + str(format(FPN_50[this_area_y, this_area_x], '.4f')) + " DN\n")
-                out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-#                out_file.write("Temporal variance ($\mathregular{DN^2}$): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
-#                out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+                out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")   
                 if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)):               
                     out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
                 if(ptc_dir.lower().find('dark') >= 0):
                     out_file.write("Dark current is: " + str(format(i_dark[this_area_y,this_area_x], '.4f')) + " e/s\n")
+        out_file.write("\n")
+        out_file.write("###############################################################################################\n")
+        for this_file in range(len(exposures)):
+            out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
+                    out_file.write("Spatiotemporal mean (DN): " + str(u_y_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("Temporal variance (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
+                    out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
+                    out_file.write("FPN (DN): " + str(format(FPN_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
+                    out_file.write("FPN (%): " + str(format(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")  
+            out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
 
     def confIntMean(self, a, conf=0.95):
