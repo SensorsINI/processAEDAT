@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures, in light [200,2200,80], in dark [200,2200000,80]
-[200,2200000,80]
+[0,2200,100]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?
