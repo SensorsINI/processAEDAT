@@ -16,19 +16,19 @@ ioff()
 ##############################################################################
 # ANALYSIS
 ##############################################################################
-do_ptc = True
+do_ptc = False
 do_frequency_response = False
 do_latency_pixel = False
-do_contrast_sensitivity = False
+do_contrast_sensitivity = True
 do_oscillations = False
 
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS346B_ADCint_ptc_08_06_16-15_36_07/"
+directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208_contrast_sensitivity_09_06_16-15_15_21/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
-camera_file = 'cameras/davis346_parameters.txt'
+camera_file = 'cameras/davis208_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]

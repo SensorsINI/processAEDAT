@@ -625,9 +625,9 @@ class caer_communication:
         recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
         print("Going on for " + str(recording_time))                
         time.sleep(2.0)
-        self.open_communication_data()
+#        self.open_communication_data()
         time.sleep(recording_time)
-        self.close_communication_data()
+#        self.close_communication_data()
         print "Done"
         
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 

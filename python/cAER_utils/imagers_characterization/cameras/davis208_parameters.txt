@@ -31,19 +31,19 @@ False
 # Contrast sensitivity parameters (for biases it takes ON, DIFF and OFF in triplets (the first value of each, then the second and so on))
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
-[150,200,255]
+[40,100,200,255,200,200,200,200,200,200,200,200]
 # 13 # DIFF bias finevalue (coarse is 4)
-[39,39,39]
+[39,39,39,39,39,39,39,39,39,39,39,39]
 # 14 # OFF bias finevalue (coarse is 3)
-[10,20,30]
+[1,1,1,1,1,2,6,8,1,1,1,1]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
-[30,35,40]
+[40,40,40,40,40,40,40,40,10,50,100,150]
 
 # #########################################################
 # Photon transfer curve parameters
 # #########################################################
-# 16 # start, end and number of points for exposures in us light: [1,100,100] dark: [1,1000000,100]
-[1,1000000,100]
+# 16 # start, end and number of points for exposures in us dark: [1,1000000,100]
+[1,100,100]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?

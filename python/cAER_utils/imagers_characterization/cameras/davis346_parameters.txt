@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures
-[1,100,20]
+[1,100,100]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?

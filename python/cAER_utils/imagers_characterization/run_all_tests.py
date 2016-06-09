@@ -15,12 +15,12 @@ import gpio_usb
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/davis346_parameters.txt'
+camera_file = 'cameras/davis208_parameters.txt'
 
 do_set_bias = False
 
-do_contrast_sensitivity = False # And DVS-FPN too
-do_ptc = True
+do_contrast_sensitivity = True # And DVS-FPN too
+do_ptc = False
 do_frequency_response = False
 do_latency_pixel_multiple_led_board = False
 do_latency_pixel_with_fiber = False
@@ -47,8 +47,9 @@ if(do_set_bias):
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
     oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    contrast_base_levels = [100,1000,2000] #contrast sensitivity base level sweeps
-    contrast_level = [0.6]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    contrast_base_levels = [100.0,1000.0,2000.0] #contrast sensitivity base level sweeps
+    contrast_base_levels = [1000.0]
+    contrast_level = [0.4]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
     for x in range(len(info[12].split(','))):
@@ -59,7 +60,7 @@ if(do_contrast_sensitivity):
     offthr = [0 for x in range(len(info[14].split(',')))]
     for x in range(len(info[14].split(','))):
         offthr[x] = int(info[14].split(',')[x].strip('[').strip(']'))
-    if(sensor == 'DAVIS208Mono'):
+    if(sensor == 'DAVIS208'):
         refss = [0 for x in range(len(info[15].split(',')))]
         for x in range(len(info[15].split(','))):
             refss[x] = int(info[15].split(',')[x].strip('[').strip(']'))
@@ -164,7 +165,7 @@ if(do_set_bias):
     sine_freq = 1.0;
     base_level = 1000;
     contrast_level = 0.5;
-    oscillations = 120; # 2 minutes
+    oscillations = 1000; # 2 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
     v_hi = (perc_hi - inter) / slope
@@ -257,12 +258,12 @@ if do_contrast_sensitivity:
                 control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/OnBn/ fineValue short '+str(onthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/DiffBn/ fineValue short '+str(diffthr[this_bias_index]))
                 control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/OffBn/ fineValue short '+str(offthr[this_bias_index]))
-                if (sensor == 'DAVIS208Mono'):
-                    for this_refss in range(len(refss)):
-                        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0") #enable sine wave
-                        print"refss finevalue" + str(refss[this_refss])
-                        control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/RefSSBn/ fineValue short '+str(refss[this_refss]))
-                        control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_refss])
+                if (sensor == 'DAVIS208'):
+                    #for this_refss in range(len(refss)):
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0") #enable sine wave
+                    print"refss finevalue" + str(refss[this_bias_index])
+                    control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/bias/RefSSBn/ fineValue short '+str(refss[this_bias_index]))
+                    control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = refss[this_bias_index])
                 else:
                     gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0") #enable sine wave
                     control.get_data_contrast_sensitivity(sensor, folder = folder, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level[this_contrast], base_level = contrast_base_levels[this_base], onthr = onthr[this_bias_index], diffthr = diffthr[this_bias_index], offthr =offthr[this_bias_index], refss = 0)
