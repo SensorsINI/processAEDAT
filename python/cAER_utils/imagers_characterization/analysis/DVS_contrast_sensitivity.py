@@ -141,33 +141,30 @@ class DVS_contrast_sensitivity:
                 matrix_count_on_noise = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
                 contrast_matrix_off = np.ones([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
                 contrast_matrix_on = np.ones([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])                                     
-                for this_div_x in range(len(frame_x_divisions)) :
-                    for this_div_y in range(len(frame_y_divisions)):
-                        for this_ev in range(len(ts)):
-                            if (xaddr[this_ev] >= frame_x_divisions[this_div_x][0] and \
-                                xaddr[this_ev] <= frame_x_divisions[this_div_x][1] and \
-                                yaddr[this_ev] >= frame_y_divisions[this_div_y][0] and \
-                                yaddr[this_ev] <= frame_y_divisions[this_div_y][1]):
-                                    #raise Exception
-                                    if (ts[this_ev] >= (sync_ts[-1] + 4.0*sine_phase) and ts[this_ev] < (sync_ts[-1] + 4.0*sine_phase*(num_oscillations-1.0))): # noise events
-                                        if (pol[this_ev] == 1):
-                                            matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1
-                                        if (pol[this_ev] == 0):
-                                            matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
-                                    for this_sync_ts in range(len(sync_ts)-1):
-                                        if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
-                                            #raise Exception
-                                            if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
-                                                #raise Exception
-                                                if(pol[this_ev] == 1):
-                                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
-                                                #if(pol[this_ev] == 0):
-                                                #    matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
-                                            if (ts[this_ev] >= (sync_ts[this_sync_ts] + sine_phase) and ts[this_ev] < (sync_ts[this_sync_ts] + 3.0*sine_phase)): # falling half of the sine wave
-                                                #if(pol[this_ev] == 1):
-                                                #    matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1        
-                                                if(pol[this_ev] == 0):
-                                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
+                this_sync_ts = 0
+                for this_ev in range(len(ts)):
+                    if (ts[this_ev] >= (sync_ts[-1] + 4.0*sine_phase) and ts[this_ev] < (sync_ts[-1] + 4.0*sine_phase*(num_oscillations-1.0))): # noise events
+                        if (pol[this_ev] == 1):
+                            matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1
+                        if (pol[this_ev] == 0):
+                            matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
+                    elif(ts[this_ev]<=sync_ts[-1]):
+                        if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase*(num_oscillations-1.0))) and (this_sync_ts<=len(sync_ts)-1)):
+                            this_sync_ts = this_sync_ts + 1           
+                            print "Moving to sync # " + str(this_sync_ts)
+                        if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
+                            if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
+                                #raise Exception
+                                if(pol[this_ev] == 1):
+                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
+                                #if(pol[this_ev] == 0):
+                                #    matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
+                            if (ts[this_ev] >= (sync_ts[this_sync_ts] + sine_phase) and ts[this_ev] < (sync_ts[this_sync_ts] + 3.0*sine_phase)): # falling half of the sine wave
+                                #if(pol[this_ev] == 1):
+                                #    matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1        
+                                if(pol[this_ev] == 0):
+                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
+                                    
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
