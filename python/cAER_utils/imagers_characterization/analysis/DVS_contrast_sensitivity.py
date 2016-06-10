@@ -149,7 +149,8 @@ class DVS_contrast_sensitivity:
                         if (pol[this_ev] == 0):
                             matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
                     elif(ts[this_ev]<=sync_ts[-1]):
-                        if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase*(num_oscillations-1.0))) and (this_sync_ts<=len(sync_ts)-1)):
+                        if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase)) and (this_sync_ts<=len(sync_ts)-1)):
+                            #raise Exception                            
                             this_sync_ts = this_sync_ts + 1           
                             print "Moving to sync # " + str(this_sync_ts)
                         if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
