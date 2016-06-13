@@ -152,21 +152,21 @@ class labview_communication:
         self.s_commands.sendall("ErrorT?\r\n\r\n")
         response = self.receive_data(self.s_commands, 5)
         if(response == 'False'):
-            return True
-        else:
             return False
+        else:
+            return True
 
     def set_wavelength(self, wavelenght):
         self.s_commands.sendall("Wavelenght""space""str(wavelenght)\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         return response
         
-    def read_wavelength(self, wavelenght):
+    def read_wavelength(self):
         self.s_commands.sendall("WavelenghtT?\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
 	return response
                 
-    def check_shutter_state(self, wavelenght):
+    def check_shutter_state(self):
         self.s_commands.sendall("ShutterT?\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
 	return response
@@ -188,7 +188,12 @@ class labview_communication:
             return False
 
     def read_reference_power(self):
-        self.s_commands.sendall("RefPower0?\r\n\r\n")
+        self.s_commands.sendall("RefPower?\r\n\r\n")
+        response = self.receive_data(self.s_commands, 53)
+	retunr response
+ 
+    def set_reference_power_offset(self):
+        self.s_commands.sendall("RefPower0Set\r\n\r\n")
         response = self.receive_data(self.s_commands, 53)
 	retunr response
 
