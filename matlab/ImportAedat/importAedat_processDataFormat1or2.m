@@ -1,10 +1,4 @@
-<<<<<<< .mine
 function output = importAedat_processDataFormat1or2(info)
-=======
-function [ output_args ] = importAedat_processDataFormat1or2(info)
->>>>>>> .r8254
-
-<<<<<<< .mine
 %{
 This is a sub-function of importAedat - it process the data where the aedat 
 file format is determined to be 1 or 2. 
@@ -50,16 +44,6 @@ fields:
 	- dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
 		special; polarity; frame; imu6; imu9; sample; ear; config.
-=======
-%{
-This is a sub-function of importAedat.
-If the recording is determined to be format 1 or 2, then this function
-runs. This includes the functionality of loadaedat, plus device-specific
-functions for interpretting addresses.
-%}
->>>>>>> .r8254
-
-<<<<<<< .mine
 
 The output is a structure with 2 fields.
 	- info - the input structure, embelished with other data
@@ -146,11 +130,9 @@ else
 	numBytesPerEvent = 8;
 	addrPrecision = 'uint32';
 end
-=======
-fileHandle = info.fileHandle;
->>>>>>> .r8254
 
-<<<<<<< .mine
+fileHandle = info.fileHandle;
+
 % Go to the EOF to find out how long it is
 fseek(info.fileHandle, 0, 'eof');
 
@@ -160,7 +142,7 @@ info.numEventsInFile = floor((ftell(info.fileHandle) - info.beginningOfDataPoint
 % Check the startEvent and endEvent parameters
 if ~isfield(info, 'startEvent')
 	info.startEvent = 1;
-=======
+
 % Find the number of events, assuming that the file position is just at the
 % end of the headers. 
 fseek(fileHandle, 0, 'eof');
@@ -168,7 +150,6 @@ numEvents = floor((ftell(f)-bof-numBytesPerEvent*startEvent)/numBytesPerEvent); 
 if numEvents>maxEvents, 
     fprintf('clipping to %d events although there are %d events in file\n',maxEvents,numEvents);
     numEvents=maxEvents;
->>>>>>> .r8254
 end
 	
 if ~isfield(info, 'endEvent')
