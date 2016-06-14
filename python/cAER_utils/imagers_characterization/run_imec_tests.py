@@ -131,12 +131,12 @@ if measure_qe:
                             print "Data saved in " +  folder
                             
                             ################### chip PTC under light ####################                             
-                            for this_wavelength in range(len(wavelength)):                            
+                            for this_wavelength in range(len(wavelengths)):                            
                                 # Step W1: Set the wavelength of interest
                                 labview_control.open_communication_command()
-                                labview_control.set_wavelength(wavelength[this_wavelength])
+                                labview_control.set_wavelength(wavelengths[this_wavelength])
                                 labview_control.open_communication_command()
-                                print "Set wavelength to " + str(wavelength[this_wavelength]) + ", read " + str(labview_control.set_wavelength)
+                                print "Set wavelength to " + str(wavelengths[this_wavelength]) + ", read " + str(labview_control.set_wavelength)
                             
                                 # Step W2: Check error (Verifies the error status of the QE setup control software)
                                 labview_control.open_communication_command()
@@ -202,7 +202,7 @@ if measure_qe:
                                                                 ADCtype = "_ADCint"
                                                             else:
                                                                 ADCtype = "_ADCext"
-                                                            folder = datadir + '/'+ sensor + ADCtype +'_ptc_light_' +  current_date # to do: include wavelength
+                                                            folder = datadir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(wavelengths[this_wavelength]) +  current_date
                                                             setting_dir = folder + str("/settings/")
                                                             print "\n"
                                                             print "Doing PTC measurements"
