@@ -42,8 +42,12 @@ class APS_photon_transfer_curve:
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
+        FPN_in_x_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
+        FPN_in_y_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         i_dark = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])  
         FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_50_in_x = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_50_in_y = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         u_y_tot_50perc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         Gain_uVe_log = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         Gain_uVe_lin = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
@@ -65,6 +69,7 @@ class APS_photon_transfer_curve:
             exp = float(exp)
             loader = load_files.load_files()
             [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = loader.load_file(directory+files_in_dir[this_file])
+            #raise Exception
             #rescale frame to their values and divide the test pixels areas
             #for this_frame in range(len(frame)):
             for this_div_x in range(len(frame_x_divisions)) :
@@ -95,7 +100,22 @@ class APS_photon_transfer_curve:
                     sigma_y = np.mean(temporal_variance)
                     #sigma_y = temporal_variance_EMVA
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
+                    y_temporal_mean = np.mean(temporal_mean,0)
+                    x_temporal_mean = np.mean(temporal_mean,1)
                     spatio_var_temporal_mean = 0.0
+                    spatio_var_y_temporal_mean = 0.0
+                    spatio_var_x_temporal_mean = 0.0
+                    
+                    for tx in range(xdim_f):
+                        spatio_var_y_temporal_mean = spatio_var_y_temporal_mean + (y_temporal_mean[tx] - spatio_temporal_mean)**2.0
+                    spatio_var_y_temporal_mean = spatio_var_y_temporal_mean / xdim_f
+                    FPN_in_x = spatio_var_y_temporal_mean**0.5
+
+                    for ty in range(ydim_f):
+                        spatio_var_x_temporal_mean = spatio_var_x_temporal_mean + (x_temporal_mean[tx] - spatio_temporal_mean)**2.0
+                    spatio_var_x_temporal_mean = spatio_var_x_temporal_mean / ydim_f
+                    FPN_in_y = spatio_var_x_temporal_mean**0.5
+
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
                             spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
@@ -112,6 +132,8 @@ class APS_photon_transfer_curve:
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
                     FPN_all[this_file, this_div_y, this_div_x] = FPN
+                    FPN_in_x_all[this_file, this_div_y, this_div_x] = FPN_in_x
+                    FPN_in_y_all[this_file, this_div_y, this_div_x] = FPN_in_y
                     #u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
                     
         #FPN 50% sat level
@@ -121,6 +143,8 @@ class APS_photon_transfer_curve:
                 u_y_tot_50perc[this_div_y, this_div_x] = np.min(u_y_tot[:, this_div_y, this_div_x]) + range_u_y_tot/2.0
                 indu_y_tot_50perc = np.where(u_y_tot[:,this_div_y,this_div_x]  >= u_y_tot_50perc[this_div_y, this_div_x])[0][0]
                 FPN_50[this_div_y, this_div_x] = FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                FPN_50_in_x[this_div_y, this_div_x] = FPN_in_x_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                FPN_50_in_y[this_div_y, this_div_x] = FPN_in_y_all[indu_y_tot_50perc,this_div_y,this_div_x]
                 print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
                 print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
                 print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
@@ -136,7 +160,11 @@ class APS_photon_transfer_curve:
             sigma_tot_real = sigma_tot[sigma_tot != -1]
             sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])
             FPN_all_real = FPN_all[FPN_all != -1]
-            FPN_all = np.reshape(FPN_all_real, [files_num-to_remove, y_div, x_div]) 
+            FPN_all = np.reshape(FPN_all_real, [files_num-to_remove, y_div, x_div])
+            FPN_in_x_all_real = FPN_in_x_all[FPN_in_x_all != -1]
+            FPN_in_x_all = np.reshape(FPN_in_x_all_real, [files_num-to_remove, y_div, x_div])
+            FPN_in_y_all_real = FPN_in_y_all[FPN_in_y_all != -1]
+            FPN_in_y_all = np.reshape(FPN_in_y_all_real, [files_num-to_remove, y_div, x_div])
             exposures = exposures[:,0]
             #all_frames = np.array(all_frames)
             #plt.figure()
@@ -374,7 +402,9 @@ class APS_photon_transfer_curve:
                 out_file.write("\n")
                 out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")           
                 out_file.write("FPN at 50% sat level (DN): " + str(format(FPN_50[this_area_y, this_area_x], '.4f')) + " DN\n")
-                out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")   
+                out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
                 if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)):               
                     out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.4f'))+" uV/e\n")
@@ -392,7 +422,9 @@ class APS_photon_transfer_curve:
                     out_file.write("Temporal variance (DN^2): " + str(sigma_tot[this_file, this_area_y, this_area_x]) + "\n")
                     out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
                     out_file.write("FPN (DN): " + str(format(FPN_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
-                    out_file.write("FPN (%): " + str(format(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")  
+                    out_file.write("FPN (%): " + str(format(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("FPN in x (%): " + str(format(100.0*(FPN_in_x_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("FPN in y (%): " + str(format(100.0*(FPN_in_y_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
 
