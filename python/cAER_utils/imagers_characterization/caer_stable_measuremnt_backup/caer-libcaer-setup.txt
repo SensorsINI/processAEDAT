@@ -1,0 +1,70 @@
+inilabs@zappatore:~/code/libcaer$ git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+nothing to commit, working directory clean
+inilabs@zappatore:~/code/libcaer$ git show
+commit 61186ab99affdde9c53b1ac66f407f6e7b48ae9c
+Author: Luca Longinotti <l@longi.li>
+Date:   Tue May 10 14:02:34 2016 +0200
+
+    Add src/libcaer.so to .gitignore.
+
+diff --git a/src/.gitignore b/src/.gitignore
+index 05b6086..cb8194d 100644
+--- a/src/.gitignore
++++ b/src/.gitignore
+@@ -2,3 +2,4 @@
+ /Makefile
+ /cmake_install.cmake
+ /*.dylib
++/libcaer.so*
+inilabs@zappatore:~/code/libcaer$ cd ..
+inilabs@zappatore:~/code$ cd caer/
+inilabs@zappatore:~/code/caer$ git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   main.c
+
+no changes added to commit (use "git add" and/or "git commit -a")
+inilabs@zappatore:~/code/caer$ git diff main.c
+diff --git a/main.c b/main.c
+index cc18e99..e738ebf 100644
+--- a/main.c
++++ b/main.c
+@@ -138,7 +138,7 @@ static bool mainloop_1(void) {
+ 
+ #ifdef ENABLE_FILE_OUTPUT
+        // Enable output to file (AER2 format).
+-       caerOutputFile(7, 1, polarity);// or (7, 2, polarity, frame) for polarity and frames
++       caerOutputFile(7, 2, polarity, special);// or (7, 2, polarity, frame) for polarity and frames
+ #endif
+ 
+ #ifdef ENABLE_NETWORK_OUTPUT
+@@ -146,10 +146,10 @@ static bool mainloop_1(void) {
+        // External clients connect to cAER, and we send them the data.
+        // WARNING: slow clients can dramatically slow this and the whole
+        // processing pipeline down!
+-       caerOutputNetTCPServer(8, 1, polarity);// or (8, 2, polarity, frame) for polarity and frames
++       caerOutputNetTCPServer(8, 3, polarity, special, frame);// or (8, 2, polarity, frame) for polarity and frames
+ 
+        // And also send them via UDP. This is fast, as it doesn't care what is on the other side.
+-       caerOutputNetUDP(9, 1, polarity);// or (9, 2, polarity, frame) for polarity and frames
++       caerOutputNetUDP(9, 2, polarity, special);// or (9, 2, polarity, frame) for polarity and frames
+ #endif
+ 
+ #ifdef ENABLE_IMAGEGENERATOR
+inilabs@zappatore:~/code/caer$ git show
+commit 6a508b3069f4cb9e22058aa4f80f12b511020be9
+Merge: cce3ed8 56d1d4a
+Author: Luca Longinotti <l@longi.li>
+Date:   Tue May 10 14:28:43 2016 +0200
+
+    Merge branch 'master' of https://github.com/inilabs/caer
+
+inilabs@zappatore:~/code/caer$ 
+
+
