@@ -3,7 +3,7 @@ sys.path.append('utils/')
 import load_files
 sys.path.append('analysis/')
 import DVS_contrast_sensitivity
-import DVS_latency
+#import DVS_latency
 import DVS_oscillations
 import DVS_frequency_response
 import APS_photon_transfer_curve
@@ -25,7 +25,7 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/DAVISHet640_ADCint_ptc_08_06_16-13_26_05/"
+directory_meas = "/home/chenghan/Documents/measurements/DAVISHet640_ADCint_ptc_08_06_16-13_26_05/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
 camera_file = 'cameras/cdavis_parameters.txt'
