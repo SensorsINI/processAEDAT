@@ -11,7 +11,7 @@ import time, os
 import shutil
 
 # import caer communication and control labview instrumentations
-import caer_communication
+import caer_communication_imec
 import labview_communication
 
 #### SETUP PARAMETERS
@@ -21,15 +21,15 @@ caer_port_data =  7777
 labview_host = '172.19.11.98'
 labview_port = 5020
 #### EXPERIMENT/CAMERA PARAMETERS
-wavelengths = np.linspace(350, 800, 451)
-exposures = np.linspace(1,1000000,100)
+wavelengths = np.linspace(350, 800, 4)
+exposures = np.linspace(1,2000,3)
 frame_number = 100 
 global_shutter = True 
 useinternaladc = True
 datadir = 'measurements'
-sensor = "DAVIS240C_" 
-sensor_type ="DAVISFX2" 
-bias_file = "cameras/davis240c_standards.xml" 
+sensor = "DAVISHet640" 
+sensor_type ="DAVISFX3" 
+bias_file = "cameras/cdavis640rgbw_PTC1.xml" 
 dvs128xml = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 
@@ -41,7 +41,7 @@ measure_qe = True
 ###############################################################################
 # CONNECT TO MACHINES
 ###############################################################################
-caer_control = caer_communication.caer_communication(host=caer_host, port_control=caer_port_command, port_data = caer_port_data)
+caer_control = caer_communication_imec.caer_communication_imec(host=caer_host, port_control=caer_port_command, port_data = caer_port_data)
 labview_control = labview_communication.labview_communication(host=labview_host, port_control=labview_port)
             
 try:
@@ -88,8 +88,8 @@ if measure_qe:
                 
                 # Step O3: Set the power meter offset (sets the offset value to the current reading)
                 labview_control.open_communication_command()
-                float power_meter_offset = labview_control.set_reference_power_offset()
-                print "Power meter offset is set to " + str(power_meter_offset)
+                power_meter_offset = labview_control.set_reference_power_offset()
+                print "Power meter offset is set to " + str(power_meter_offset) + "\n"
                 
                 # Step O4: Check error (Verifies the error status of the QE setup control software)
                 labview_control.open_communication_command()
@@ -121,22 +121,27 @@ if measure_qe:
                                 ADCtype = "_ADCext"
                             folder = datadir + '/'+ sensor + ADCtype +'_ptc_dark_' +  current_date
                             setting_dir = folder + str("/settings/")
+                            if(not os.path.exists(setting_dir)):
+                                os.makedirs(setting_dir)
                             print "\n"
                             print "Doing PTC measurements"
                             caer_control.open_communication_command()
                             caer_control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                             copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-                            caer_control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
+                            caer_control.get_data_ptc(sensor, folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
                             caer_control.close_communication_command()    
-                            print "Data saved in " +  folder
+                            print "Data saved in " +  folder + "\n"
                             
                             ################### chip PTC under light ####################                             
                             for this_wavelength in range(len(wavelengths)):                            
                                 # Step W1: Set the wavelength of interest
+                                print "Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n"
                                 labview_control.open_communication_command()
-                                labview_control.set_wavelength(wavelengths[this_wavelength])
-                                labview_control.open_communication_command()
-                                print "Set wavelength to " + str(wavelengths[this_wavelength]) + ", read " + str(labview_control.set_wavelength)
+                                wavelength_check = labview_control.set_wavelength(wavelengths[this_wavelength])
+								#labview_control.open_communication_command()
+								#wavelength_check = labview_control.read_wavelength
+								#raise Exception
+                                print "Wavelength is set to " + str(wavelength_check) + "\n"
                             
                                 # Step W2: Check error (Verifies the error status of the QE setup control software)
                                 labview_control.open_communication_command()
@@ -161,8 +166,8 @@ if measure_qe:
                                         
                                             # Step DL3: Measure the dark signal of the reference diode
                                             labview_control.open_communication_command()
-                                            float ref_diode_DL3 = labview_control.read_reference_power()
-                                            print "The dark signal of the reference diode is " + str(ref_diode_DL3)
+                                            ref_diode_DL3 = labview_control.read_reference_power()
+                                            print "The dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
                                             
                                             # Step DL4: Check error (Verifies the error status of the QE setup control software)
                                             labview_control.open_communication_command()
@@ -187,8 +192,8 @@ if measure_qe:
                                                         
                                                         # Step PR3: Measure the photoexcitation level of the reference diode
                                                         labview_control.open_communication_command()
-                                                        float ref_diode_PR3 = labview_control.read_reference_power()
-                                                        print "The photoexcitation level of the reference diode is " + str(ref_diode_PR3)
+                                                        ref_diode_PR3 = labview_control.read_reference_power()
+                                                        print "The photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n"
                                                         
                                                         # Step PR4: Check error (Verifies the error status of the QE setup control software)
                                                         labview_control.open_communication_command()
@@ -204,19 +209,21 @@ if measure_qe:
                                                                 ADCtype = "_ADCext"
                                                             folder = datadir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(wavelengths[this_wavelength]) +  current_date
                                                             setting_dir = folder + str("/settings/")
+                                                            if(not os.path.exists(setting_dir)):
+                                                                os.makedirs(setting_dir)
                                                             print "\n"
                                                             print "Doing PTC measurements"
                                                             caer_control.open_communication_command()
                                                             caer_control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                                                             copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
-                                                            caer_control.get_data_ptc( folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
+                                                            caer_control.get_data_ptc(sensor, folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
                                                             caer_control.close_communication_command()    
                                                             print "Data saved in " +  folder
                                                             
                                                             # Step PR6: Measure the photoexcitation level of the reference diode
                                                             labview_control.open_communication_command()
-                                                            float ref_diode_PR6 = labview_control.read_reference_power()
-                                                            print "The photoexcitation level of the reference diode is " + str(ref_diode_PR6)
+                                                            ref_diode_PR6 = labview_control.read_reference_power()
+                                                            print "The photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n"
                                                             
                                                             # Step PR7: Check error (Verifies the error status of the QE setup control software)
                                                             labview_control.open_communication_command()
