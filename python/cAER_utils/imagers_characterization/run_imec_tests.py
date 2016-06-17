@@ -21,15 +21,15 @@ caer_port_data =  7777
 labview_host = '172.19.11.98'
 labview_port = 5020
 #### EXPERIMENT/CAMERA PARAMETERS
-wavelengths = np.linspace(350, 800, 4)
+wavelengths = np.linspace(350, 800, 2)
 exposures = np.linspace(1,2000,3)
 frame_number = 100 
 global_shutter = True 
 useinternaladc = True
 datadir = 'measurements'
-sensor = "DAVISHet640" 
+sensor = "DAVIS346C" 
 sensor_type ="DAVISFX3" 
-bias_file = "cameras/cdavis640rgbw_PTC1.xml" 
+bias_file = "cameras/davis346bsi_PTC.xml" 
 dvs128xml = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 
@@ -63,11 +63,15 @@ def copyFile(src, dest):
 # RUN PROTOCOLS AND GATHER DATA
 ###############################################################################
 if measure_qe:
-    log_file = datadir + "log_imec" + sensor + ".txt"
+    log_dir = datadir+'/log/'
+    if(not os.path.exists(log_dir)):
+        os.makedirs(log_dir)
+    log_file = log_dir + "log_imec_" + sensor + ".txt"
     out_file = open(log_file,"w")
     out_file.write(str(current_date) + "\n")
 
     ################### Initialization #########################
+    out_file.write("################### Initialization #########################\n")
     # Step I1: Check connection (Verify communication with the server)
     labview_control.open_communication_command()
     if(labview_control.check_connection() == False):
@@ -77,7 +81,8 @@ if measure_qe:
         print "Connected to labview\n"
         out_file.write("Connected to labview\n")
         
-        ################### Set offset #########################        
+        ################### Set offset #########################
+        out_file.write("################### Set offset #########################\n")        
         # Step O1:  Close shutter (set dark measurement condition)
         labview_control.open_communication_command()
         if(labview_control.close_shutter() == False):
@@ -111,7 +116,8 @@ if measure_qe:
                     print "No error reported in the setup\n"
                     out_file.write("No error reported in the setup\n")
                                         
-                    ################### PTC in dark ######################### 
+                    ################### chip PTC in dark #########################
+                    out_file.write("################### chip PTC in dark #########################\n")
                     print "Start PTC measurement in dark...\n"
                     out_file.write("Start PTC measurement in dark...\n")
                     
@@ -152,9 +158,11 @@ if measure_qe:
                             print "Data saved in " +  folder + "\n"
                             out_file.write("Data saved in " +  folder + "\n")
                             
-                            ################### chip PTC under light ####################                             
+                            ################### chip PTC under light ####################
+                            out_file.write("################### chip PTC under light #########################\n")
                             for this_wavelength in range(len(wavelengths)):                            
                                 # Step W1: Set the wavelength of interest
+                                out_file.write("----------------------------------------------------------------\n")
                                 print "Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n"
                                 out_file.write("Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n")
                                 labview_control.open_communication_command()
@@ -164,6 +172,7 @@ if measure_qe:
 								#raise Exception
                                 print "Wavelength is set to " + str(wavelength_check) + "\n"
                                 out_file.write("Wavelength is set to " + str(wavelength_check) + "\n")
+                                out_file.write("----------------------------------------------------------------\n")
                             
                                 # Step W2: Check error (Verifies the error status of the QE setup control software)
                                 labview_control.open_communication_command()
