@@ -47,7 +47,7 @@ labview_control = labview_communication.labview_communication(host=labview_host,
 try:
     os.stat(datadir)
 except:
-    os.mkdir(datadir) 
+    os.mkdir(datadir)
 
 def copyFile(src, dest):
     try:
@@ -63,56 +63,75 @@ def copyFile(src, dest):
 # RUN PROTOCOLS AND GATHER DATA
 ###############################################################################
 if measure_qe:
+    log_file = datadir + "log_imec" + sensor + ".txt"
+    out_file = open(log_file,"w")
+    out_file.write(str(current_date) + "\n")
+
     ################### Initialization #########################
     # Step I1: Check connection (Verify communication with the server)
     labview_control.open_communication_command()
     if(labview_control.check_connection() == False):
         print "Error I1: no connection to labview\n"
+        out_file.write("Error I1: no connection to labview\n")
     else:
         print "Connected to labview\n"
+        out_file.write("Connected to labview\n")
         
         ################### Set offset #########################        
         # Step O1:  Close shutter (set dark measurement condition)
         labview_control.open_communication_command()
         if(labview_control.close_shutter() == False):
             print "Error O1: shutter not closed\n"
+            out_file.write("Error O1: shutter not closed\n")
         else:
             print "Shutter closed for dark measurement\n"
+            out_file.write("Shutter closed for dark measurement\n")
         
             # Step O2: Check error (Verifies the error status of the QE setup control software)
             labview_control.open_communication_command()
             if(labview_control.check_for_errors() == True):
                 print "Error O2: error in setup control software\n"
+                out_file.write("Error O2: error in setup control software\n")
             else:
                 print "No error reported in the setup\n"
+                out_file.write("No error reported in the setup\n")
                 
                 # Step O3: Set the power meter offset (sets the offset value to the current reading)
                 labview_control.open_communication_command()
                 power_meter_offset = labview_control.set_reference_power_offset()
                 print "Power meter offset is set to " + str(power_meter_offset) + "\n"
+                out_file.write("Power meter offset is set to " + str(power_meter_offset) + "\n")
                 
                 # Step O4: Check error (Verifies the error status of the QE setup control software)
                 labview_control.open_communication_command()
                 if(labview_control.check_for_errors() == True):
                     print "Error O4: error in setup control software\n"
+                    out_file.write("Error O4: error in setup control software\n")
                 else:
                     print "No error reported in the setup\n"
+                    out_file.write("No error reported in the setup\n")
+                                        
+                    ################### PTC in dark ######################### 
                     print "Start PTC measurement in dark...\n"
+                    out_file.write("Start PTC measurement in dark...\n")
                     
-                    ################### PTC in dark #########################                     
                     # Step D1:  Close shutter (set dark measurement condition)
                     labview_control.open_communication_command()
                     if(labview_control.close_shutter() == False):
                         print "Error D1: shutter not closed\n"
+                        out_file.write("Error D1: shutter not closed\n")
                     else:
                         print "Shutter closed for dark measurement\n"
+                        out_file.write("Shutter closed for dark measurement\n")
                         
                         # Step D2: Check error (Verifies the error status of the QE setup control software)
                         labview_control.open_communication_command()
                         if(labview_control.check_for_errors() == True):
                             print "Error D2: error in setup control software\n"
+                            out_file.write("Error D2: error in setup control software\n")
                         else:
                             print "No error reported in the setup\n"
+                            out_file.write("No error reported in the setup\n")
                             
                             # Step D3:  Measure PTC of the chip in the dark.
                             if(useinternaladc):
@@ -123,84 +142,103 @@ if measure_qe:
                             setting_dir = folder + str("/settings/")
                             if(not os.path.exists(setting_dir)):
                                 os.makedirs(setting_dir)
-                            print "\n"
-                            print "Doing PTC measurements"
+                            print "Doing PTC measurements\n"
+                            out_file.write("Doing PTC measurements\n")
                             caer_control.open_communication_command()
                             caer_control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                             copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
                             caer_control.get_data_ptc(sensor, folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
                             caer_control.close_communication_command()    
                             print "Data saved in " +  folder + "\n"
+                            out_file.write("Data saved in " +  folder + "\n")
                             
                             ################### chip PTC under light ####################                             
                             for this_wavelength in range(len(wavelengths)):                            
                                 # Step W1: Set the wavelength of interest
                                 print "Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n"
+                                out_file.write("Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n")
                                 labview_control.open_communication_command()
                                 wavelength_check = labview_control.set_wavelength(wavelengths[this_wavelength])
 								#labview_control.open_communication_command()
 								#wavelength_check = labview_control.read_wavelength
 								#raise Exception
                                 print "Wavelength is set to " + str(wavelength_check) + "\n"
+                                out_file.write("Wavelength is set to " + str(wavelength_check) + "\n")
                             
                                 # Step W2: Check error (Verifies the error status of the QE setup control software)
                                 labview_control.open_communication_command()
                                 if(labview_control.check_for_errors() == True):
                                     print "Error W2: error in setup control software\n"
+                                    out_file.write("Error W2: error in setup control software\n")
                                 else:
                                     print "No error reported in the setup\n"
+                                    out_file.write("No error reported in the setup\n")
                                 
                                     # Step DL1:  Close shutter (set dark measurement condition)
                                     labview_control.open_communication_command()
                                     if(labview_control.close_shutter() == False):
                                         print "Error DL1: shutter not closed\n"
+                                        out_file.write("Error DL1: shutter not closed\n")
                                     else:
                                         print "Shutter closed for dark measurement\n"
+                                        out_file.write("Shutter closed for dark measurement\n")
                                     
                                         # Step DL2: Check error (Verifies the error status of the QE setup control software)
                                         labview_control.open_communication_command()
                                         if(labview_control.check_for_errors() == True):
                                             print "Error DL2: error in setup control software\n"
+                                            out_file.write("Error DL2: error in setup control software\n")
                                         else:
                                             print "No error reported in the setup\n"
+                                            out_file.write("No error reported in the setup\n")
                                         
                                             # Step DL3: Measure the dark signal of the reference diode
                                             labview_control.open_communication_command()
                                             ref_diode_DL3 = labview_control.read_reference_power()
-                                            print "The dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
+                                            print "DL3: the dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
+                                            out_file.write("DL3: he dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n")
                                             
                                             # Step DL4: Check error (Verifies the error status of the QE setup control software)
                                             labview_control.open_communication_command()
                                             if(labview_control.check_for_errors() == True):
                                                 print "Error DL4: error in setup control software\n"
+                                                out_file.write("Error DL4: error in setup control software\n")
                                             else:
                                                 print "No error reported in the setup\n"
+                                                out_file.write("No error reported in the setup\n")
                                                 
                                                 # Step PR1:  Open shutter (set measurement condition under illumination)
                                                 labview_control.open_communication_command()
                                                 if(labview_control.open_shutter() == False):
                                                     print "Error PR1: shutter not open\n"
+                                                    out_file.write("Error PR1: shutter not open\n")
                                                 else:
                                                     print "Shutter opened for measurement under illumination\n"
+                                                    out_file.write("Shutter opened for measurement under illumination\n")
                                                     
                                                     # Step PR2: Check error (Verifies the error status of the QE setup control software)
                                                     labview_control.open_communication_command()
                                                     if(labview_control.check_for_errors() == True):
                                                         print "Error PR2: error in setup control software\n"
+                                                        out_file.write("Error PR2: error in setup control software\n")
                                                     else:
                                                         print "No error reported in the setup\n"
+                                                        out_file.write("No error reported in the setup\n")
                                                         
                                                         # Step PR3: Measure the photoexcitation level of the reference diode
                                                         labview_control.open_communication_command()
                                                         ref_diode_PR3 = labview_control.read_reference_power()
-                                                        print "The photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n"
+                                                        print "PR3: he photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n"
+                                                        out_file.write("PR3: he photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n")
                                                         
                                                         # Step PR4: Check error (Verifies the error status of the QE setup control software)
                                                         labview_control.open_communication_command()
                                                         if(labview_control.check_for_errors() == True):
                                                             print "Error PR4: error in setup control software\n"
+                                                            out_file.write("Error PR4: error in setup control software\n")
                                                         else:
                                                             print "No error reported in the setup\n"
+                                                            out_file.write("No error reported in the setup\n")
                                                             
                                                             # Step PR5:  Measure PTC of the chip under illumination.
                                                             if(useinternaladc):
@@ -211,26 +249,68 @@ if measure_qe:
                                                             setting_dir = folder + str("/settings/")
                                                             if(not os.path.exists(setting_dir)):
                                                                 os.makedirs(setting_dir)
-                                                            print "\n"
-                                                            print "Doing PTC measurements"
+                                                            print "Doing PTC measurements\n"
+                                                            out_file.write("Doing PTC measurements\n")
                                                             caer_control.open_communication_command()
                                                             caer_control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                                                             copyFile(bias_file, setting_dir+str("biases_ptc_all_exposures.xml") )
                                                             caer_control.get_data_ptc(sensor, folder = folder, frame_number = frame_number, exposures=exposures, global_shutter=global_shutter, sensor_type = sensor_type, useinternaladc = useinternaladc )
                                                             caer_control.close_communication_command()    
-                                                            print "Data saved in " +  folder
+                                                            print "Data saved in " +  folder + "\n"
+                                                            out_file.write("Data saved in " +  folder + "\n")
                                                             
                                                             # Step PR6: Measure the photoexcitation level of the reference diode
                                                             labview_control.open_communication_command()
                                                             ref_diode_PR6 = labview_control.read_reference_power()
-                                                            print "The photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n"
+                                                            print "PR6: the photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n"
+                                                            out_file.write("PR6: the photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n")
                                                             
                                                             # Step PR7: Check error (Verifies the error status of the QE setup control software)
                                                             labview_control.open_communication_command()
                                                             if(labview_control.check_for_errors() == True):
                                                                 print "Error PR7: error in setup control software\n"
+                                                                out_file.write("Error PR7: error in setup control software\n")
                                                             else:
                                                                 print "No error reported in the setup\n"
+                                                                out_file.write("No error reported in the setup\n")
+                                                                
+                                                                # Step DL5:  Close shutter (set dark measurement condition)
+                                                                labview_control.open_communication_command()
+                                                                if(labview_control.close_shutter() == False):
+                                                                    print "Error DL5: shutter not closed\n"
+                                                                    out_file.write("Error DL5: shutter not closed\n")
+                                                                else:
+                                                                    print "Shutter closed for dark measurement\n"
+                                                                    out_file.write("Shutter closed for dark measurement\n")
+                                                                
+                                                                    # Step DL6: Check error (Verifies the error status of the QE setup control software)
+                                                                    labview_control.open_communication_command()
+                                                                    if(labview_control.check_for_errors() == True):
+                                                                        print "Error DL6: error in setup control software\n"
+                                                                        out_file.write("Error DL6: error in setup control software\n")
+                                                                    else:
+                                                                        print "No error reported in the setup\n"
+                                                                        out_file.write("No error reported in the setup\n")
+                                                                    
+                                                                        # Step DL7: Measure the dark signal of the reference diode
+                                                                        labview_control.open_communication_command()
+                                                                        ref_diode_DL7 = labview_control.read_reference_power()
+                                                                        print "DL7: the dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
+                                                                        out_file.write("DL7: he dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n")
+                                                                        
+                                                                        # Step DL8: Check error (Verifies the error status of the QE setup control software)
+                                                                        labview_control.open_communication_command()
+                                                                        if(labview_control.check_for_errors() == True):
+                                                                            print "Error DL8: error in setup control software\n"
+                                                                            out_file.write("Error DL8: error in setup control software\n")
+                                                                        else:
+                                                                            print "No error reported in the setup\n"
+                                                                            out_file.write("No error reported in the setup\n")
+                                                                            print "Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n"
+                                                                            out_file.write("Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n")
+
+                                                                            ############### Compute average between DL3&7 and PR3&6 ###########################
+    out_file.close()
                 
                 
                 
