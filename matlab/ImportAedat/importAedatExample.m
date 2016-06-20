@@ -12,7 +12,6 @@ input.filePath = 'C:\Google Drive\Inilabs - Data shared externally\2016_06 Brain
 
 
 % Add any restrictions on what to read out. 
-
 % This example limits readout to the first 1M events (aedat fileFormat 1 or 2 only):
 %input.endEvent = 1e6;
 
