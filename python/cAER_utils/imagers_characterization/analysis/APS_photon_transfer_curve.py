@@ -223,7 +223,7 @@ class APS_photon_transfer_curve:
                     print "Row/Column FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x_adc[this_div_y, this_div_x], '.4f')) + "DN"
                     print "Row/Column FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y_adc[this_div_y, this_div_x], '.4f')) + " DN"
 
-            # sensitivity plot 
+            # Sensitivity plot 
             plt.figure()
             plt.title("Sensitivity APS")
             un, y_div, x_div = np.shape(u_y_tot)
@@ -238,7 +238,42 @@ class APS_photon_transfer_curve:
             plt.ylabel('Mean[DN]') 
             plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-    
+            # Sensitivity fit
+            print("Sensitivity fit...")
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            un, y_div, x_div = np.shape(u_y_tot)
+            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+            color_tmp = 0;
+            percentage_margin = 0.2
+            for this_area_x in range(x_div):
+                for this_area_y in range(y_div):
+                    range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
+                    max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
+                    indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
+                    min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
+                    indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
+                    u_y_fit = u_y_tot[indmin20perc:indmax80perc,this_area_y, this_area_x]
+                    exposures_t = np.array(exposures.reshape(len(exposures)))
+                    exposures_fit = exposures_t[indmin20perc:indmax80perc]
+                    slope, inter = np.polyfit(exposures_fit.reshape(len(exposures_fit)), u_y_fit.reshape(len(u_y_fit)),1)
+                    fit_fn = np.poly1d([slope, inter]) 
+                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                    ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
+                    bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                    color_tmp = color_tmp+1
+            color_tmp = 0;
+            for this_area_x in range(len(frame_x_divisions)):
+                for this_area_y in range(len(frame_y_divisions)):
+                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                    color_tmp = color_tmp+1
+            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.xlabel('Exposure time [us]') 
+            plt.ylabel('Mean[DN]') 
+            plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                    
             if(ptc_dir.lower().find('dark') >= 0):
                 # Dark current
                 # capacitance = 18.0*10**(-15)    
