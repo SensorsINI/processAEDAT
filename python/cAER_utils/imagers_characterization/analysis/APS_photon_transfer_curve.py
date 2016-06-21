@@ -23,7 +23,7 @@ import scipy.stats as st
 import math
 sys.path.append('utils/')
 import load_files
-import winsound
+#import winsound
 
 class APS_photon_transfer_curve:
     def ptc_analysis(self, sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):
@@ -445,7 +445,7 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN in y at 50% sat level (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
-        winsound.Beep(500,2000)
+        #winsound.Beep(500,2000)
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
