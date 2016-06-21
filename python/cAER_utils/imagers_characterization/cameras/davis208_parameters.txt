@@ -22,10 +22,13 @@ False
 0.648
 # 9 # ADC levels
 1024
-# 10 # X divisions (no spaces, comma separated, starting from 0) for PixelParade which is flipped: [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]] == [[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]]
-[[0,187],[188,191],[194,195],[196,197],[198,199],[202,203],[204,207]]
+# 10 # X divisions (no spaces, comma separated, starting from 0) for PixelParade which is flipped: 
+## [[207-3,207-0],[207-5,207-4],[207-9,207-8],[207-11,207-10],[207-13,207-12],[207-19,207-16],[207-207,207-20]] == 
+## [[204,207],[202,203],[198,199],[196,197],[194,195],[188,191],[0,187]] == 
+## [[0,187],[188,191],[194,195],[196,197],[198,199],[202,203],[204,207]]
+[[70,120]]
 # 11 #  Y divisions (no spaces, comma separated)
-[[0,191]]
+[[70,120]]
 
 # #########################################################
 # Contrast sensitivity parameters (for biases it takes ON, DIFF and OFF in triplets (the first value of each, then the second and so on))
