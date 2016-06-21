@@ -101,21 +101,23 @@ class APS_photon_transfer_curve:
                     sigma_y = np.mean(temporal_variance)
                     #sigma_y = temporal_variance_EMVA
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
-                    y_temporal_mean = np.mean(temporal_mean,0)
-                    x_temporal_mean = np.mean(temporal_mean,1)
                     spatio_var_temporal_mean = 0.0
-                    spatio_var_y_temporal_mean = 0.0
-                    spatio_var_x_temporal_mean = 0.0
+                    spatio_var_y_temporal_mean = np.zeros([xdim_f])
+                    spatio_var_x_temporal_mean = np.zeros([ydim_f])
                     
                     for tx in range(xdim_f):
-                        spatio_var_y_temporal_mean = spatio_var_y_temporal_mean + (y_temporal_mean[tx] - spatio_temporal_mean)**2.0
-                    spatio_var_y_temporal_mean = spatio_var_y_temporal_mean / xdim_f
-                    FPN_in_x = spatio_var_y_temporal_mean**0.5
-
+                        spatio_temporal_y_mean = np.mean(np.mean(temporal_mean[tx,:]))
+                        for ty in range(ydim_f):
+                            spatio_var_y_temporal_mean[tx] = spatio_var_y_temporal_mean[tx] + (temporal_mean[tx,ty] - spatio_temporal_y_mean)**2.0
+                        spatio_var_y_temporal_mean[tx] = spatio_var_y_temporal_mean[tx] / ydim_f
+                    FPN_in_x = np.mean(spatio_var_y_temporal_mean)**0.5
+                    
                     for ty in range(ydim_f):
-                        spatio_var_x_temporal_mean = spatio_var_x_temporal_mean + (x_temporal_mean[tx] - spatio_temporal_mean)**2.0
-                    spatio_var_x_temporal_mean = spatio_var_x_temporal_mean / ydim_f
-                    FPN_in_y = spatio_var_x_temporal_mean**0.5
+                        spatio_temporal_x_mean = np.mean(np.mean(temporal_mean[:,ty]))
+                        for tx in range(xdim_f):
+                            spatio_var_x_temporal_mean[ty] = spatio_var_x_temporal_mean[ty] + (temporal_mean[tx,ty] - spatio_temporal_x_mean)**2.0
+                        spatio_var_x_temporal_mean[ty] = spatio_var_x_temporal_mean[ty] / xdim_f
+                    FPN_in_y = np.mean(spatio_var_x_temporal_mean)**0.5
 
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
@@ -125,8 +127,8 @@ class APS_photon_transfer_curve:
 #                    if(ptc_dir.lower().find('debug') >= 0):
                     print "--------------------------------------------"
                     print "X: " + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y])
-                    print "FPN: " + str(FPN) + "DN"
-                    print "Temporal var: " + str(sigma_y) + "DN"
+                    print "FPN: " + str(FPN) + " DN"
+                    print "Temporal var: " + str(sigma_y) + " DN"
                     print str(n_frames) + " frames recorded." 
 #                    print(str(np.shape(all_frames)) + " all_frames.")
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
@@ -183,6 +185,10 @@ class APS_photon_transfer_curve:
                     print "50% point: " + str(u_y_tot_50perc[this_div_y, this_div_x]) + " DN"
                     print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
                     print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
+                    print "FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x[this_div_y, this_div_x], '.4f')) + "DN"
+                    print "FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y[this_div_y, this_div_x], '.4f')) + " DN"
 
             # sensitivity plot 
             plt.figure()
@@ -413,6 +419,8 @@ class APS_photon_transfer_curve:
                 out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
                 out_file.write("FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
                 out_file.write("FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x[this_area_y, this_area_x], '.4f')) + "DN\n")
+                out_file.write("FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y[this_area_y, this_area_x], '.4f')) + " DN\n")
                 if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)):               
                     out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.4f'))+" uV/e\n")
@@ -433,9 +441,11 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN (%): " + str(format(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
                     out_file.write("FPN in x (%): " + str(format(100.0*(FPN_in_x_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
                     out_file.write("FPN in y (%): " + str(format(100.0*(FPN_in_y_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("FPN in x at 50% sat level (DN): " + str(format(FPN_in_x_all[this_file, this_area_y, this_area_x], '.4f')) + "DN\n")
+                    out_file.write("FPN in y at 50% sat level (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
-        winsound.Beep(300,2000)
+        winsound.Beep(500,2000)
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
