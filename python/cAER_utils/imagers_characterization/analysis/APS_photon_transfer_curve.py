@@ -23,6 +23,7 @@ import scipy.stats as st
 import math
 sys.path.append('utils/')
 import load_files
+import winsound
 
 class APS_photon_transfer_curve:
     def ptc_analysis(self, sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values):
@@ -135,20 +136,7 @@ class APS_photon_transfer_curve:
                     FPN_in_x_all[this_file, this_div_y, this_div_x] = FPN_in_x
                     FPN_in_y_all[this_file, this_div_y, this_div_x] = FPN_in_y
                     #u_y_mean_frames.append(spatio_temporal_mean) #average DN over time
-                    
-        #FPN 50% sat level
-        for this_div_x in range(len(frame_x_divisions)) :
-            for this_div_y in range(len(frame_y_divisions)):
-                range_u_y_tot = np.max(u_y_tot[:, this_div_y, this_div_x])-np.min(u_y_tot[:, this_div_y, this_div_x])
-                u_y_tot_50perc[this_div_y, this_div_x] = np.min(u_y_tot[:, this_div_y, this_div_x]) + range_u_y_tot/2.0
-                indu_y_tot_50perc = np.where(u_y_tot[:,this_div_y,this_div_x]  >= u_y_tot_50perc[this_div_y, this_div_x])[0][0]
-                FPN_50[this_div_y, this_div_x] = FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                FPN_50_in_x[this_div_y, this_div_x] = FPN_in_x_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                FPN_50_in_y[this_div_y, this_div_x] = FPN_in_y_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
-                print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
-                print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
-        
+                            
         if(ptc_dir.lower().find('debug') < 0):        
             #just remove entry that corresponds to files that are not measurements
             files_num, y_div, x_div = np.shape(exposures)
@@ -180,6 +168,22 @@ class APS_photon_transfer_curve:
             #plt.savefig(figure_dir+"dn_value_single_pixel.pdf",  format='pdf') 
             #plt.savefig(figure_dir+"dn_value_single_pixel.png",  format='png')  
         
+            #FPN 50% sat level
+            for this_div_x in range(len(frame_x_divisions)) :
+                for this_div_y in range(len(frame_y_divisions)):
+                    range_u_y_tot = np.max(u_y_tot[:, this_div_y, this_div_x])-np.min(u_y_tot[:, this_div_y, this_div_x])
+                    u_y_tot_50perc[this_div_y, this_div_x] = np.min(u_y_tot[:, this_div_y, this_div_x]) + range_u_y_tot/2.0
+                    indu_y_tot_50perc = np.where(u_y_tot[:,this_div_y,this_div_x]  >= u_y_tot_50perc[this_div_y, this_div_x])[0][0]
+                    FPN_50[this_div_y, this_div_x] = FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    FPN_50_in_x[this_div_y, this_div_x] = FPN_in_x_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    FPN_50_in_y[this_div_y, this_div_x] = FPN_in_y_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+                    print "Saturating DN: " + str(np.max(u_y_tot[:, this_div_y, this_div_x])) + " DN"
+                    print "Sarting DN: " + str(np.min(u_y_tot[:, this_div_y, this_div_x])) + " DN"
+                    print "50% point: " + str(u_y_tot_50perc[this_div_y, this_div_x]) + " DN"
+                    print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
+                    print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
+
             # sensitivity plot 
             plt.figure()
             plt.title("Sensitivity APS")
@@ -294,7 +298,7 @@ class APS_photon_transfer_curve:
                         max_var = np.max(sigma_fit)
                         max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                         this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
-                        percentage_fit = 0.45 # Last percentage to fit
+                        percentage_fit = 0.30 # Last percentage to fit
                         start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
                         this_mean_values_lin = this_mean_values[start_index:max_ind_var]
                         try: 
@@ -341,11 +345,15 @@ class APS_photon_transfer_curve:
                             max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                             this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                             this_mean_values_lin = this_mean_values[0:max_ind_var]
-                            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[0:max_ind_var],1)
+                            percentage_fit = 0.30 # Last percentage to fit
+                            start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
+                            this_mean_values_lin = this_mean_values[start_index:max_ind_var]
+                            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var],1)
                             Gain_uVe_lin[this_area_y,this_area_x] = ((ADC_range*slope)/ADC_values)*1000000;
                             print("Conversion gain: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                             fit_fn = np.poly1d([slope, inter]) 
                             ax.plot( u_y_tot[:,this_area_y, this_area_x], sigma_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f')) + ' uV/e')
+                            this_mean_values_lin = this_mean_values[0:max_ind_var]                            
                             ax.plot(this_mean_values_lin.reshape(len(this_mean_values_lin)), fit_fn(this_mean_values_lin.reshape(len(this_mean_values_lin))), '-*', markersize=4, color=colors[color_tmp])
                             bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                             color_tmp = color_tmp+1
@@ -427,6 +435,7 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN in y (%): " + str(format(100.0*(FPN_in_y_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
+        winsound.Beep(300,2000)
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
