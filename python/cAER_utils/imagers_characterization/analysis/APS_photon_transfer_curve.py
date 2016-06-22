@@ -56,6 +56,7 @@ class APS_photon_transfer_curve:
         Gain_uVe_log = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         Gain_uVe_lin = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         i_pd_ua = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        i_pd_vs = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         all_frames = []
         done = False
 
@@ -491,8 +492,9 @@ class APS_photon_transfer_curve:
                     slope, inter = np.polyfit(exposures_fit.reshape(len(exposures_fit)), u_y_fit.reshape(len(u_y_fit)),1)
                     fit_fn = np.poly1d([slope, inter])
                     i_pd_ua[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)/(Gain_uVe_lin[this_area_y,this_area_x])
-                    print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd_ua[this_area_y,this_area_x]) + " uA for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
-                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_ua[this_area_y,this_area_x], '.2f')) + ' uA')
+                    i_pd_vs[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)
+                    print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd_ua[this_area_y,this_area_x]) + " uA or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_ua[this_area_y,this_area_x], '.2f')) + ' uA or ' + str(i_pd_vs[this_area_y,this_area_x]) + ' V/s ')
                     ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
                     bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                     color_tmp = color_tmp+1
@@ -565,9 +567,9 @@ class APS_photon_transfer_curve:
                     out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
                     out_file.write("\n")
                 if(ptc_dir.lower().find('dark') >= 0):
-                    out_file.write("Dark current is: " + str(format(i_pd_ua[this_area_y,this_area_x], '.4f')) + " uA\n")
+                    out_file.write("Dark current is: " + str(format(i_pd_ua[this_area_y,this_area_x], '.4f')) + " uA or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s\n")
                 else:
-                    out_file.write("Photodiode current is: " + str(format(i_pd_ua[this_area_y,this_area_x], '.4f')) + " uA\n")
+                    out_file.write("Photodiode current is: " + str(format(i_pd_ua[this_area_y,this_area_x], '.4f')) + " uA or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s\n")
         out_file.write("\n")
         out_file.write("###############################################################################################\n")
         for this_file in range(len(exposures)):
