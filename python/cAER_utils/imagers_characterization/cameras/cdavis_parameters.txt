@@ -22,9 +22,9 @@ False
 # 9 # ADC levels
 1024
 # 10 # X divisions (no spaces, comma separated)
-[[0,639]]
+[[4,635]]
 # 11 #  Y divisions (no spaces, comma separated)
-[[0,479]]
+[[4,475]]
 
 # #########################################################
 # Contrast sensitivity parameters
@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures, in light [200,2200,80], in dark [200,2200000,80]
-[0,2200,100]
+[0,900,30]
 # 17 # Use internal ADC?
 True
 # 18 # Global shutter enabled?
