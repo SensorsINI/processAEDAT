@@ -494,11 +494,13 @@ class APS_photon_transfer_curve:
                     i_pd_ua[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)/(Gain_uVe_lin[this_area_y,this_area_x])
                     i_pd_vs[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)
                     print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd_ua[this_area_y,this_area_x]) + " uA or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
-                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_ua[this_area_y,this_area_x], '.2f')) + ' uA or ' + str(i_pd_vs[this_area_y,this_area_x]) + ' V/s ')
+                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_ua[this_area_y,this_area_x], '.2f')) + ' uA or ' + str(format(i_pd_vs[this_area_y,this_area_x], '.2f')) + ' V/s ')
                     ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
                     bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                     color_tmp = color_tmp+1
             color_tmp = 0;
+            if(ptc_dir.lower().find('dark') < 0):
+                plt.ylim([np.min(u_y_tot[:,this_area_y, this_area_x])-100,np.max(u_y_tot[:,this_area_y, this_area_x])+100])
             for this_area_x in range(len(frame_x_divisions)):
                 for this_area_y in range(len(frame_y_divisions)):
                     ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.3f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
