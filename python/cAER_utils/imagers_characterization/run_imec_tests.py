@@ -63,10 +63,10 @@ def copyFile(src, dest):
 # RUN PROTOCOLS AND GATHER DATA
 ###############################################################################
 if measure_qe:
-    log_dir = datadir+'/log/'
-    if(not os.path.exists(log_dir)):
-        os.makedirs(log_dir)
-    log_file = log_dir + "log_imec_" + sensor + ".txt"
+    this_dir = datadir+'/'+sensor+'/'
+    if(not os.path.exists(this_dir)):
+        os.makedirs(this_dir)
+    log_file = this_dir + "log_qe_" + sensor + ".txt"
     out_file = open(log_file,"w")
     out_file.write(str(current_date) + "\n")
 
@@ -144,7 +144,7 @@ if measure_qe:
                                 ADCtype = "_ADCint"
                             else:
                                 ADCtype = "_ADCext"
-                            folder = datadir + '/'+ sensor + ADCtype +'_ptc_dark_' +  current_date
+                            folder = this_dir + '/'+ sensor + ADCtype +'_ptc_dark_' +  current_date
                             setting_dir = folder + str("/settings/")
                             if(not os.path.exists(setting_dir)):
                                 os.makedirs(setting_dir)
@@ -254,7 +254,7 @@ if measure_qe:
                                                                 ADCtype = "_ADCint"
                                                             else:
                                                                 ADCtype = "_ADCext"
-                                                            folder = datadir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(wavelengths[this_wavelength]) +  current_date
+                                                            folder = this_dir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(wavelengths[this_wavelength]) +  current_date
                                                             setting_dir = folder + str("/settings/")
                                                             if(not os.path.exists(setting_dir)):
                                                                 os.makedirs(setting_dir)
@@ -317,9 +317,7 @@ if measure_qe:
                                                                             out_file.write("No error reported in the setup\n")
                                                                             print "Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n"
                                                                             out_file.write("Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n")
-
-                                                                            ############### Compute average between DL3&7 and PR3&6 ###########################
     out_file.close()
-                
-                
-                
+    
+    ############### Store DL3&7 and PR3&6 values into a file ###########################
+    
