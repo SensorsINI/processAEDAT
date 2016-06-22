@@ -43,19 +43,20 @@ class APS_photon_transfer_curve:
         sigma_tot = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         exposures = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
         FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
+        mean_y_FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
+        mean_x_FPN_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         FPN_in_x_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         FPN_in_y_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
-        FPN_in_x_adc_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
-        FPN_in_y_adc_all = np.zeros([len(files_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
         i_dark = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])  
         FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
-        FPN_50_in_x = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
-        FPN_50_in_y = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
-        FPN_50_in_x_adc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
-        FPN_50_in_y_adc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        mean_y_FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        mean_x_FPN_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_in_x_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        FPN_in_y_50 = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         u_y_tot_50perc = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         Gain_uVe_log = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         Gain_uVe_lin = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
+        i_pd = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
         all_frames = []
         done = False
 
@@ -91,58 +92,60 @@ class APS_photon_transfer_curve:
                     #    avr_all_frames.append(np.mean(frame_areas[this_frame]))
                     #avr_all_frames = np.array(avr_all_frames)       
                     #u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
-                    xdim_f , ydim_f = np.shape(frame_areas[0])
-                    temporal_mean = np.zeros([xdim_f, ydim_f])
-                    temporal_variance = np.zeros([xdim_f, ydim_f])
+                    ydim_f , xdim_f = np.shape(frame_areas[0])
+                    temporal_mean = np.zeros([ydim_f, xdim_f])
+                    temporal_variance = np.zeros([ydim_f, xdim_f])
                     #temporal_variance_EMVA = 0
                     #factor = (1.0/(2.0*float(xdim_f*ydim_f)))
+                    #raise Exception
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
-                            temporal_mean[tx,ty] = np.mean(frame_areas[:,tx,ty])
-                            temporal_variance[tx,ty] =  np.sum((frame_areas[:,tx,ty]-temporal_mean[tx,ty])**2)/n_frames
-                            #temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[10,tx,ty]- frame_areas[11,tx,ty])**2.0
+                            temporal_mean[ty,tx] = np.mean(frame_areas[:,ty,tx])
+                            temporal_variance[ty,tx] =  np.sum((frame_areas[:,ty,tx]-temporal_mean[ty,tx])**2)/n_frames
+                            #temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[10,ty,tx]- frame_areas[11,ty,tx])**2.0
                     #temporal_variance_EMVA = factor*temporal_variance_EMVA
                     sigma_y = np.mean(temporal_variance)
                     #sigma_y = temporal_variance_EMVA
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
                     spatio_var_temporal_mean = 0.0
-                    spatio_var_y_temporal_mean = np.zeros([xdim_f])
-                    spatio_var_x_temporal_mean = np.zeros([ydim_f])
-                    y_adc_temporal_mean = np.mean(temporal_mean,0)
-                    x_adc_temporal_mean = np.mean(temporal_mean,1)
-                    spatio_var_y_adc_temporal_mean = 0.0
-                    spatio_var_x_adc_temporal_mean = 0.0
+                    y_var_temporal_mean = np.zeros([xdim_f])
+                    x_var_temporal_mean = np.zeros([ydim_f])
+                    y_temporal_mean = np.mean(temporal_mean,0)
+                    x_temporal_mean = np.mean(temporal_mean,1)
+                    spatio_var_y_temporal_mean = 0.0
+                    spatio_var_x_temporal_mean = 0.0
                     
-                    # Entire X and Y FPN
+                    # mean X and Y FPN
                     for tx in range(xdim_f):
-                        spatio_temporal_y_mean = np.mean(np.mean(temporal_mean[tx,:]))
+                        #spatio_temporal_y_mean = np.mean(np.mean(temporal_mean[tx,:]))
                         for ty in range(ydim_f):
-                            spatio_var_y_temporal_mean[tx] = spatio_var_y_temporal_mean[tx] + (temporal_mean[tx,ty] - spatio_temporal_y_mean)**2.0
-                        spatio_var_y_temporal_mean[tx] = spatio_var_y_temporal_mean[tx] / ydim_f
-                    FPN_in_x = np.mean(spatio_var_y_temporal_mean)**0.5
+                            y_var_temporal_mean[tx] = y_var_temporal_mean[tx] + (temporal_mean[ty,tx] - y_temporal_mean[tx])**2.0
+                        y_var_temporal_mean[tx] = y_var_temporal_mean[tx] / ydim_f
+                    mean_y_FPN = np.mean((y_var_temporal_mean)**0.5)
                     
                     for ty in range(ydim_f):
-                        spatio_temporal_x_mean = np.mean(np.mean(temporal_mean[:,ty]))
+                        #raise Exception
+                        #spatio_temporal_x_mean = np.mean(np.mean(temporal_mean[:,ty]))
                         for tx in range(xdim_f):
-                            spatio_var_x_temporal_mean[ty] = spatio_var_x_temporal_mean[ty] + (temporal_mean[tx,ty] - spatio_temporal_x_mean)**2.0
-                        spatio_var_x_temporal_mean[ty] = spatio_var_x_temporal_mean[ty] / xdim_f
-                    FPN_in_y = np.mean(spatio_var_x_temporal_mean)**0.5
+                            x_var_temporal_mean[ty] = x_var_temporal_mean[ty] + (temporal_mean[ty,tx] - x_temporal_mean[ty])**2.0
+                        x_var_temporal_mean[ty] = x_var_temporal_mean[ty] / xdim_f
+                    mean_x_FPN = np.mean((x_var_temporal_mean)**0.5)
                     
                     # Just ADC contribution
                     for tx in range(xdim_f):
-                        spatio_var_y_adc_temporal_mean = spatio_var_y_adc_temporal_mean + (y_adc_temporal_mean[tx] - spatio_temporal_mean)**2.0
-                    spatio_var_y_adc_temporal_mean = spatio_var_y_adc_temporal_mean / xdim_f
-                    FPN_in_x_adc = spatio_var_y_adc_temporal_mean**0.5
+                        spatio_var_y_temporal_mean = spatio_var_y_temporal_mean + (y_temporal_mean[tx] - spatio_temporal_mean)**2.0
+                    spatio_var_y_temporal_mean = spatio_var_y_temporal_mean / xdim_f
+                    FPN_in_x = spatio_var_y_temporal_mean**0.5
 
                     for ty in range(ydim_f):
-                        spatio_var_x_adc_temporal_mean = spatio_var_x_adc_temporal_mean + (x_adc_temporal_mean[tx] - spatio_temporal_mean)**2.0
-                    spatio_var_x_adc_temporal_mean = spatio_var_x_adc_temporal_mean / ydim_f
-                    FPN_in_y_adc = spatio_var_x_adc_temporal_mean**0.5
+                        spatio_var_x_temporal_mean = spatio_var_x_temporal_mean + (x_temporal_mean[ty] - spatio_temporal_mean)**2.0
+                    spatio_var_x_temporal_mean = spatio_var_x_temporal_mean / ydim_f
+                    FPN_in_y = spatio_var_x_temporal_mean**0.5
                     
                     # All
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
-                            spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[tx,ty] - spatio_temporal_mean)**2.0
+                            spatio_var_temporal_mean = spatio_var_temporal_mean + (temporal_mean[ty,tx] - spatio_temporal_mean)**2.0
                     spatio_var_temporal_mean = spatio_var_temporal_mean / (xdim_f * ydim_f)
                     FPN = spatio_var_temporal_mean**0.5
 #                    if(ptc_dir.lower().find('debug') >= 0):
@@ -156,10 +159,10 @@ class APS_photon_transfer_curve:
                     sigma_tot[this_file, this_div_y, this_div_x] = sigma_y
                     exposures[this_file, this_div_y, this_div_x] = exp
                     FPN_all[this_file, this_div_y, this_div_x] = FPN
+                    mean_y_FPN_all[this_file, this_div_y, this_div_x] = mean_y_FPN
+                    mean_x_FPN_all[this_file, this_div_y, this_div_x] = mean_x_FPN
                     FPN_in_x_all[this_file, this_div_y, this_div_x] = FPN_in_x
                     FPN_in_y_all[this_file, this_div_y, this_div_x] = FPN_in_y
-                    FPN_in_x_adc_all[this_file, this_div_y, this_div_x] = FPN_in_x_adc
-                    FPN_in_y_adc_all[this_file, this_div_y, this_div_x] = FPN_in_y_adc
                             
         if(ptc_dir.lower().find('debug') < 0):        
             #just remove entry that corresponds to files that are not measurements
@@ -173,14 +176,14 @@ class APS_photon_transfer_curve:
             sigma_tot =  np.reshape(sigma_tot_real, [files_num-to_remove, y_div, x_div])
             FPN_all_real = FPN_all[FPN_all != -1]
             FPN_all = np.reshape(FPN_all_real, [files_num-to_remove, y_div, x_div])
+            mean_y_FPN_all_real = mean_y_FPN_all[mean_y_FPN_all != -1]
+            mean_y_FPN_all = np.reshape(mean_y_FPN_all_real, [files_num-to_remove, y_div, x_div])
+            mean_x_FPN_all_real = mean_x_FPN_all[mean_x_FPN_all != -1]
+            mean_x_FPN_all = np.reshape(mean_x_FPN_all_real, [files_num-to_remove, y_div, x_div])
             FPN_in_x_all_real = FPN_in_x_all[FPN_in_x_all != -1]
             FPN_in_x_all = np.reshape(FPN_in_x_all_real, [files_num-to_remove, y_div, x_div])
             FPN_in_y_all_real = FPN_in_y_all[FPN_in_y_all != -1]
             FPN_in_y_all = np.reshape(FPN_in_y_all_real, [files_num-to_remove, y_div, x_div])
-            FPN_in_x_adc_all_real = FPN_in_x_adc_all[FPN_in_x_adc_all != -1]
-            FPN_in_x_adc_all = np.reshape(FPN_in_x_adc_all_real, [files_num-to_remove, y_div, x_div])
-            FPN_in_y_adc_all_real = FPN_in_y_adc_all[FPN_in_y_adc_all != -1]
-            FPN_in_y_adc_all = np.reshape(FPN_in_y_adc_all_real, [files_num-to_remove, y_div, x_div])
             
             exposures = exposures[:,0]
             #all_frames = np.array(all_frames)
@@ -204,24 +207,24 @@ class APS_photon_transfer_curve:
                     u_y_tot_50perc[this_div_y, this_div_x] = np.min(u_y_tot[:, this_div_y, this_div_x]) + range_u_y_tot/2.0
                     indu_y_tot_50perc = np.where(u_y_tot[:,this_div_y,this_div_x]  >= u_y_tot_50perc[this_div_y, this_div_x])[0][0]
                     FPN_50[this_div_y, this_div_x] = FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                    FPN_50_in_x[this_div_y, this_div_x] = FPN_in_x_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                    FPN_50_in_y[this_div_y, this_div_x] = FPN_in_y_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                    FPN_50_in_x_adc[this_div_y, this_div_x] = FPN_in_x_adc_all[indu_y_tot_50perc,this_div_y,this_div_x]
-                    FPN_50_in_y_adc[this_div_y, this_div_x] = FPN_in_y_adc_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    mean_y_FPN_50[this_div_y, this_div_x] = mean_y_FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    mean_x_FPN_50[this_div_y, this_div_x] = mean_x_FPN_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    FPN_in_x_50[this_div_y, this_div_x] = FPN_in_x_all[indu_y_tot_50perc,this_div_y,this_div_x]
+                    FPN_in_y_50[this_div_y, this_div_x] = FPN_in_y_all[indu_y_tot_50perc,this_div_y,this_div_x]
                     print "X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
                     print "Saturating DN: " + str(np.max(u_y_tot[:, this_div_y, this_div_x])) + " DN"
                     print "Sarting DN: " + str(np.min(u_y_tot[:, this_div_y, this_div_x])) + " DN"
                     print "50% point: " + str(u_y_tot_50perc[this_div_y, this_div_x]) + " DN"
                     print "FPN at 50% sat level (DN): " + str(FPN_50[this_div_y, this_div_x]) + " DN"
                     print "FPN at 50% sat level (%): " + str(100.0*(FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x])) + "%"
-                    print "FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
-                    print "FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
-                    print "FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x[this_div_y, this_div_x], '.4f')) + "DN"
-                    print "FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y[this_div_y, this_div_x], '.4f')) + " DN"
-                    print "Row/Column FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x_adc[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
-                    print "Row/Column FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y_adc[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
-                    print "Row/Column FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x_adc[this_div_y, this_div_x], '.4f')) + "DN"
-                    print "Row/Column FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y_adc[this_div_y, this_div_x], '.4f')) + " DN"
+                    print "Mean y FPN of every x at 50% sat level (%): " + str(format(100.0*(mean_y_FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "Mean x FPN of every y at 50% sat level (%): " + str(format(100.0*(mean_x_FPN_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "Mean y FPN of every x at 50% sat level (DN): " + str(format(mean_y_FPN_50[this_div_y, this_div_x], '.4f')) + "DN"
+                    print "Mean x FPN of every y at 50% sat level (DN): " + str(format(mean_x_FPN_50[this_div_y, this_div_x], '.4f')) + " DN"
+                    print "Row/Column FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_in_x_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "Row/Column FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_in_y_50[this_div_y, this_div_x]/u_y_tot_50perc[this_div_y, this_div_x]), '.4f')) + "%"
+                    print "Row/Column FPN in x at 50% sat level (DN): " + str(format(FPN_in_x_50[this_div_y, this_div_x], '.4f')) + "DN"
+                    print "Row/Column FPN in y at 50% sat level (DN): " + str(format(FPN_in_y_50[this_div_y, this_div_x], '.4f')) + " DN"
 
             # Sensitivity plot 
             plt.figure()
@@ -251,15 +254,17 @@ class APS_photon_transfer_curve:
                 for this_area_y in range(y_div):
                     range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
                     max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
-                    indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
+                    indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= max80perc)[0][0]
                     min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
-                    indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
+                    indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= min20perc)[0][0]
                     u_y_fit = u_y_tot[indmin20perc:indmax80perc,this_area_y, this_area_x]
                     exposures_t = np.array(exposures.reshape(len(exposures)))
                     exposures_fit = exposures_t[indmin20perc:indmax80perc]
                     slope, inter = np.polyfit(exposures_fit.reshape(len(exposures_fit)), u_y_fit.reshape(len(u_y_fit)),1)
-                    fit_fn = np.poly1d([slope, inter]) 
-                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
+                    fit_fn = np.poly1d([slope, inter])
+                    i_pd[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)
+                    print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd[this_area_y,this_area_x]) + " V/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+                    ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' pd current: '+ str(format(i_pd[this_area_y,this_area_x], '.2f')) + ' V/s')
                     ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
                     bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
                     color_tmp = color_tmp+1
@@ -283,9 +288,9 @@ class APS_photon_transfer_curve:
                     for this_area_y in range(y_div):
                         range_sensitivity = np.max(u_y_tot[:,this_area_y,this_area_x]) - np.min(u_y_tot[:,this_area_y,this_area_x])
                         max80perc = np.max(u_y_tot[:,this_area_y,this_area_x]) - range_sensitivity*percentage_margin
-                        indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= max80perc)[0][0]
+                        indmax80perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= max80perc)[0][0]
                         min20perc = np.min(u_y_tot[:,this_area_y,this_area_x]) + range_sensitivity*percentage_margin
-                        indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  >= min20perc)[0][0]
+                        indmin20perc = np.where(u_y_tot[:,this_area_y,this_area_x]  <= min20perc)[0][0]
                         slope_sensitivity = (u_y_tot[indmax80perc,this_area_y,this_area_x]-u_y_tot[indmin20perc,this_area_y,this_area_x])/((exposures[indmax80perc,0]-exposures[indmin20perc,0])/1000000.0)
                         i_dark[this_area_y,this_area_x] = slope_sensitivity #*capacitance*(ADC_range/ADC_values)/echarge
                         print "Dark current is: " + str(i_dark[this_area_y,this_area_x]) + " DN/s or " + str(i_dark[this_area_y,this_area_x]*(ADC_range/ADC_values)) + " V/s for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
@@ -323,79 +328,79 @@ class APS_photon_transfer_curve:
             plt.savefig(figure_dir+"fpn_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"fpn_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             
-            # x and y FPN vs signal in DN
+            # mean x and y FPN vs signal in DN
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            plt.title("X and Y FPN in DN vs signal")
+            plt.title("mean X and Y FPN in DN vs signal")
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div*2))
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_x_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in x-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], mean_y_FPN_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='mean FPN in y-direction of every x for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_y_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in y-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], mean_x_FPN_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='mean FPN in x-direction of every y for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel('Mean [DN] ') 
             plt.ylabel('FPN [DN] ')
-            plt.savefig(figure_dir+"fpn_xy_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"fpn_xy_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.savefig(figure_dir+"mean_xy_fpn_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"mean_xy_fpn_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             # x and y FPN vs signal as %
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            plt.title("X and Y FPN in % vs signal")
+            plt.title("mean X and Y FPN in % vs signal")
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div*2))
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_x_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in x-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(mean_y_FPN_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='mean FPN in y-direction of every x for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_y_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in y-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(mean_x_FPN_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='mean FPN in x-direction of every y for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel('Mean [DN] ') 
             plt.ylabel('FPN [%] ')
-            plt.savefig(figure_dir+"fpn_xy_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"fpn_xy_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
+            plt.savefig(figure_dir+"mean_xy_fpn_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"mean_xy_fpn_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
             
             # row/column only x and y FPN vs signal in DN
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            plt.title("Row/Column-only X and Y FPN in DN vs signal")
+            plt.title("Row/Column-only FPN in DN vs signal")
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div*2))
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_x_adc_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in x-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_x_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in x-direction only for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_y_adc_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in y-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], FPN_in_y_all[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='FPN in y-direction only for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel('Mean [DN] ') 
             plt.ylabel('FPN [DN] ')
-            plt.savefig(figure_dir+"fpn_xy_adc_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"fpn_xy_adc_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.savefig(figure_dir+"fpn_in_xy_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"fpn_in_xy_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             # x and y FPN vs signal as %
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            plt.title("Row/Column-only X and Y FPN in % vs signal")
+            plt.title("Row/Column-only FPN in % vs signal")
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div*2))
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_x_adc_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in x-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_x_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in x-direction only for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_y_adc_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in y-direction for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( u_y_tot[:,this_area_y,this_area_x], 100.0*(FPN_in_y_all[:, this_area_y, this_area_x]/u_y_tot[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='FPN in y-direction only for div X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel('Mean [DN] ') 
             plt.ylabel('FPN [%] ')
-            plt.savefig(figure_dir+"fpn_xy_adc_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"fpn_xy_adc_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
+            plt.savefig(figure_dir+"fpn_in_xy_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+            plt.savefig(figure_dir+"fpn_in_xy_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
                         
             # photon transfer curve 
             plt.figure()
@@ -447,7 +452,7 @@ class APS_photon_transfer_curve:
                         max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                         this_mean_values = u_y_tot[1:-1,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]
                         percentage_fit = 0.30 # Last percentage to fit
-                        start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
+                        start_index = np.floor((1.0 - percentage_fit)*max_ind_var)
                         this_mean_values_lin = this_mean_values[start_index:max_ind_var]
                         try: 
                             #raise Exception
@@ -458,7 +463,7 @@ class APS_photon_transfer_curve:
                             failed = True
                             continue
                         e_log = 2.71828183
-                        Gain_uVe_log[this_area_y,this_area_x] = e_log**(-inter/slope_log);
+                        Gain_uVe_log[this_area_y,this_area_x] = e_log**(-inter/slope_log)
                         print("Conversion gain: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                         fit_fn = np.poly1d([slope_log, inter]) 
                         ax.plot( log(u_y_tot[:,this_area_y, this_area_x]-u_y_tot[0,this_area_y,this_area_x]), log(np.sqrt(sigma_tot[:,this_area_y, this_area_x])), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' with conversion gain: '+ str(format(Gain_uVe_log[this_area_y,this_area_x], '.2f')) + ' uV/e')
@@ -493,10 +498,12 @@ class APS_photon_transfer_curve:
                             max_ind_var = np.where(sigma_fit  == max_var)[0][0]
                             this_mean_values = u_y_tot[:,this_area_y, this_area_x]
                             this_mean_values_lin = this_mean_values[0:max_ind_var]
-                            percentage_fit = 0.30 # Last percentage to fit
-                            start_index = max_ind_var - np.floor((1-percentage_fit)*max_ind_var)
-                            this_mean_values_lin = this_mean_values[start_index:max_ind_var]
-                            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[start_index:max_ind_var],1)
+                            percentage_start = 0.20 # start percentage to fit
+                            percentage_end = 0.80 # end percentage to fit
+                            start_index = np.floor(percentage_start*max_ind_var)
+                            end_index = np.floor(percentage_end*max_ind_var)
+                            this_mean_values_lin = this_mean_values[start_index:end_index]
+                            slope, inter = np.polyfit(this_mean_values_lin.reshape(len(this_mean_values_lin)), sigma_fit.reshape(len(sigma_fit))[start_index:end_index],1)
                             Gain_uVe_lin[this_area_y,this_area_x] = ((ADC_range*slope)/ADC_values)*1000000.0
                             print("Conversion gain: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.2f'))+" uV/e for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]))
                             fit_fn = np.poly1d([slope, inter]) 
@@ -559,18 +566,20 @@ class APS_photon_transfer_curve:
                 out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")           
                 out_file.write("FPN at 50% sat level (DN): " + str(format(FPN_50[this_area_y, this_area_x], '.4f')) + " DN\n")
                 out_file.write("FPN at 50% sat level (%): " + str(format(100.0*(FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-                out_file.write("FPN in x at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-                out_file.write("FPN in y at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-                out_file.write("FPN in x at 50% sat level (DN): " + str(format(FPN_50_in_x[this_area_y, this_area_x], '.4f')) + "DN\n")
-                out_file.write("FPN in y at 50% sat level (DN): " + str(format(FPN_50_in_y[this_area_y, this_area_x], '.4f')) + " DN\n")
-                out_file.write("FPN in x row/column only at 50% sat level (%): " + str(format(100.0*(FPN_50_in_x_adc[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-                out_file.write("FPN in y row/column only at 50% sat level (%): " + str(format(100.0*(FPN_50_in_y_adc[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
-                out_file.write("FPN in x row/column only at 50% sat level (DN): " + str(format(FPN_50_in_x_adc[this_area_y, this_area_x], '.4f')) + "DN\n")
-                out_file.write("FPN in y row/column only at 50% sat level (DN): " + str(format(FPN_50_in_y_adc[this_area_y, this_area_x], '.4f')) + " DN\n")
+                out_file.write("Mean y FPN of every x at 50% sat level (%): " + str(format(100.0*(mean_y_FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("Mean x FPN of every y at 50% sat level (%): " + str(format(100.0*(mean_x_FPN_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("Mean y FPN of every x at 50% sat level (DN): " + str(format(mean_y_FPN_50[this_area_y, this_area_x], '.4f')) + "DN\n")
+                out_file.write("Mean x FPN of every y at 50% sat level (DN): " + str(format(mean_x_FPN_50[this_area_y, this_area_x], '.4f')) + " DN\n")
+                out_file.write("FPN in x row/column only at 50% sat level (%): " + str(format(100.0*(FPN_in_x_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("FPN in y row/column only at 50% sat level (%): " + str(format(100.0*(FPN_in_y_50[this_area_y, this_area_x]/u_y_tot_50perc[this_area_y, this_area_x]), '.4f')) + "%\n")
+                out_file.write("FPN in x row/column only at 50% sat level (DN): " + str(format(FPN_in_x_50[this_area_y, this_area_x], '.4f')) + "DN\n")
+                out_file.write("FPN in y row/column only at 50% sat level (DN): " + str(format(FPN_in_y_50[this_area_y, this_area_x], '.4f')) + " DN\n")
                 if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)):               
                     out_file.write("Conversion gain from linear fit: "+str(format(Gain_uVe_lin[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Conversion gain from log fit: "+str(format(Gain_uVe_log[this_area_y,this_area_x], '.4f'))+" uV/e\n")
                     out_file.write("Slope of log fit: "+str(format(slope_log, '.4f'))+"\n")
+                    out_file.write("Photodiode current is: " + str(format(i_pd[this_area_y,this_area_x], '.4f')) + " V/s\n")
+                    out_file.write("\n")
                 if(ptc_dir.lower().find('dark') >= 0):
                     out_file.write("Dark current is: " + str(format(i_dark[this_area_y,this_area_x], '.4f')) + " DN/s or " + str(i_dark[this_area_y,this_area_x]*(ADC_range/ADC_values)) + " V/s\n")
         out_file.write("\n")
@@ -585,14 +594,14 @@ class APS_photon_transfer_curve:
                     out_file.write("Temporal SD (%): " + str(100.0*((sigma_tot[this_file, this_area_y, this_area_x]**0.5)/u_y_tot[this_file, this_area_y, this_area_x])) + "%\n")
                     out_file.write("FPN (DN): " + str(format(FPN_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
                     out_file.write("FPN (%): " + str(format(100.0*(FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
-                    out_file.write("FPN in x (%): " + str(format(100.0*(FPN_in_x_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
-                    out_file.write("FPN in y (%): " + str(format(100.0*(FPN_in_y_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
-                    out_file.write("FPN in x at 50% sat level (DN): " + str(format(FPN_in_x_all[this_file, this_area_y, this_area_x], '.4f')) + "DN\n")
-                    out_file.write("FPN in y at 50% sat level (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
-                    out_file.write("FPN in x row/column only (%): " + str(format(100.0*(FPN_in_x_adc_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
-                    out_file.write("FPN in y row/column only (%): " + str(format(100.0*(FPN_in_y_adc_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
-                    out_file.write("FPN in x row/column only at 50% sat level (DN): " + str(format(FPN_in_x_adc_all[this_file, this_area_y, this_area_x], '.4f')) + "DN\n")
-                    out_file.write("FPN in y row/column only at 50% sat level (DN): " + str(format(FPN_in_y_adc_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
+                    out_file.write("Mean y FPN of every x (%): " + str(format(100.0*(mean_y_FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("Mean x FPN of every y (%): " + str(format(100.0*(mean_x_FPN_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("Mean y FPN of every x (DN): " + str(format(mean_y_FPN_all[this_file, this_area_y, this_area_x], '.4f')) + "DN\n")
+                    out_file.write("Mean x FPN of every y (DN): " + str(format(mean_x_FPN_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
+                    out_file.write("FPN in x row/column only (%): " + str(format(100.0*(FPN_in_x_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("FPN in y row/column only (%): " + str(format(100.0*(FPN_in_y_all[this_file, this_area_y, this_area_x]/u_y_tot[this_file, this_area_y, this_area_x]), '.4f')) + "%\n")
+                    out_file.write("FPN in x row/column only (DN): " + str(format(FPN_in_x_all[this_file, this_area_y, this_area_x], '.4f')) + "DN\n")
+                    out_file.write("FPN in y row/column only (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
 
