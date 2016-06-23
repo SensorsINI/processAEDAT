@@ -20,6 +20,7 @@ caer_port_command = 4040
 caer_port_data =  7777
 labview_host = '172.19.11.98'
 labview_port = 5020
+
 #### EXPERIMENT/CAMERA PARAMETERS
 wavelengths = np.linspace(350, 800, 2)
 exposures = np.linspace(1,2000,3)
@@ -66,9 +67,14 @@ if measure_qe:
     this_dir = datadir+'/'+sensor+'/'
     if(not os.path.exists(this_dir)):
         os.makedirs(this_dir)
-    log_file = this_dir + "log_qe_" + sensor + ".txt"
+    log_file = this_dir + "log_qe_" + sensor + "_" + current_date + ".txt"
     out_file = open(log_file,"w")
     out_file.write(str(current_date) + "\n")
+    
+    ref_diode_DL3_strs = ["" for i in range(len(wavelengths))]
+    ref_diode_PR3_strs = ["" for i in range(len(wavelengths))]
+    ref_diode_PR6_strs = ["" for i in range(len(wavelengths))]
+    ref_diode_DL7_strs = ["" for i in range(len(wavelengths))]
 
     ################### Initialization #########################
     out_file.write("################### Initialization #########################\n")
@@ -203,9 +209,10 @@ if measure_qe:
                                         
                                             # Step DL3: Measure the dark signal of the reference diode
                                             labview_control.open_communication_command()
-                                            ref_diode_DL3 = labview_control.read_reference_power()
-                                            print "DL3: the dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
-                                            out_file.write("DL3: he dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n")
+                                            ref_diode_DL3_strs[this_wavelength] = labview_control.read_reference_power()
+                                            print "DL3: the dark signal of the reference diode is " + ref_diode_DL3_strs[this_wavelength]  + "\n"
+                                            out_file.write("DL3: the dark signal of the reference diode is " + ref_diode_DL3_strs[this_wavelength]  + "\n")
+                                            
                                             
                                             # Step DL4: Check error (Verifies the error status of the QE setup control software)
                                             labview_control.open_communication_command()
@@ -236,9 +243,9 @@ if measure_qe:
                                                         
                                                         # Step PR3: Measure the photoexcitation level of the reference diode
                                                         labview_control.open_communication_command()
-                                                        ref_diode_PR3 = labview_control.read_reference_power()
-                                                        print "PR3: he photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n"
-                                                        out_file.write("PR3: he photoexcitation level of the reference diode is " + str(ref_diode_PR3)  + "\n")
+                                                        ref_diode_PR3_strs[this_wavelength] = labview_control.read_reference_power()
+                                                        print "PR3: the photoexcitation level of the reference diode is " + ref_diode_PR3_strs[this_wavelength]  + "\n"
+                                                        out_file.write("PR3: the photoexcitation level of the reference diode is " + ref_diode_PR3_strs[this_wavelength]  + "\n")
                                                         
                                                         # Step PR4: Check error (Verifies the error status of the QE setup control software)
                                                         labview_control.open_communication_command()
@@ -270,9 +277,9 @@ if measure_qe:
                                                             
                                                             # Step PR6: Measure the photoexcitation level of the reference diode
                                                             labview_control.open_communication_command()
-                                                            ref_diode_PR6 = labview_control.read_reference_power()
-                                                            print "PR6: the photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n"
-                                                            out_file.write("PR6: the photoexcitation level of the reference diode is " + str(ref_diode_PR6)  + "\n")
+                                                            ref_diode_PR6_strs[this_wavelength] = labview_control.read_reference_power()
+                                                            print "PR6: the photoexcitation level of the reference diode is " + ref_diode_PR6_strs[this_wavelength]  + "\n"
+                                                            out_file.write("PR6: the photoexcitation level of the reference diode is " + ref_diode_PR6_strs[this_wavelength]  + "\n")
                                                             
                                                             # Step PR7: Check error (Verifies the error status of the QE setup control software)
                                                             labview_control.open_communication_command()
@@ -303,9 +310,9 @@ if measure_qe:
                                                                     
                                                                         # Step DL7: Measure the dark signal of the reference diode
                                                                         labview_control.open_communication_command()
-                                                                        ref_diode_DL7 = labview_control.read_reference_power()
-                                                                        print "DL7: the dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n"
-                                                                        out_file.write("DL7: he dark signal of the reference diode is " + str(ref_diode_DL3)  + "\n")
+                                                                        ref_diode_DL7_strs[this_wavelength] = labview_control.read_reference_power()
+                                                                        print "DL7: the dark signal of the reference diode is " + ref_diode_DL7_strs[this_wavelength]  + "\n"
+                                                                        out_file.write("DL7: the dark signal of the reference diode is " + ref_diode_DL7_strs[this_wavelength]  + "\n")
                                                                         
                                                                         # Step DL8: Check error (Verifies the error status of the QE setup control software)
                                                                         labview_control.open_communication_command()
@@ -320,4 +327,9 @@ if measure_qe:
     out_file.close()
     
     ############### Store DL3&7 and PR3&6 values into a file ###########################
+    ref_diode_readings_file = this_dir + "ref_diode_" + sensor + "_" + current_date + ".txt"
+    out_file = open(log_file,"w")
+    for this_wavelength in range(len(wavelengths)):
+        out_file.write(str(wavelengths[this_wavelength]) + ":DL3[" + ref_diode_DL3_strs[this_wavelength] + "]DL7[" + ref_diode_DL7_strs[this_wavelength] + "]PR3[" + ref_diode_PR3_strs[this_wavelength] + "]PR6[" + ref_diode_PR6_strs[this_wavelength] + "\n")
+    out_file.close()
     
