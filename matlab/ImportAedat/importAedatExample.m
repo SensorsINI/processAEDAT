@@ -7,8 +7,7 @@ dbstop if error
 input = struct;
 
 % Put the filename, including full path, in the 'file' field.
-%input.filePath = 'C:\Users\Sim\Google Drive\Inilabs - All\Production\Davis640\Static hand waving high pr prsf selft-stimulation.aedat';
-input.filePath = 'C:\Google Drive\Inilabs - Data shared externally\2016_06 Brainchip\BoxStartingAtTopLeft.aedat';
+input.filePath = 'C:\Users\Sim\example.aedat';
 
 
 % Add any restrictions on what to read out. 
