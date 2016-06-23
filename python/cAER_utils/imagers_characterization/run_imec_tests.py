@@ -23,7 +23,7 @@ labview_port = 5020
 
 #### EXPERIMENT/CAMERA PARAMETERS
 wavelengths = np.linspace(350, 800, 2)
-exposures = np.linspace(1,2000,3)
+exposures = np.linspace(1,300,4)
 frame_number = 100 
 global_shutter = True 
 useinternaladc = True
@@ -64,7 +64,7 @@ def copyFile(src, dest):
 # RUN PROTOCOLS AND GATHER DATA
 ###############################################################################
 if measure_qe:
-    this_dir = datadir+'/'+sensor+'/'
+    this_dir = datadir+'/QE_'+sensor+'_'+current_date+'/'
     if(not os.path.exists(this_dir)):
         os.makedirs(this_dir)
     log_file = this_dir + "log_qe_" + sensor + "_" + current_date + ".txt"
@@ -168,9 +168,10 @@ if measure_qe:
                             out_file.write("################### chip PTC under light #########################\n")
                             for this_wavelength in range(len(wavelengths)):                            
                                 # Step W1: Set the wavelength of interest
+                                print "----------------------------------------------------------------"
                                 out_file.write("----------------------------------------------------------------\n")
-                                print "Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n"
-                                out_file.write("Setting wavelength to " + str(wavelengths[this_wavelength]) + "\n")
+                                print "Setting wavelength to " + str(format(wavelengths[this_wavelength],'.0f')) + "\n"
+                                out_file.write("Setting wavelength to " + str(format(wavelengths[this_wavelength],'.0f')) + "\n")
                                 labview_control.open_communication_command()
                                 wavelength_check = labview_control.set_wavelength(wavelengths[this_wavelength])
 								#labview_control.open_communication_command()
@@ -178,6 +179,7 @@ if measure_qe:
 								#raise Exception
                                 print "Wavelength is set to " + str(wavelength_check) + "\n"
                                 out_file.write("Wavelength is set to " + str(wavelength_check) + "\n")
+                                print "----------------------------------------------------------------"
                                 out_file.write("----------------------------------------------------------------\n")
                             
                                 # Step W2: Check error (Verifies the error status of the QE setup control software)
@@ -261,7 +263,7 @@ if measure_qe:
                                                                 ADCtype = "_ADCint"
                                                             else:
                                                                 ADCtype = "_ADCext"
-                                                            folder = this_dir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(wavelengths[this_wavelength]) +  current_date
+                                                            folder = this_dir + '/'+ sensor + ADCtype +'_ptc_wavelength_' + str(format(wavelengths[this_wavelength],'.0f')) + '_' + current_date
                                                             setting_dir = folder + str("/settings/")
                                                             if(not os.path.exists(setting_dir)):
                                                                 os.makedirs(setting_dir)
@@ -322,14 +324,14 @@ if measure_qe:
                                                                         else:
                                                                             print "No error reported in the setup\n"
                                                                             out_file.write("No error reported in the setup\n")
-                                                                            print "Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n"
-                                                                            out_file.write("Measurement completed for wavelength " + str(wavelengths[this_wavelength]) + "\n")
+                                                                            print "Measurement completed for wavelength " + str(format(wavelengths[this_wavelength],'.0f')) + "\n"
+                                                                            out_file.write("Measurement completed for wavelength " + str(format(wavelengths[this_wavelength],'.0f')) + "\n")
     out_file.close()
     
     ############### Store DL3&7 and PR3&6 values into a file ###########################
     ref_diode_readings_file = this_dir + "ref_diode_" + sensor + "_" + current_date + ".txt"
-    out_file = open(log_file,"w")
+    out_file = open(ref_diode_readings_file,"w")
     for this_wavelength in range(len(wavelengths)):
-        out_file.write(str(wavelengths[this_wavelength]) + ":DL3[" + ref_diode_DL3_strs[this_wavelength] + "]DL7[" + ref_diode_DL7_strs[this_wavelength] + "]PR3[" + ref_diode_PR3_strs[this_wavelength] + "]PR6[" + ref_diode_PR6_strs[this_wavelength] + "\n")
+        out_file.write(str(format(wavelengths[this_wavelength],'.0f')) + ":DL3[" + ref_diode_DL3_strs[this_wavelength] + "]DL7[" + ref_diode_DL7_strs[this_wavelength] + "]PR3[" + ref_diode_PR3_strs[this_wavelength] + "]PR6[" + ref_diode_PR6_strs[this_wavelength] + "\n")
     out_file.close()
     
