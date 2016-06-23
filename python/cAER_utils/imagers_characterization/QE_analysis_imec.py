@@ -57,32 +57,35 @@ pixel_area = pixel_side_lenght*pixel_side_lenght
 wavelengths_in_dir = os.listdir(directory_meas)
 wavelengths_in_dir.sort()
 aedat = APS_photon_transfer_curve.APS_photon_transfer_curve()
-    if('_ADCint' in ptc_dir):
-        ADC_range = ADC_range_int
-    else:
-        ADC_range = ADC_range_ext
 
 wavelengths = np.zeros([len(wavelengths_in_dir),len(frame_y_divisions),len(frame_x_divisions)])
 QE = np.zeros([len(wavelengths_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
 i_pd_es = np.zeros([len(wavelengths_in_dir),len(frame_y_divisions),len(frame_x_divisions)])+1*-1
 i_dark_es = np.zeros([len(frame_y_divisions),len(frame_x_divisions)])
 i_ref_diode_wcm = np.zeros([len(wavelengths_in_dir)])+1*-1
+done = False
 
-for this_wavelength_file in range(len(wavelengths_in_dir)):       
-    while( not wavelengths_in_dir[this_wavelength_file].lower().find('wavelength') >= 0):
-        print("not a valid data file ", str(wavelengths_in_dir[this_wavelength_file]))
-        this_wavelength_file  = this_wavelength_file + 1
+for this_wavelength_file in range(len(wavelengths_in_dir)):    
+    ptc_dir = directory_meas + wavelengths_in_dir[this_wavelength_file] + "/"
+    while(wavelengths_in_dir[this_wavelength_file].lower().find('wavelength') < 0):
+        print "FILE" +str(this_wavelength_file)
+        print "not a valid data file: " + str(wavelengths_in_dir[this_wavelength_file])
+        if('_ADCint' in wavelengths_in_dir[this_wavelength_file]):
+            ADC_range = ADC_range_int
+        else:
+            ADC_range = ADC_range_ext
         if(wavelengths_in_dir[this_wavelength_file].lower().find('dark') >= 0):
             print "PTC in dark processed"
-            i_dark_es= aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
+#            i_dark_es= aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
+        this_wavelength_file  = this_wavelength_file + 1
         if(this_wavelength_file == len(wavelengths_in_dir)):
             done = True
             break
     if(done == True):
         break
+    wavelengths[this_wavelength_file] = float(wavelengths_in_dir[this_wavelength_file].split('_')[5])
     print "####################################"
-    print "processing PTC for wavelength " + str(wavelengths_in_dir[this_wavelength_file].split('_')[9]) + " nm"
-    ptc_dir = wavelengths_in_dir[this_wavelength_file] + "/"
+    print "processing PTC for wavelength " + str(wavelengths_in_dir[this_wavelength_file].split('_')[5]) + " nm"
     i_pd_es[this_wavelength_file,:,:] = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve    
 
 
@@ -102,15 +105,15 @@ i_pd_esm = (i_pd_es/pixel_area)*10^(-4)
 print "Looking for 'ref_diode_' file.."
 for files_in_folder in os.listdir(directory_meas):
     if files_in_folder.startswith("ref_diode_"):
-        info_ref_diode = np.genfromtxt(files_in_folder, dtype='str')
+        info_ref_diode = np.genfromtxt(directory_meas+files_in_folder, dtype='str')
         for this_wavelength in range(len(info_ref_diode)):
-            i_d_light1 = float(info_ref_diode[this_wavelength].split(':').split('[').split(';').split(']')[33])
-            i_d_light2 = float(info_ref_diode[this_wavelength].split(':').split('[').split(';').split(']')[45])
-            i_d_dark1 = float(info_ref_diode[this_wavelength].split(':').split('[').split(';').split(']')[9])
-            i_d_dark2 = float(info_ref_diode[this_wavelength].split(':').split('[').split(';').split(']')[21])
+            i_d_light1 = float(info_ref_diode[this_wavelength].split('[')[3].split(';')[2])
+            i_d_light2 = float(info_ref_diode[this_wavelength].split('[')[4].split(';')[2])
+            i_d_dark1 = float(info_ref_diode[this_wavelength].split('[')[1].split(';')[2])
+            i_d_dark2 = float(info_ref_diode[this_wavelength].split('[')[2].split(';')[2])
             i_ref_diode_wcm[this_wavelength_file] = ((i_d_light1+i_d_light2)/2.0)-((i_d_dark1+i_d_dark2)/2.0)
             # i_ref_diode_wcm is e/(s*(18um)^2) to convert to e/(s*cm^2):
-            hc = 299792458.0*6.62607004*10^(-34)
+            hc = 299792458.0*6.62607004*10^(-34.0)
             E_photon = hc/wavelengths[this_wavelength_file]
             i_ref_diode_pscm[this_wavelength_file] = (i_ref_diode_wcm*10^(4))/E_photon
             break
