@@ -23,14 +23,14 @@ labview_port = 5020
 
 #### EXPERIMENT/CAMERA PARAMETERS
 wavelengths = np.linspace(350, 800, 2)
-exposures = np.linspace(1,300,4)
+exposures = np.linspace(1,7000,20)
 frame_number = 100 
 global_shutter = True 
 useinternaladc = True
 datadir = 'measurements'
-sensor = "DAVIS346C" 
+sensor = "DAVISHet640" 
 sensor_type ="DAVISFX3" 
-bias_file = "cameras/davis346bsi_PTC.xml" 
+bias_file = "cameras/cdavis640rgbw_PTC1.xml" 
 dvs128xml = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 
