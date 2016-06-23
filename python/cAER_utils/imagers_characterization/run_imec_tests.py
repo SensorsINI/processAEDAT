@@ -11,7 +11,7 @@ import time, os
 import shutil
 
 # import caer communication and control labview instrumentations
-import caer_communication_imec
+import caer_communication
 import labview_communication
 
 #### SETUP PARAMETERS
@@ -42,7 +42,7 @@ measure_qe = True
 ###############################################################################
 # CONNECT TO MACHINES
 ###############################################################################
-caer_control = caer_communication_imec.caer_communication_imec(host=caer_host, port_control=caer_port_command, port_data = caer_port_data)
+caer_control = caer_communication.caer_communication(host=caer_host, port_control=caer_port_command, port_data = caer_port_data)
 labview_control = labview_communication.labview_communication(host=labview_host, port_control=labview_port)
             
 try:
