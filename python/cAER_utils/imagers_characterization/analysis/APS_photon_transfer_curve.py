@@ -594,6 +594,7 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN in y row/column only (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
+        return i_pd_es
 
 #        winsound.Beep(500,2000)
 

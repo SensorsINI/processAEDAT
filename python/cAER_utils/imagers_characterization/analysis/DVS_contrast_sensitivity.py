@@ -565,6 +565,7 @@ class DVS_contrast_sensitivity:
                    plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON median - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.ylim([0,20])
         plt.xlabel("Off level [FineValue]")
         plt.ylabel("Contrast sensitivity")
 #        plt.ylim((0,100))
@@ -581,6 +582,7 @@ class DVS_contrast_sensitivity:
                    plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], err_off_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.ylim([0,20])
             plt.xlabel("OFF Contrast sensitivity")
 #            plt.xlim((0,100))
             plt.ylabel("95% conf interval in percentage from median")
@@ -596,6 +598,7 @@ class DVS_contrast_sensitivity:
                    plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], err_on_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON median - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            plt.ylim([0,20])
             plt.xlabel("ON Contrast sensitivity")
 #            plt.xlim((0,100))
             plt.ylabel("95% conf interval in percentage from median")
@@ -620,6 +623,7 @@ class DVS_contrast_sensitivity:
                        color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel("Refss level [FineValue]")
+            plt.ylim([0,20])
             plt.ylabel("Contrast sensitivity")
 #            plt.ylim((0,100))
             plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
@@ -627,39 +631,39 @@ class DVS_contrast_sensitivity:
             plt.close("all")
             
         # Tell best parameters
-        for this_div_x in range(len(frame_x_divisions)) :
-            for this_div_y in range(len(frame_y_divisions)):
-                print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'            
-                print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
-                if(single_pixels_analysis):
-                    area_contrast_on = contrast_sensitivity_on_median_array[:,this_div_x, this_div_y]
-                    min_index_on, min_value_on = min(enumerate(area_contrast_on), key=operator.itemgetter(1))
-                    print "BEST ON median CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_on_median_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"     
-                else:
-                    area_contrast_on = contrast_sensitivity_on_average_array[:,this_div_x, this_div_y]
-                    min_index_on, min_value_on = min(enumerate(area_contrast_on), key=operator.itemgetter(1))
-                    print "BEST ON average CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_on_average_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
-                print "This base level: " + str(base_level[min_index_on,this_div_x, this_div_y])
-                print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
-                print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
-                print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
-                if(sensor == 'DAVIS208'):
-                    print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])       
-                
-                if(single_pixels_analysis):
-                    area_contrast_off = contrast_sensitivity_off_median_array[:,this_div_x, this_div_y]
-                    min_index_off, min_value_off = min(enumerate(area_contrast_off), key=operator.itemgetter(1))
-                    print "BEST OFF median CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_off_median_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
-                else:
-                    area_contrast_off = contrast_sensitivity_off_average_array[:,this_div_x, this_div_y]
-                    min_index_off, min_value_off = min(enumerate(area_contrast_off), key=operator.itemgetter(1))
-                    print "BEST OFF average CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_off_average_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
-                print "This base level: " + str(base_level[min_index_on,this_div_x, this_div_y])
-                print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
-                print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
-                print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
-                if(sensor == 'DAVIS208'):
-                    print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])  
+#        for this_div_x in range(len(frame_x_divisions)) :
+#            for this_div_y in range(len(frame_y_divisions)):
+#                print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'            
+#                print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
+#                if(single_pixels_analysis):
+#                    area_contrast_on = contrast_sensitivity_on_median_array[:,this_div_x, this_div_y]
+#                    min_index_on = np.where(area_contrast_on==np.min(area_contrast_on))
+#                    print "BEST ON median CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_on_median_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"     
+#                else:
+#                    area_contrast_on = contrast_sensitivity_on_average_array[:,this_div_x, this_div_y]
+#                    min_index_on = np.where(area_contrast_on==np.min(area_contrast_on))
+#                    print "BEST ON average CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_on_average_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
+#                print "This base level: " + str(base_level[min_index_on,this_div_x, this_div_y])
+#                print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
+#                print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
+#                print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
+#                if(sensor == 'DAVIS208'):
+#                    print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])       
+#                
+#                if(single_pixels_analysis):
+#                    area_contrast_off = contrast_sensitivity_off_median_array[:,this_div_x, this_div_y]
+#                    min_index_off = np.where(area_contrast_off==np.min(area_contrast_off))
+#                    print "BEST OFF median CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_off_median_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
+#                else:
+#                    area_contrast_off = contrast_sensitivity_off_average_array[:,this_div_x, this_div_y]
+#                    min_index_off = np.where(area_contrast_off==np.min(area_contrast_off))
+#                    print "BEST OFF average CONTRAST SENSITIVITY "+ str('{0:.3f}'.format(contrast_sensitivity_off_average_array[min_index_on,this_div_x, this_div_y]*100))+ "% at:"
+#                print "This base level: " + str(base_level[min_index_on,this_div_x, this_div_y])
+#                print "This on level: " + str(on_level[min_index_on,this_div_x, this_div_y])
+#                print "This diff level: " + str(diff_level[min_index_on,this_div_x, this_div_y])
+#                print "This off level: " + str(off_level[min_index_on,this_div_x, this_div_y])  
+#                if(sensor == 'DAVIS208'):
+#                    print "This refss level: " + str(refss_level[min_index_on,this_div_x, this_div_y])  
             
 #        return rmse_tot, contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, \
         return contrast_level, base_level, on_level, diff_level, off_level, refss_level, contrast_sensitivity_off_average_array, \
