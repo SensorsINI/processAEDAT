@@ -1,4 +1,4 @@
-function output = importAedat_processDataFormat1or2(info)
+function output = ImportAedatProcessDataFormat1or2(info)
 %{
 This is a sub-function of importAedat - it process the data where the aedat 
 file format is determined to be 1 or 2. 

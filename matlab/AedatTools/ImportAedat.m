@@ -1,4 +1,4 @@
-function output = importAedat(varargin)
+function output = ImportAedat(varargin)
 
 %{
 2015_11_20 THIS FUNCTION IS WORK IN PROGRESS
@@ -201,13 +201,13 @@ end
 info.fileHandle = fopen(info.filePath, 'r');
 
 % Process the headers
-info = importAedat_processHeaders(info);
+info = ImportAedatProcessHeaders(info);
 
 % Process the data - different subfunctions handle fileFormat 2 vs 3
 if info.fileFormat < 3
-	output = importAedat_processDataFormat1or2(info);
+	output = ImportAedatProcessDataFormat1or2(info);
 else
-	output = importAedat_processDataFormat3(info);	
+	output = ImportAedatProcessDataFormat3(info);	
 end
 
 fclose(output.info.fileHandle);

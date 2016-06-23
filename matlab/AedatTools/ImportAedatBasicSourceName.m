@@ -1,4 +1,4 @@
-function output = importAedat_basicSourceName(input)
+function output = ImportAedatBasicSourceName(input)
 
 %{ 
 input is a device name; output is the key device name associated with that

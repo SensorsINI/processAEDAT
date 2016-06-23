@@ -1,4 +1,4 @@
-function info = importAedat_processHeaders(info)
+function info = ImportAedatProcessHeaders(info)
 
 %{
 This is a sub-function of importAedat. 
@@ -177,7 +177,7 @@ end
 	
 % If a device is specified in input, does it match the derived source?
 if isfield(info, 'source')
-	info.source = importAedat_basicSourceName(info.source);
+	info.source = ImportAedatBasicSourceName(info.source);
 	if isfield(info, 'sourceFromFile') && ~strcmp(info.source, info.sourceFromFile)
 		fprintf('The source given as input, "%s", doesn''t match the source declared in the file, "%s"; assuming the source given as input.\n', inputSource, info.Source);
 	end

@@ -22,4 +22,4 @@ input.filePath = 'C:\Users\Sim\example.aedat';
 %input.endTime = 48.1;
 
 % Invoke the function
-output = importAedat(input);
+output = ImportAedat(input);
