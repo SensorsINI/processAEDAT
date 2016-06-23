@@ -15,12 +15,12 @@ import gpio_usb
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/davis208_parameters.txt'
+camera_file = 'cameras/davis240_parameters.txt'
 
 do_set_bias = False
 
-do_contrast_sensitivity = True # And DVS-FPN too
-do_ptc = False
+do_contrast_sensitivity = False # And DVS-FPN too
+do_ptc = True
 do_frequency_response = False
 do_latency_pixel_multiple_led_board = False
 do_latency_pixel_with_fiber = False
@@ -204,7 +204,7 @@ if do_ptc:
         ADCtype = "_ADCint"
     else:
         ADCtype = "_ADCext"
-    folder = datadir + '/'+ sensor + ADCtype +'_ptc_' +  current_date
+    folder = datadir + '/'+ sensor + ADCtype + '_ptc_' + str(format(base_level,'.0f')) + 'lux_' + current_date
     setting_dir = folder + str("/settings/")
     if(not os.path.exists(setting_dir)):
         os.makedirs(setting_dir)
