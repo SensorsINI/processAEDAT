@@ -8,7 +8,7 @@ Example script for how to invoke the ImportAedat function
 """
 
 import sys
-sys.path.append('C:\Users\Sim\Ini\JAER_SVN\scripts\python\ImportAedat')
+#sys.path.append('/home/federico/space/inilabs/data/multicam/cam0/')
 
 import ImportAedat
 
@@ -16,10 +16,11 @@ import ImportAedat
 args = {}
 
 # Put the filename, including full path, in the 'file' field.
-args['filePathAndName'] = 'C:\\Users\\Sim\\example.aedat'
+#probelms caer_out-2016-06-23_17:24:47.aedat
+args['filePathAndName'] = '/home/federico/space/inilabs/data/multicam/cam1/caer_out-2016-06-22_17_03_53_new.aedat'
 
-# Only read special events
-args['dataTypes'] = {0}
+# Read special events and polarity events
+args['dataTypes'] = {0,1,2}
 
 # Invoke the function
 output = ImportAedat.ImportAedat(args)
