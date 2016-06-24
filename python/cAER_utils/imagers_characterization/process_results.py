@@ -25,10 +25,10 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/chenghan/inilabs/cAER_utils/imagers_characterization/measurements/QE_DAVISHet640_23_06_16-17_33_59/DAVISHet640_ADCint_ptc_wavelength_800_23_06_16-17_33_59/"
+directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/QE_DAVIS346C_23_06_16-14_33_11/DAVIS346C_ADCint_ptc_dark_23_06_16-14_33_11/"
 #"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
 #"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
-camera_file = 'cameras/cdavis_parameters.txt'
+camera_file = 'cameras/davis346bsi_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]

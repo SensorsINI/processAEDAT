@@ -185,7 +185,7 @@ class APS_photon_transfer_curve:
             FPN_in_y_all_real = FPN_in_y_all[FPN_in_y_all != -1]
             FPN_in_y_all = np.reshape(FPN_in_y_all_real, [files_num-to_remove, y_div, x_div])
             
-            exposures = exposures[:,0]
+            exposures = exposures[:,0,0]
             #all_frames = np.array(all_frames)
             #plt.figure()
             #plt.title("all frames values")
@@ -349,24 +349,25 @@ class APS_photon_transfer_curve:
             plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             # photon transfer curve log 
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            plt.title("Photon Transfer Curve")
-            un, y_div, x_div = np.shape(u_y_tot)
-            colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
-            color_tmp = 0;
-            for this_area_x in range(x_div):
-                for this_area_y in range(y_div):
-                    #raise Exception
-                    plt.plot( u_y_tot[:,this_area_y,this_area_x]-u_y_tot[0,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
-                    color_tmp = color_tmp+1
-            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            ax.set_xscale("log", nonposx='clip')
-            ax.set_yscale("log", nonposy='clip')
-            plt.xlabel('Mean [DN] ') 
-            plt.ylabel('STD [DN] ')
-            plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            if(ptc_dir.lower().find('dark') < 0):# Don't plot log for dark current
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                plt.title("Photon Transfer Curve")
+                un, y_div, x_div = np.shape(u_y_tot)
+                colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
+                color_tmp = 0;
+                for this_area_x in range(x_div):
+                    for this_area_y in range(y_div):
+                        #raise Exception
+                        plt.plot( u_y_tot[:,this_area_y,this_area_x]-u_y_tot[0,this_area_y,this_area_x] , np.sqrt(sigma_tot[:,this_area_y,this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                        color_tmp = color_tmp+1
+                lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                ax.set_xscale("log", nonposx='clip')
+                ax.set_yscale("log", nonposy='clip')
+                plt.xlabel('Mean [DN] ') 
+                plt.ylabel('STD [DN] ')
+                plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+                plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             
             if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)): # Don't fit for dark current
                 print("Log fit...")
@@ -463,7 +464,7 @@ class APS_photon_transfer_curve:
             color_tmp = 0;
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
-                    plt.plot( exposures[:,0], u_y_tot[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+                    plt.plot( exposures[:], u_y_tot[:,this_area_y,this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
                     color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel('Exposure time [us]') 
@@ -575,7 +576,7 @@ class APS_photon_transfer_curve:
         out_file.write("\n")
         out_file.write("###############################################################################################\n")
         for this_file in range(len(exposures)):
-            out_file.write("Exposure " +str(exposures[this_file,0]) + " us:\n")
+            out_file.write("Exposure " +str(exposures[this_file]) + " us:\n")
             for this_area_x in range(x_div):
                 for this_area_y in range(y_div):
                     out_file.write("X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])+"\n")
@@ -594,7 +595,10 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN in y row/column only (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
-        return i_pd_es
+        if(ptc_dir.lower().find('dark') < 0):
+            return i_pd_vs, Gain_uVe_lin
+        else:
+            return i_pd_vs
 
 #        winsound.Beep(500,2000)
 
