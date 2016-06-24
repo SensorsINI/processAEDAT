@@ -1,7 +1,7 @@
-function output = ImportAedatProcessDataFormat3(info)
+function output = ImportAedatDataVersion3(info)
 %{
 This is a sub-function of importAedat - it process the data where the aedat 
-file format is determined to be 3.xx 
+file format is determined to be 3.x
 The .aedat file format is documented here:
 http://inilabs.com/support/software/fileformat/
 This function is based on a combination of the loadaerdat function and
@@ -119,32 +119,71 @@ there is no guarantee about how far back in time
 
 dbstop if error
 
-fileHandle = info.fileHandle;
-
 % Check the startEvent and endEvent parameters
-if ~isfield(info, 'startEvent')
-	info.startEvent = 1;
+if ~isfield(info, 'startPacket')
+	info.startPacket = 1;
 end
-if info.startEvent > info.numEventsInFile
-	error([	'The file contains ' num2str(info.numEventsInFile) ...
-			'; the startEvent parameter is ' num2str(info.startEvents) ]);
+if ~isfield(info, 'endPacket')	
+	info.endPacket = inf;
 end
-if ~isfield(info, 'endEvent')	
-	info.endEvent = info.numEventsInFile;
-end
-	
-if info.endEvent > info.numEventsInFile
-	disp([	'The file contains ' num2str(info.numEventsInFile) ...
-			'; the endEvent parameter is ' num2str(info.endEvents) ...
-			'; reducing the endEvent parameter accordingly.']);
-		info.endEvent = info.numEventsInFile;
-end
-if info.startEvent >= info.endEvent 
-	error([	'The startEvent parameter is ' num2str(info.startEvent) ...
-		', but the endEvent parameter is ' num2str(info.endEvent) ]);
+if info.startPacket >= info.endPacket 
+	error([	'The startPacket parameter is ' num2str(info.startPacket) ...
+		', but the endPacket parameter is ' num2str(info.endPacket) ]);
 end
 
-numEventsToRead = info.endEvent - info.startEvent + 1;
+packetCount = 0;
+
+cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
+
+while ~feof(info.fileHandle)
+	% Read the header of the next packet
+	packetCount = packetCount + 1;
+	header = fread(info.fileHandle, 28);
+	if info.startPacket > packetCount
+		% Ignore this packet as its count is too low
+		eventSize = int32(header(4:7));
+		eventCapacity = int32(header(16:19));
+		fseek(info.fileHandle, eventCapacity * eventSize, 'cof');
+	else
+		eventType = int16(header(0:1));
+		eventSource = int16(data(2:3)); % Multiple sources not handled yet
+		eventSize = int32(header(4:7));
+		eventTsOffset = int32(header(8:11));
+		eventTsOverflow = int32(header(12:15));
+		eventCapacity = int32(header(16:19));
+		eventNumber = int32(header(20:23));
+		eventValid = int32(header(24:27));
+		% Read the full packet
+		data = fread(info.fileHandle, eventCapacity * eventSize);
+
+		% handle the packet types individually
+		
+		% Special events
+        if eventType == 0 
+            if ~ 'dataTypes' in info or 0 in info['dataTypes'] :
+                while(data[counter:counter + eventSize]):  # loop over all event packets
+                    specialAddr = struct.unpack('I', data[counter:counter + 4])[0]
+                    specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
+                    specialAddr = (specialAddr >> 1) & 0x0000007F
+                    specialAddrAll.append(specialAddr)
+                    specialTsAll.append(specialTs)
+                    counter = counter + eventSize 
+				end
+			end
+        % Polarity events                
+		elseif eventType == 1  
+            if ~isfield(info, 'dataTypes') | any(cellfun(cellFind('polarity'), info.dataTypes))
+                while(data[counter:counter + eventSize]):  # loop over all event packets
+                    polData = struct.unpack('I', data[counter:counter + 4])[0]
+                    polTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
+                    polAddrX = (polData >> 18) & 0x00003FFF
+                    polAddrY = (polData >> 4) & 0x00003FFF
+                    polPol = (polData >> 1) & 0x00000001
+                    polTsAll.append(polTs)
+                    polAddrXAll.append(polAddrX)
+                    polAddrYAll.append(polAddrY)
+                    polPolAll.append(polPol)
+                    counter = counter + eventSize
 
 % Read addresses
 fseek(info.fileHandle, info.beginningOfDataPointer + numBytesPerEvent * info.startEvent, 'bof'); 
@@ -243,6 +282,7 @@ end
 
 % Calculate some basic stats
 %info.numEventsInFile 
+%info.endEvent
 
 output.info = info;
 

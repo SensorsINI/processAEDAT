@@ -1,4 +1,4 @@
-function output = ImportAedatProcessDataFormat1or2(info)
+function output = ImportAedatDataVersion1or2(info)
 %{
 This is a sub-function of importAedat - it process the data where the aedat 
 file format is determined to be 1 or 2. 
@@ -210,53 +210,112 @@ end
 		- Interpret APS events according to chip class
 %}
 
-if strcmp(info.source, 'das1')
-	% DAS1 - NOT IMPLEMENTED YET
-else
-	% DVS events
-	if isfield(info, 'dataTypes') && ~any(cellfun(@strcmp, info.dataTypes, repmat({'polarity'}, length(devices), 1)))
-		disp('Polarity events excluded.')
-	else
-		if strcmp(info.source, 'dvs128')
-			% Not implemented yet
-			xmask = hex2dec ('fE'); % x are 7 bits (64 cols) ranging from bit 1-8
-			ymask = hex2dec ('7f00'); % y are also 7 bits
-			xshift = 1; % bits to shift x to right
-			yshift = 8; % bits to shift y to right
-			polmask = 1; % polarity bit is LSB
+% Declare function for finding specific event types in eventTypes cell array
+cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
-			
-		else % assume a DAVIS type
-			% In the 32-bit address:
-			% bit 32 (1-based) being 1 indicates an APS sample
-			% bit 11 (1-based) being 1 indicates a special event 
-			% bits 11 and 32 (1-based) both being zero signals a polarity event
-			specialMask = hex2dec ('400');
-			specialLogical = bitand(allAddr, specialMask);
-			apsMask = hex2dec ('80000000');
-			apsLogical = bitand(allAddr, apsMask);
-			nDvsMask = bitor(specialMask, apsMask);
-			polarityEventsLogical = ~bitand(allAddr, nDvsMask);
-			
-			% Get timestamps
-			output.data.polarity.timeStamp = allTs(polarityEventsLogical);
-			
-			% Get y addresses
-			yMask = hex2dec('7FC00000');
-			yShiftBits = 22;
-			output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityEventsLogical), yMask), -yShiftBits));
-			
-			% Get x addresses
-			xMask = hex2dec('003FF000');
-			xShiftBits = 12;
-			output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityEventsLogical), xMask), -xShiftBits));
-			
-			% Get polarities
-			polBit = 12;
-			output.data.polarity.polarity = bitget(allAddr(polarityEventsLogical), polBit) == 1;
-			
-			% If you want to do chip-specific address shifts or subtractions, 
-			% this would be the place to do it. 
+if strcmp(info.source, 'das1')
+	% DAS1 
+	sampleMask = hex2dec('1000');
+	sampleLogical = bitand(allAddr, sampleMask);
+	earLogical = ~sampleLogical;
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('ear'), info.dataTypes))) && any(sampleLogical)
+		% ADC Samples
+		output.data.sample.timeStamp = allTs(sampleLogical);
+		% Sample type
+		sampleTypeMask = hex2dec('1c00'); % take ADC scanner sync and ADC channel together for this value - kludge - the alternative would be to introduce a special event type to represent the scanner wrapping around
+		sampleTypeShiftBits = 10;
+		output.data.sample.sampleType = uint8(bitshift(bitand(allAddr(sampleLogical), sampleTypeMask), -sampleTypeShiftBits));
+		% Sample data
+		sampleDataMask = hex2dec('3FF'); % take ADC scanner sync and ADC channel together for this value - kludge - the alternative would be to introduce a special event type to represent the scanner wrapping around
+		output.data.sample.sample = uint32(bitand(allAddr(sampleLogical), sampleTypeMask));
+	end
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('ear'), info.dataTypes))) && any(earLogical)
+		% EAR events
+		output.data.ear.timeStamp = allTs(earLogical); 
+		% Filter (0 = BPF, 1 = SOS)
+		filterMask     = hex2dec('0001');
+		output.data.ear.filter = uint8(bitand(allAddr, filterMask));
+		% Position (0 = left; 1 = right)
+		positionMask   = hex2dec('0002');
+		positionShiftBits = 1;
+		output.data.ear.position = uint8(bitshift(bitand(allAddr, positionMask), -positionShiftBits));
+		% Channel (0 (high freq) to 63 (low freq))
+		channelMask = hex2dec('00FC');
+		channelShiftBits = 2;
+		output.data.ear.channel = uint16(bitshift(bitand(allAddr, channelMask), -channelShiftBits));
+		% Neuron (in the range 0-3)
+		neuronMask  = hex2dec('0300'); 
+		neuronShiftBits = 8;
+		output.data.ear.neuron = uint8(bitshift(bitand(allAddr, neuronMask), -neuronShiftBits));
+	end
+	
+elseif strcmp(info.source, 'dvs128')
+	% DVS128
+	specialMask = hex2dec ('f000');
+	specialLogical = bitand(allAddr, specialMask);
+	polarityLogical = ~specialLogical;
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
+		% Special events
+		output.data.special.timeStamp = allTs(specialLogical);
+		% No need to create address field, since there is only one type of special event
+	end
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))) && any(polarityLogical)
+		% Polarity events
+		output.data.polarity.timeStamp = allTs(polarityLogical); % Use the negation of the special mask for polarity events
+		% Y addresses
+		yMask = hex2dec('7F00');
+		yShiftBits = 8;
+		output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityLogical), yMask), -yShiftBits));
+		% X addresses
+		xMask = hex2dec('fE');
+		xShiftBits = 1;
+		output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityLogical), xMask), -xShiftBits));
+		% Polarity bit
+		polBit = 1;
+		output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
+	end					
+elseif strfind('davis', info.source) 
+	% DAVIS
+	% In the 32-bit address:
+	% bit 32 (1-based) being 1 indicates an APS sample
+	% bit 11 (1-based) being 1 indicates a special event 
+	% bits 11 and 32 (1-based) both being zero signals a polarity event
+	apsOrImuMask = hex2dec ('80000000');
+	apsOrImuLogical = bitand(allAddr, apsOrImuMask);
+	ImuOrPolarityMask = hex2dec ('800');
+	ImuOrPolarityLogical = bitand(allAddr, ImuOrPolarityMask);
+	signalOrSpecialMask = hex2dec ('400');
+	signalOrSpecialLogical = bitand(allAddr, signalOrSpecialMask);
+	frameLogical = apsOrImuLogical & ~ImuOrPolarityLogical;
+	imuLogical = apsOrImuLogical & ImuOrPolarityLogical;
+	dvsLogical = ~apsOrImuLogical & ~signalOrSpecialLogical;
+	specialLogical = ~apsOrImuLogical & signalOrSpecialLogical;
+
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
+		% Special events
+	
+		%IMU handling:
+		%7 words are sent in series, these being 3 axes for accel, temperature, and 3 axes for gyro
+		
+	% Get timestamps
+	output.data.polarity.timeStamp = allTs(polarityLogical);
+
+	% Get y addresses
+	yMask = hex2dec('7FC00000');
+	yShiftBits = 22;
+	output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityLogical), yMask), -yShiftBits));
+
+	% Get x addresses
+	xMask = hex2dec('003FF000');
+	xShiftBits = 12;
+	output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityLogical), xMask), -xShiftBits));
+
+	% Get polarities
+	polBit = 12;
+	output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
+
+	% If you want to do chip-specific address shifts or subtractions, 
+	% this would be the place to do it. 
 		end
 				
 	end

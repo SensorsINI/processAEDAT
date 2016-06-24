@@ -21,5 +21,8 @@ input.filePath = 'C:\Users\Sim\example.aedat';
 %input.startTime = 48;
 %input.endTime = 48.1;
 
+%This example limits the read out to certain types of event only
+input.dataTypes = {'polarity', 'special'};
+
 % Invoke the function
 output = ImportAedat(input);

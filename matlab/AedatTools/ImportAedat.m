@@ -14,20 +14,20 @@ Some data-type-specific functionality are removed, such as a spatial
 	region-of-interest (ROI) parameter. 
 Addresses and polarities from DAVIS are exactly what is encoded in the file 
 	- no messing about with arbitrary inversions and subtractions.
-It extends functionality to the new aedat format 3.0. Importantly, data
+It extends functionality to the new aedat format 3. Importantly, data
 	from earlier versions are separated as if they had been encoded in version
-	3.0 - there are separate output data structures for retina address-events vs
+	3 - there are separate output data structures for retina address-events vs
 	aps samples, etc. 
 
 This function supports incremental readout, through these methods: 
 	- Blocks of time can be read out.
 	- Alternatively, for fileformats 1.0-2.1, blocks of events (as counted 
 		from the beginning of the file) can be read out.
-	- Alternatively, for fileformat 3.0, blocks of packets (as counted from
+	- Alternatively, for fileformat 3, blocks of packets (as counted from
 		the beginning of the file) can be read out.
 	In time-based readout, for fileformat 1.0-2.1, frame data is read out 
 		according to the timeStamps of individual samples. For fileformat
-		3.0, frames are read out if the mid point between the exposure
+		3, frames are read out if the mid point between the exposure
 		start and exposure end is included in the time window. 
 	
 This function expects a single input, which is a structure with the following fields:
@@ -70,13 +70,13 @@ This function expects a single input, which is a structure with the following fi
 	- endEvent (optional) Only accepted for fileformats 1.0-2.1. If
 		provided, any events with a higher count that this will not be returned.
 		APS samples, if present, are counted as events. 
-	- startPacket (optional) Only accepted for fileformat 3.0. If
+	- startPacket (optional) Only accepted for fileformat 3. If
 		provided, any packets with a lower count that this will not be returned.
-	- endPacket (optional) Only accepted for fileformat 3.0. If
+	- endPacket (optional) Only accepted for fileformat 3. If
 		provided, any packets with a higher count that this will not be returned.
 	-dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
-		special; polarity; frame; imu6; imu9; sample; ear; config.
+		special; polarity; frame; imu6; imu9; sample; ear; config (other types as they are implemented)
 	When using startEvent and endEvent, any events excluded
 	because of the time window or dataType are not replaced, so the amount
 	of data returned may be much less than the difference between
@@ -94,7 +94,7 @@ The output is a structure with the following fields:
 			recording started.
 		- endEvent - (for file format 1.0-2.1 only) The count of the last event 
 			included in the readout.
-		- endPacket - (for file format 3.0 only) The count of the last packet
+		- endPacket - (for file format 3 only) The count of the last packet
 			from which all of the data has been included in the readout. 
 			Packets partially read out are not included in the count - this
 			is necessary to implement incremental readout by blocks of
@@ -122,20 +122,21 @@ The output is a structure with the following fields:
 			In detail the contents of these structures are:
 		- special
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
-			- address (colvector uint32)
+			- timeStamp (colvector uint64)
+			- address (colvector uint32) % Not constructed for e.g. DVS128,
+				where there is only one type of special event
 		- polarity
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- x (colvector uint16)
 			- y (colvector uint16)
 			- polarity (colvector bool)
 		- frame
 			- valid (bool)
-			- frame timeStamp start ???
-			- frame timeStamp end ???
-			- timeStampExposureStart (uint32)
-			- timeStampExposureEnd (uint32)
+			- frame timeStamp start (uint64)
+			- frame timeStamp end (uint64)
+			- timeStampExposureStart (uint64)
+			- timeStampExposureEnd (uint64)
 			- samples (matrix of uint16 r*c, where r is the number of rows and c is 
 				the number of columns.)
 			- xStart (only present if the frame doesn't start from x=0)
@@ -144,7 +145,7 @@ The output is a structure with the following fields:
 			- colChannelId (optional, if its not present, assume a mono array)
 		- imu6
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- accelX (colvector single)
 			- accelY (colvector single)
 			- accelZ (colvector single)
@@ -159,19 +160,19 @@ The output is a structure with the following fields:
 			- compZ (colvector single)
 		- sample
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- sampleType (colvector uint8)
 			- sample (colvector uint32)
 		- ear
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- position (colvector uint8)
 			- channel (colvector uint16)
 			- neuron (colvector uint8)
 			- filter (colvector uint8)
 		- config
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- moduleAddress (colvector uint8)
 			- parameterAddress (colvector uint8)
 			- parameter (colvector uint32)
@@ -201,13 +202,13 @@ end
 info.fileHandle = fopen(info.filePath, 'r');
 
 % Process the headers
-info = ImportAedatProcessHeaders(info);
+info = ImportAedatHeaders(info);
 
 % Process the data - different subfunctions handle fileFormat 2 vs 3
 if info.fileFormat < 3
-	output = ImportAedatProcessDataFormat1or2(info);
+	output = ImportAedatDataVersion1or2(info);
 else
-	output = ImportAedatProcessDataFormat3(info);	
+	output = ImportAedatDataVersion3(info);	
 end
 
 fclose(output.info.fileHandle);

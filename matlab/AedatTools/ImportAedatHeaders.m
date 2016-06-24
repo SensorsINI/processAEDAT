@@ -1,4 +1,4 @@
-function info = ImportAedatProcessHeaders(info)
+function info = ImportAedatHeaders(info)
 
 %{
 This is a sub-function of importAedat. 
@@ -88,7 +88,7 @@ line = native2unicode(fgets(info.fileHandle));
 versionPrefix = '#!AER-DAT';
 if strncmp(line, versionPrefix, length(versionPrefix))
 	info.fileFormat = sscanf(line(length(versionPrefix) + 1 : end), '%f');
-	fprintf('File format: %g.2\n', info.fileFormat);
+	fprintf('File format: %g.1\n', info.fileFormat);
 else % the default version is 1
 	info.fileFormat = 1;
 	fprintf('No #!AER-DAT version header found, assuming format 1.0\n');
