@@ -11,6 +11,9 @@ import matplotlib as plt
 from pylab import *
 import numpy as np
 import os
+import winsound
+
+winsound.Beep(300,2000)
 
 ioff()
 ##############################################################################
@@ -25,10 +28,21 @@ do_oscillations = False
 ################### 
 # GET CHIP INFO
 ###################
-directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/QE_DAVIS346C_23_06_16-14_33_11/DAVIS346C_ADCint_ptc_dark_23_06_16-14_33_11/"
-#"/home/inilabs/inilabs/code/scripts/python/cAER_utils/imagers_characterization/measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/"
-#"Z:/Characterizations/Measurements/DAVIS208Mono_contrast_sensitivity_18_04_16-08_33_12/" # Diederik's PC path
-camera_file = 'cameras/davis346bsi_parameters.txt'
+
+#PTC
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/DARK/DAVIS208_ADCint_ptc_07_06_16-15_59_39_dark_long_coveredleds/"
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/DARK/DAVIS208_ADCint_ptc_07_06_16-15_51_10_dark_short_coveredleds/"
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/DARK/DAVIS208_ADCint_ptc_07_06_16-15_41_37_dark_short/"
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/LIGHT/DAVIS208_ADCint_ptc_07_06_16-15_17_01_light/"
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/LIGHT/DAVIS208_ADCint_ptc_07_06_16-15_29_42_light/"
+#directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/LIGHT/DAVIS208_ADCint_ptc_08_06_16-16_16_58_light/"
+
+#directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-15_37_22_light/"
+#directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_10_43_dark_short/"
+#directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_26_43_dark_long/"
+
+#camera_file = 'cameras/davis208_parameters.txt'
+camera_file = 'cameras/davis346_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
@@ -119,7 +133,7 @@ if do_ptc:
         ADC_range = ADC_range_int
     else:
         ADC_range = ADC_range_ext
-    aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
+    i_pd_es = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
 
 if do_latency_pixel:
     #######################
