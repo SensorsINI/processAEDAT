@@ -37,7 +37,7 @@ do_oscillations = False
 #directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/LIGHT/DAVIS208_ADCint_ptc_07_06_16-15_29_42_light/"
 #directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/LIGHT/DAVIS208_ADCint_ptc_08_06_16-16_16_58_light/"
 
-#directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-15_37_22_light/"
+directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-15_37_22_light/"
 #directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_10_43_dark_short/"
 #directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_26_43_dark_long/"
 
@@ -133,7 +133,10 @@ if do_ptc:
         ADC_range = ADC_range_int
     else:
         ADC_range = ADC_range_ext
-    i_pd_es = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values)    
+    if (ptc_dir.lower().find('dark') > 0):
+        i_pd_es = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) 
+    else:
+        i_pd_vs, Gain_uVe_lin = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) 
 
 if do_latency_pixel:
     #######################
