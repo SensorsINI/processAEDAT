@@ -1,7 +1,7 @@
-function output = ImportAedatProcessDataFormat1or2(info)
+function output = ImportAedatProcessDataFormat3(info)
 %{
 This is a sub-function of importAedat - it process the data where the aedat 
-file format is determined to be 1 or 2. 
+file format is determined to be 3.xx 
 The .aedat file format is documented here:
 http://inilabs.com/support/software/fileformat/
 This function is based on a combination of the loadaerdat function and
@@ -12,15 +12,13 @@ fields:
 		data
 	- fileHandle - handle of the open aedat file in question
 	- fileFormat - indicates the version of the aedat file format - should
-		be either 1 or 2
+		be 3.xx
 	- startTime (optional) - if provided, any data with a timeStamp lower
 		than this will not be returned.
 	- endTime (optional) - if provided, any data with a timeStamp higher than 
 		this time will not be returned.
-	- startEvent (optional) Any events with a lower count that this will not be returned.
-		APS samples, if present, are counted as events. 
-	- endEvent (optional) Any events with a higher count that this will not be returned.
-		APS samples, if present, are counted as events. 
+	- startPacket (optional) Any packets with a lower count that this will not be returned.
+	- endPacket (optional) Any packets with a higher count that this will not be returned.
 	- source - a string containing the name of the chip class from
 		which the data came. Options are:
 		- dvs128 
@@ -39,11 +37,12 @@ fields:
 		- hdavis640mono 
 		- hdavis640rgbw
 		- das1
-		'file' and 'network' origins are not acceptable - the chip class is
-		necessary for the interpretation of the addresses in address-events.
+		- file
+		- network
 	- dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
-		special; polarity; frame; imu6; imu9; sample; ear; config.
+		special; polarity; frame; imu6; imu9; sample; ear; config; 1dPoint;
+		2dPoint; 3dPoint 4dPoint; dynapse
 
 The output is a structure with 2 fields.
 	- info - the input structure, embelished with other data
@@ -65,20 +64,20 @@ The output is a structure with 2 fields.
 			In detail the contents of these structures are:
 		- special
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- address (colvector uint32)
 		- polarity
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- x (colvector uint16)
 			- y (colvector uint16)
 			- polarity (colvector bool)
 		- frame
 			- valid (bool)
-			- frame timeStamp start ???
-			- frame timeStamp end ???
-			- timeStampExposureStart (uint32)
-			- timeStampExposureEnd (uint32)
+			- frame timeStamp start (uint64)
+			- frame timeStamp end (uint64)
+			- timeStampExposureStart (uint64)
+			- timeStampExposureEnd (uint64)
 			- samples (matrix of uint16 r*c, where r is the number of rows and c is 
 				the number of columns.)
 			- xStart (only present if the frame doesn't start from x=0)
@@ -87,7 +86,7 @@ The output is a structure with 2 fields.
 			- colChannelId (optional, if its not present, assume a mono array)
 		- imu6
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- accelX (colvector single)
 			- accelY (colvector single)
 			- accelZ (colvector single)
@@ -97,47 +96,30 @@ The output is a structure with 2 fields.
 			- temperature (colvector single)
 		- sample
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- sampleType (colvector uint8)
 			- sample (colvector uint32)
 		- ear
 			- valid (colvector bool)
-			- timeStamp (colvector uint32)
+			- timeStamp (colvector uint64)
 			- position (colvector uint8)
 			- channel (colvector uint16)
 			- neuron (colvector uint8)
 			- filter (colvector uint8)
 
-Implementation: There is an efficient implementation of startEvent and
-EndEvent, since the correct file locations to read from can be determined
-in advance. 
-However, the implementation of startTime and endTime is not efficient, since
-the file is read and then the timestamps are processed.
-It is not possible to do better than this, since a binary search through
-the file to find the correct file locations in advance could fail due to
-non-monotonic timestamps. 
+Implementation: There is an efficient implementation of startPacket and
+EndPacket, since the correct file locations to read from can be determined
+in advance.
+endTime is implemented by stopping consuming packets once the first
+timestamp is greater than the endTime. Any trailing events with timestamp
+greater than the end time are then cut off.
+However, the implementation of startTime is not efficient, since
+there is no guarantee about how far back in time 
 %}
 
 dbstop if error
 
-% The fileFormat dictates whether there are 6 or 8 bytes per event. 
-if info.fileFormat == 1
-	numBytesPerAddress = 2;
-	numBytesPerEvent = 6;
-	addrPrecision = 'uint16';
-else
-	numBytesPerAddress = 4;
-	numBytesPerEvent = 8;
-	addrPrecision = 'uint32';
-end
-
 fileHandle = info.fileHandle;
-
-% Go to the EOF to find out how long it is
-fseek(info.fileHandle, 0, 'eof');
-
-% Calculate the number of events
-info.numEventsInFile = floor((ftell(info.fileHandle) - info.beginningOfDataPointer) / numBytesPerEvent);
 
 % Check the startEvent and endEvent parameters
 if ~isfield(info, 'startEvent')
@@ -258,6 +240,9 @@ else
 	end
 
 end
+
+% Calculate some basic stats
+%info.numEventsInFile 
 
 output.info = info;
 

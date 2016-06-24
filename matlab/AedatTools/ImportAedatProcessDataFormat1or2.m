@@ -192,12 +192,16 @@ end
 %{ 
 - Split between DVS/DAVIS and DAS.
 	For DAS1:
-		- Special events - how is this encoded?
+		- Special events - external injected events has never been
+		implemented for DAS
 		- Split between Address events and ADC samples
 		- Intepret address events
 		- Interpret ADC samples
 	For DVS128:
-		- Special events - how is this encoded?
+		- Special events - external injected events are on bit 15 = 1;
+		there is a more general label for special events which is bit 31 =
+		1, but this has ambiguous interpretations; it is also overloaded
+		for the stereo pair encoding - ignore this. 
 		- Intepret address events
 	For DAVIS:
 		- Special events
