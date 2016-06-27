@@ -7,7 +7,7 @@ dbstop if error
 input = struct;
 
 % Put the filename, including full path, in the 'file' field.
-input.filePath = 'C:\Users\Sim\example.aedat';
+input.filePath = 'example.aedat';
 
 
 % Add any restrictions on what to read out. 
@@ -23,6 +23,9 @@ input.filePath = 'C:\Users\Sim\example.aedat';
 
 %This example limits the read out to certain types of event only
 input.dataTypes = {'polarity', 'special'};
+
+% Working with a file where the source hasn't been declared - do this explicitly:
+input.source = 'Davis240b';
 
 % Invoke the function
 output = ImportAedat(input);
