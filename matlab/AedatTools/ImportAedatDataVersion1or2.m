@@ -288,37 +288,80 @@ elseif strfind('davis', info.source)
 	signalOrSpecialLogical = bitand(allAddr, signalOrSpecialMask);
 	frameLogical = apsOrImuLogical & ~ImuOrPolarityLogical;
 	imuLogical = apsOrImuLogical & ImuOrPolarityLogical;
-	dvsLogical = ~apsOrImuLogical & ~signalOrSpecialLogical;
+	polarityLogical = ~apsOrImuLogical & ~signalOrSpecialLogical;
 	specialLogical = ~apsOrImuLogical & signalOrSpecialLogical;
 
+	% Special events
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
-		% Special events
-	
+		output.data.special.timeStamp = allTs(specialLogical);
+		% No need to create address field, since there is only one type of special event
+
+	% Polarity (DVS) events
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))) && any(dvsLogical)
+		output.data.polarity.timeStamp = allTs(polarityLogical);
+		% Y addresses
+		yMask = hex2dec('7FC00000');
+		yShiftBits = 22;
+		output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityLogical), yMask), -yShiftBits));
+		% X addresses
+		xMask = hex2dec('003FF000');
+		xShiftBits = 12;
+		output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityLogical), xMask), -xShiftBits));
+		% Polarity bit
+		polBit = 12;		
+		output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
+	end					
+
+	% IMU events
+		% These come in blocks of 7, for the 7 different values produced in
+		% a single sample; the following code recomposes these
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))) && any(dvsLogical)
+		
+		if mod(nnz(imuLogical), 7) > 0 
+			error('The number of IMU samples should be divisible by 7')
+		end
+		output.data.imu6.timeStamp = allTs(imuLogical);
+		output.data.imu6.timeStamp = output.data.imu6.timeStamp(1 : 7 : end);	
+
+		- accelX (colvector single)
+		- accelY (colvector single)
+		- accelZ (colvector single)
+		- gyroX (colvector single)
+		- gyroY (colvector single)
+		- gyroZ (colvector single)
+		- temperature (colvector single)
+
 		%IMU handling:
 		%7 words are sent in series, these being 3 axes for accel, temperature, and 3 axes for gyro
 		
-	% Get timestamps
-	output.data.polarity.timeStamp = allTs(polarityLogical);
+		datashift=12;
+		accelScale = 1/16384;
+		gyroScale = 1/131;
+		temperatureScale = 1/340;
+		temperatureOffset=35;
 
-	% Get y addresses
-	yMask = hex2dec('7FC00000');
-	yShiftBits = 22;
-	output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityLogical), yMask), -yShiftBits));
+		%     ax("AccelX", 0), ay("AccelY", 1), az("AccelZ", 2), temp("Temperature", 3), gx("GyroTiltX", 4), gy("GyroPanY", 5), gz("GyroRollZ", 6); 
 
-	% Get x addresses
-	xMask = hex2dec('003FF000');
-	xShiftBits = 12;
-	output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityLogical), xMask), -xShiftBits));
+		imuDataMask = hex2dec('003FF000');
+		rawData  = single(bitand(allAddr(imuLogical), imuDataMask));		
+		
+		data=typecast(rawdata,'int16'); % cast to signed 16 bit shorts
+		data=double(data); % cast to double so conversion to g's and deg/s works
+		
+		output.data.imu6.accelX			= rawData(1 : 7 : end) * accelScale;	
+		output.data.imu6.accelY			= rawData(2 : 7 : end) * accelScale;	
+		output.data.imu6.accelZ			= rawData(3 : 7 : end) * accelScale;	
+		output.data.imu6.temperature	= rawData(4 : 7 : end) * temperatureScale + temperatureOffset;	
+		output.data.imu6.gyroX			= rawData(5 : 7 : end) * gyroScale;	
+		output.data.imu6.gyroY			= rawData(6 : 7 : end) * gyroScale;	
+		output.data.imu6.gyroZ			= rawData(7 : 7 : end) * gyroScale;	
 
-	% Get polarities
-	polBit = 12;
-	output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
-
-	% If you want to do chip-specific address shifts or subtractions, 
-	% this would be the place to do it. 
-		end
+	
 				
 	end
+
+	% If you want to do chip-specific address shifts or subtractions,
+	% this would be the place to do it. 
 
 end
 

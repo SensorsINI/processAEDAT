@@ -64,6 +64,9 @@ This function expects a single input, which is a structure with the following fi
 	- endTime (optional) - if provided, any data with a timeStamp higher than 
 		this time will not be returned. This is in seconds, not
 		microseconds. 
+	- strictTime (optional) boolean - if present and true, then AEDAT3.x
+		files will handle the inclusion of time in the startTime-endTime
+		time window strictly, i.e. on an event-by-event basis. 
 	- startEvent (optional) Only accepted for fileformats 1.0-2.1. If
 		provided, any events with a lower count that this will not be returned.
 		APS samples, if present, are counted individually as events. 

@@ -110,11 +110,24 @@ The output is a structure with 2 fields.
 Implementation: There is an efficient implementation of startPacket and
 EndPacket, since the correct file locations to read from can be determined
 in advance.
-endTime is implemented by stopping consuming packets once the first
-timestamp is greater than the endTime. Any trailing events with timestamp
-greater than the end time are then cut off.
-However, the implementation of startTime is not efficient, since
-there is no guarantee about how far back in time 
+There are two possibilities for handling startTime and endTime; one is with
+strict capture of events within the prescribed time window. The other is a
+loose interpretation with capture of all events whose packets start within
+the prescribed time window. It is much more efficient to implement this
+second approach, and nevertheless allows a calling function to iterate 
+through all the data in bite-sized chunks. 
+There is a switch info.strictTime - if this is present and
+true then the strict time approach is used, otherwise the packet-based time
+approach is used. In the strict approach, data must be accumulated from the
+beginning of the file and then cut off once packets' first timestamp is
+greater than endTime. In the strict approach, frames are considered part of
+the time window if the time which is half way between exposure start and
+exposure end is within the time window. 
+2016_06_27 Strict time handling is not implemented yet.
+Since there is no way to know in advance how big the data vectors must be,
+the data vectors/matrices are started off when they are needed 
+and are grown by a factor of 2 each time they need to be enlarged. 
+At the end of the run they are clipped to the correct size. 
 %}
 
 dbstop if error
@@ -126,12 +139,84 @@ end
 if ~isfield(info, 'endPacket')	
 	info.endPacket = inf;
 end
-if info.startPacket >= info.endPacket 
+if info.startPacket > info.endPacket 
 	error([	'The startPacket parameter is ' num2str(info.startPacket) ...
 		', but the endPacket parameter is ' num2str(info.endPacket) ]);
 end
+if ~isfield(info, 'startTime')
+	info.startTime = 0;
+end
+if ~isfield(info, 'endTime')	
+	info.endTime = inf;
+end
+if info.startTime > info.endTime 
+	error([	'The startTime parameter is ' num2str(info.startTime) ...
+		', but the endTime parameter is ' num2str(info.endTime) ]);
+end
 
 packetCount = 0;
+
+% Create structures to hold the output data
+
+special = struct;
+spe
+polarity = struct;
+frame = struct;
+imu6 = struct;
+sample = struct;
+ear = struct;
+special.valid = [];
+special.timeStamp = [];
+special.address = [];
+polarity.valid = [];
+polarity.timeStamp = [];
+polarity.x = [];
+polarity.y = [];
+polarity.polarity = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+frame. = [];
+			- valid (bool)
+			- frame timeStamp start (uint64)
+			- frame timeStamp end (uint64)
+			- timeStampExposureStart (uint64)
+			- timeStampExposureEnd (uint64)
+			- samples (matrix of uint16 r*c, where r is the number of rows and c is 
+				the number of columns.)
+			- xStart (only present if the frame doesn't start from x=0)
+			- yStart (only present if the frame doesn't start from y=0)
+			- roiId (only present if this frame has an ROI identifier)
+			- colChannelId (optional, if its not present, assume a mono array)
+		- imu6
+			- valid (colvector bool)
+			- timeStamp (colvector uint64)
+			- accelX (colvector single)
+			- accelY (colvector single)
+			- accelZ (colvector single)
+			- gyroX (colvector single)
+			- gyroY (colvector single)
+			- gyroZ (colvector single)
+			- temperature (colvector single)
+		- sample
+			- valid (colvector bool)
+			- timeStamp (colvector uint64)
+			- sampleType (colvector uint8)
+			- sample (colvector uint32)
+		- ear
+			- valid (colvector bool)
+			- timeStamp (colvector uint64)
+			- position (colvector uint8)
+			- channel (colvector uint16)
+			- neuron (colvector uint8)
+			- filter (colvector uint8)
+
 
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
@@ -141,143 +226,60 @@ while ~feof(info.fileHandle)
 	header = fread(info.fileHandle, 28);
 	if info.startPacket > packetCount
 		% Ignore this packet as its count is too low
-		eventSize = int32(header(4:7));
-		eventCapacity = int32(header(16:19));
-		fseek(info.fileHandle, eventCapacity * eventSize, 'cof');
+		eventSize = typecast(header(4:7), 'int32');
+		eventCapacity = typecast(header(16:19), 'int32');
+		fseek(info.fileHandle, eventNumber * eventSize, 'cof');
 	else
-		eventType = int16(header(0:1));
-		eventSource = int16(data(2:3)); % Multiple sources not handled yet
-		eventSize = int32(header(4:7));
-		eventTsOffset = int32(header(8:11));
-		eventTsOverflow = int32(header(12:15));
-		eventCapacity = int32(header(16:19));
-		eventNumber = int32(header(20:23));
-		eventValid = int32(header(24:27));
+		eventSize = typecast(header(4:7), 'int32');
+		eventTsOffset = typecast(header(8:11), 'int32');
+		eventTsOverflow = typecast(header(12:15), 'int32');
+		%eventCapacity = typecast(header(16:19), 'int32');
+		eventNumber = typecast(header(20:23), 'int32');
+		%eventValid = typecast(header(24:27), 'int32');
 		% Read the full packet
-		data = fread(info.fileHandle, eventCapacity * eventSize);
+		data = fread(info.fileHandle, eventNumber * eventSize);
+		% Find the first timestamp and check the timing constraints
+		mainTimeStamp = uint64(typecast(data(eventTsOffset : eventTsOffset + 4), ' int32')) + uint64(eventTsOverflow * 2^31);
+		if info.startTime <= mainTimeStamp && mainTimeStamp <= info.endTime
+			eventType = typecast(header(0:1), 'int16');
+			%eventSource = typecast(data(2:3), 'int16'); % Multiple sources not handled yet
 
-		% handle the packet types individually
-		
-		% Special events
-        if eventType == 0 
-            if ~ 'dataTypes' in info or 0 in info['dataTypes'] :
-                while(data[counter:counter + eventSize]):  # loop over all event packets
-                    specialAddr = struct.unpack('I', data[counter:counter + 4])[0]
-                    specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
-                    specialAddr = (specialAddr >> 1) & 0x0000007F
-                    specialAddrAll.append(specialAddr)
-                    specialTsAll.append(specialTs)
-                    counter = counter + eventSize 
+			% Handle the packet types individually:
+			
+			% Special events
+			if eventType == 0 
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))
+					if special.
+					for eventNo = 
+					while(data[counter:counter + eventSize]):  # loop over all event packets
+						specialAddr = struct.unpack('I', data[counter:counter + 4])[0]
+						specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
+						specialAddr = (specialAddr >> 1) & 0x0000007F
+						specialAddrAll.append(specialAddr)
+						specialTsAll.append(specialTs)
+						counter = counter + eventSize 
+					end
+				end
+			% Polarity events                
+			elseif eventType == 1  
+				if ~isfield(info, 'dataTypes') | any(cellfun(cellFind('polarity'), info.dataTypes))
+					while(data[counter:counter + eventSize]):  # loop over all event packets
+						polData = struct.unpack('I', data[counter:counter + 4])[0]
+						polTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
+						polAddrX = (polData >> 18) & 0x00003FFF
+						polAddrY = (polData >> 4) & 0x00003FFF
+						polPol = (polData >> 1) & 0x00000001
+						polTsAll.append(polTs)
+						polAddrXAll.append(polAddrX)
+						polAddrYAll.append(polAddrY)
+						polPolAll.append(polPol)
+						counter = counter + eventSize
+
+					end
 				end
 			end
-        % Polarity events                
-		elseif eventType == 1  
-            if ~isfield(info, 'dataTypes') | any(cellfun(cellFind('polarity'), info.dataTypes))
-                while(data[counter:counter + eventSize]):  # loop over all event packets
-                    polData = struct.unpack('I', data[counter:counter + 4])[0]
-                    polTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
-                    polAddrX = (polData >> 18) & 0x00003FFF
-                    polAddrY = (polData >> 4) & 0x00003FFF
-                    polPol = (polData >> 1) & 0x00000001
-                    polTsAll.append(polTs)
-                    polAddrXAll.append(polAddrX)
-                    polAddrYAll.append(polAddrY)
-                    polPolAll.append(polPol)
-                    counter = counter + eventSize
-
-% Read addresses
-fseek(info.fileHandle, info.beginningOfDataPointer + numBytesPerEvent * info.startEvent, 'bof'); 
-allAddr = uint32(fread(info.fileHandle, numEventsToRead, addrPrecision, 4, 'b'));
-
-% Read timestamps
-fseek(info.fileHandle, info.beginningOfDataPointer + numBytesPerEvent * info.startEvent + numBytesPerAddress, 'bof');
-allTs = uint32(fread(info.fileHandle, numEventsToRead, addrPrecision, numBytesPerAddress, 'b'));
-
-% Trim events outside time window
-% This is an inefficent implementation, which allows for
-% non-monotonic timestamps. 
-
-if isfield(info, 'startTime')
-	tempIndex = allTs >= info.startTime * 1e6;
-	allAddr = allAddr(tempIndex);
-	allTs	= allTs(tempIndex);
-end
-
-if isfield(info, 'endTime')
-	tempIndex = allTs <= info.endTime * 1e6;
-	allAddr = allAddr(tempIndex);
-	allTs	= allTs(tempIndex);
-end
-
-% Interpret the addresses
-%{ 
-- Split between DVS/DAVIS and DAS.
-	For DAS1:
-		- Special events - how is this encoded?
-		- Split between Address events and ADC samples
-		- Intepret address events
-		- Interpret ADC samples
-	For DVS128:
-		- Special events - how is this encoded?
-		- Intepret address events
-	For DAVIS:
-		- Special events
-			- Interpret IMU events from special events
-		- Interpret DVS events according to chip class
-		- Interpret APS events according to chip class
-%}
-
-if strcmp(info.source, 'das1')
-	% DAS1 - NOT IMPLEMENTED YET
-else
-	% DVS events
-	if isfield(info, 'dataTypes') && ~any(cellfun(@strcmp, info.dataTypes, repmat({'polarity'}, length(devices), 1)))
-		disp('Polarity events excluded.')
-	else
-		if strcmp(info.source, 'dvs128')
-			% Not implemented yet
-			xmask = hex2dec ('fE'); % x are 7 bits (64 cols) ranging from bit 1-8
-			ymask = hex2dec ('7f00'); % y are also 7 bits
-			xshift = 1; % bits to shift x to right
-			yshift = 8; % bits to shift y to right
-			polmask = 1; % polarity bit is LSB
-
-			
-		else % assume a DAVIS type
-			% In the 32-bit address:
-			% bit 32 (1-based) being 1 indicates an APS sample
-			% bit 11 (1-based) being 1 indicates a special event 
-			% bits 11 and 32 (1-based) both being zero signals a polarity event
-			specialMask = hex2dec ('400');
-			specialLogical = bitand(allAddr, specialMask);
-			apsMask = hex2dec ('80000000');
-			apsLogical = bitand(allAddr, apsMask);
-			nDvsMask = bitor(specialMask, apsMask);
-			polarityEventsLogical = ~bitand(allAddr, nDvsMask);
-			
-			% Get timestamps
-			output.data.polarity.timeStamp = allTs(polarityEventsLogical);
-			
-			% Get y addresses
-			yMask = hex2dec('7FC00000');
-			yShiftBits = 22;
-			output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityEventsLogical), yMask), -yShiftBits));
-			
-			% Get x addresses
-			xMask = hex2dec('003FF000');
-			xShiftBits = 12;
-			output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityEventsLogical), xMask), -xShiftBits));
-			
-			% Get polarities
-			polBit = 12;
-			output.data.polarity.polarity = bitget(allAddr(polarityEventsLogical), polBit) == 1;
-			
-			% If you want to do chip-specific address shifts or subtractions, 
-			% this would be the place to do it. 
 		end
-				
 	end
-
 end
 
 % Calculate some basic stats
