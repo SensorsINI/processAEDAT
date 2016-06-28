@@ -149,7 +149,7 @@ class labview_communication:
             return False
         
     def check_for_errors(self):
-        self.s_commands.sendall("ErrorT?\r\n\r\n")
+        self.s_commands.sendall("Error?\r\n\r\n")
         response = self.receive_data(self.s_commands, 5)
         if(response == 'False'):
             return False
@@ -157,22 +157,22 @@ class labview_communication:
             return True
 
     def set_wavelength(self, wavelength):
-        self.s_commands.sendall("WavelengthT\t" + str('%.2f' % wavelength) + "\r\n\r\n")
+        self.s_commands.sendall("Wavelength\t" + str('%.2f' % wavelength) + "\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         return response
         
     def read_wavelength(self):
-        self.s_commands.sendall("WavelengthT?\r\n\r\n")
+        self.s_commands.sendall("Wavelength?\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         return response
                 
     def check_shutter_state(self):
-        self.s_commands.sendall("ShutterT?\r\n\r\n")
+        self.s_commands.sendall("Shutter?\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         return response
 
     def open_shutter(self):
-        self.s_commands.sendall("ShutterT Open\r\n\r\n")
+        self.s_commands.sendall("Shutter Open\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         if(response == 'Opened'):
             return True
@@ -180,7 +180,7 @@ class labview_communication:
             return False   
             
     def close_shutter(self):
-        self.s_commands.sendall("ShutterT Close\r\n\r\n")
+        self.s_commands.sendall("Shutter Close\r\n\r\n")
         response = self.receive_data(self.s_commands, 6)
         if(response == 'Closed'):
             return True
@@ -188,12 +188,12 @@ class labview_communication:
             return False
 
     def read_reference_power(self):
-        self.s_commands.sendall("RefPowerT?\r\n\r\n")
+        self.s_commands.sendall("RefPower?\r\n\r\n")
         response = self.receive_data(self.s_commands, 56)
         return response
  
     def set_reference_power_offset(self):
-        self.s_commands.sendall("RefPower0SetT\r\n\r\n")
+        self.s_commands.sendall("RefPower0Set\r\n\r\n")
         response = self.receive_data(self.s_commands, 12)
         return response
 

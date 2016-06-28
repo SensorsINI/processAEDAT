@@ -18,19 +18,19 @@ import labview_communication
 caer_host = '127.0.0.1'
 caer_port_command = 4040
 caer_port_data =  7777
-labview_host = '172.19.11.98'
+labview_host = '192.168.1.1'
 labview_port = 5020
 
 #### EXPERIMENT/CAMERA PARAMETERS
 wavelengths = np.linspace(350, 800, 2)
-exposures = np.linspace(1,7000,20)
+exposures = np.linspace(1,7000,2)
 frame_number = 100 
 global_shutter = True 
 useinternaladc = True
 datadir = 'measurements'
-sensor = "DAVISHet640" 
+sensor = "DAVIS346B" 
 sensor_type ="DAVISFX3" 
-bias_file = "cameras/cdavis640rgbw_PTC1.xml" 
+bias_file = "cameras/davis346BMono_PTC.xml" 
 dvs128xml = False
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
 
