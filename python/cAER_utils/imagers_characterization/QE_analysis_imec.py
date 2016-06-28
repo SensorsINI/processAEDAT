@@ -6,7 +6,7 @@ import sys
 sys.path.append('utils/')
 import load_files
 sys.path.append('analysis/')
-import APS_photon_transfer_curve
+import APS_qe_slope
 import matplotlib as plt
 from pylab import *
 import numpy as np
@@ -21,8 +21,8 @@ ioff()
 # GET CHIP INFO
 ###################
 #QE folder
-directory_meas = "/home/inilabs/code/JAER_SVN/scripts/python/cAER_utils/imagers_characterization/measurements/QE_DAVIS346C_23_06_16-14_33_11/"
-camera_file = 'cameras/davis346bsi_parameters.txt'
+directory_meas = "/home/chenghan/inilabs/cAER_utils/imagers_characterization/measurements/QE_DAVIS346B_28_06_16-17_31_02/"
+camera_file = 'cameras/davis346_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
 sensor = info[0]
@@ -61,7 +61,7 @@ x_div = len(frame_x_divisions)
 
 wavelengths_in_dir = os.listdir(directory_meas)
 wavelengths_in_dir.sort()
-aedat = APS_photon_transfer_curve.APS_photon_transfer_curve()
+aedat = APS_qe_slope.APS_qe_slope()
 
 wavelengths = np.zeros(len(wavelengths_in_dir))
 i_pd_vs = np.zeros([len(wavelengths_in_dir),y_div,x_div])+1*-1
@@ -77,7 +77,8 @@ for this_wavelength_file in range(len(wavelengths_in_dir)):
             ADC_range = ADC_range_int
         else:
             ADC_range = ADC_range_ext
-        i_pd_vs[this_wavelength_file,:,:], cg_uve[this_wavelength_file,:,:] = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve
+        i_pd_vs[this_wavelength_file,:,:], cg_uve[this_wavelength_file,:,:] = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve
+	cg_uve[this_wavelength_file,:,:] = np.zeros([y_div,x_div])+1*20
     elif (wavelengths_in_dir[this_wavelength_file].lower().find('dark') > 0):
         ptc_dir = directory_meas + wavelengths_in_dir[this_wavelength_file] + "/"
         print "processing PTC in dark... "
@@ -85,7 +86,7 @@ for this_wavelength_file in range(len(wavelengths_in_dir)):
             ADC_range = ADC_range_int
         else:
             ADC_range = ADC_range_ext
-        i_dark_vs = aedat.ptc_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
+        i_dark_vs = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
 
 # Remove non-wavelengths
 files_num = len(wavelengths)
@@ -124,7 +125,7 @@ for files_in_folder in os.listdir(directory_meas):
             p_d_dark1 = float(info_ref_diode[this_wavelength].split('[')[1].split(';')[2])
             p_d_dark2 = float(info_ref_diode[this_wavelength].split('[')[2].split(';')[2])
             p_ref_diode_wcm2[this_wavelength] = ((p_d_light1+p_d_light2)/2.0)-((p_d_dark1+p_d_dark2)/2.0)
-            E_photon = hc/wavelengths[this_wavelength]
+            E_photon = hc/(wavelengths[this_wavelength]*10.0**(-9.0))
             f_ref_diode_psm2[this_wavelength] = (p_ref_diode_wcm2[this_wavelength]*10**(4))/E_photon
 
 #raise Exception
