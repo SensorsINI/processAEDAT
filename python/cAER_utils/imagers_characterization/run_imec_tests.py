@@ -22,7 +22,7 @@ labview_host = '192.168.1.1'
 labview_port = 5020
 
 #### EXPERIMENT/CAMERA PARAMETERS
-wavelengths = np.linspace(350, 800, 2)
+wavelengths = np.linspace(400, 800, 10)
 exposures = np.linspace(1,7000,2)
 frame_number = 100 
 global_shutter = True 
@@ -332,6 +332,8 @@ if measure_qe:
     ref_diode_readings_file = this_dir + "ref_diode_" + sensor + "_" + current_date + ".txt"
     out_file = open(ref_diode_readings_file,"w")
     for this_wavelength in range(len(wavelengths)):
-        out_file.write(str(format(wavelengths[this_wavelength],'.0f')) + ":DL3[" + ref_diode_DL3_strs[this_wavelength] + "]DL7[" + ref_diode_DL7_strs[this_wavelength] + "]PR3[" + ref_diode_PR3_strs[this_wavelength] + "]PR6[" + ref_diode_PR6_strs[this_wavelength] + "\n")
+        content = str(format(wavelengths[this_wavelength],'.0f')) + ":DL3[" + ref_diode_DL3_strs[this_wavelength] + "]DL7[" + ref_diode_DL7_strs[this_wavelength] + "]PR3[" + ref_diode_PR3_strs[this_wavelength] + "]PR6[" + ref_diode_PR6_strs[this_wavelength]
+        content.rstrip("\n")
+        out_file.write(content + "\n")
     out_file.close()
     
