@@ -122,32 +122,34 @@ class APS_qe_slope:
                     u_y_fit = u_y_tot[indmin20perc:indmax80perc,this_area_y, this_area_x]
                     exposures_t = np.array(exposures.reshape(len(exposures)))
                     exposures_fit = exposures_t[indmin20perc:indmax80perc]
-                    try: 
-                        slope, inter = np.polyfit(exposures_fit.reshape(len(exposures_fit)), u_y_fit.reshape(len(u_y_fit)),1)
-                        fit_fn = np.poly1d([slope, inter])
-                        i_pd_es[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)/(Gain_uVe_lin[this_area_y,this_area_x]/1000000.0)
-                        i_pd_vs[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)
-                        print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd_es[this_area_y,this_area_x]) + " e/s or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s or " + str(i_pd_es[this_area_y,this_area_x]*1.6*10**(-19)) + " A for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
-                        ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_es[this_area_y,this_area_x], '.2f')) + ' e/s or ' + str(format(i_pd_vs[this_area_y,this_area_x], '.2f')) + ' V/s ')
-                        ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
-                    except ValueError:
-                        print("Poly Fit Failed for this recording.. skipping")
-                        continue
-                    bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
-                    color_tmp = color_tmp+1
-            color_tmp = 0;
-            if(ptc_dir.lower().find('dark') < 0):
-                plt.ylim([np.min(u_y_tot[:,this_area_y, this_area_x])-100,np.max(u_y_tot[:,this_area_y, this_area_x])+100])
-            for this_area_x in range(len(frame_x_divisions)):
-                for this_area_y in range(len(frame_y_divisions)):
-                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.6f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
-                    color_tmp = color_tmp+1
-            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            plt.xlabel('Exposure time [us]') 
-            plt.ylabel('Mean[DN]') 
-            plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-                              
+                    if(len(exposures_fit)!= 0):
+                        try: 
+                            slope, inter = np.polyfit(exposures_fit.reshape(len(exposures_fit)), u_y_fit.reshape(len(u_y_fit)),1)
+                            fit_fn = np.poly1d([slope, inter])
+                            i_pd_es[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)/(Gain_uVe_lin[this_area_y,this_area_x]/1000000.0)
+                            i_pd_vs[this_area_y,this_area_x] = slope*1000000.0*(ADC_range/ADC_values)
+                            print "Photodiode current is: " + str(slope*1000000.0) + " DN/s or " + str(i_pd_es[this_area_y,this_area_x]) + " e/s or " + str(i_pd_vs[this_area_y,this_area_x]) + " V/s or " + str(i_pd_es[this_area_y,this_area_x]*1.6*10**(-19)) + " A for X: " + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y])
+                            ax.plot(exposures_t, u_y_tot[:,this_area_y, this_area_x], 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) +' photodiode current: '+ str(format(i_pd_es[this_area_y,this_area_x], '.2f')) + ' e/s or ' + str(format(i_pd_vs[this_area_y,this_area_x], '.2f')) + ' V/s ')
+                            ax.plot(exposures_t, fit_fn(exposures_t), '-*', markersize=4, color=colors[color_tmp])
+                            bbox_props = dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=2)
+                            color_tmp = color_tmp+1
+                            color_tmp = 0;
+                            if(ptc_dir.lower().find('dark') < 0):
+                                plt.ylim([np.min(u_y_tot[:,this_area_y, this_area_x])-100,np.max(u_y_tot[:,this_area_y, this_area_x])+100])
+                            for this_area_x in range(len(frame_x_divisions)):
+                                for this_area_y in range(len(frame_y_divisions)):
+                                    ax.text( ax.get_xlim()[1]+((ax.get_xlim()[1]-ax.get_xlim()[0])/10), ax.get_ylim()[0]+(this_area_x+this_area_y)*((ax.get_ylim()[1]-ax.get_ylim()[0])/15),'Slope: '+str(format(slope, '.6f'))+' Intercept: '+str(format(inter, '.3f')), fontsize=15, color=colors[color_tmp], bbox=bbox_props)
+                                    color_tmp = color_tmp+1
+                            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                            plt.xlabel('Exposure time [us]') 
+                            plt.ylabel('Mean[DN]') 
+                            plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
+                            plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                                
+                        except ValueError:
+                            print("Poly Fit Failed for this recording.. skipping")
+                            continue
+                      
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"
         out_file = open(report_file,"w")  
