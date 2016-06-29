@@ -15,6 +15,12 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
+
+'''
+in run imec test, name file with 0001000 or move the 1000 nm file at the
+beginning in the ref diode file, otherwise numbers are offset and you make a 
+mess when peaks occur
+'''
 #import winsound
 
 #winsound.Beep(300,2000)
