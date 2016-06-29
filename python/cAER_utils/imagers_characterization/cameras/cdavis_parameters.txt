@@ -22,9 +22,9 @@ False
 # 9 # ADC levels
 1024
 # 10 # X divisions (no spaces, comma separated)
-[[4,635]]
+[[120,520]]
 # 11 #  Y divisions (no spaces, comma separated)
-[[4,475]]
+[[120,360]]
 
 # #########################################################
 # Contrast sensitivity parameters
