@@ -175,7 +175,7 @@ index_fit = np.where(QE[1:-1, this_area_y, this_area_x]!= 0)
 xx = np.linspace(wavelengths[index_fit[0][0]],wavelengths[index_fit[0][-1]], 1000)
 # interpolate + smooth
 itp = interp1d(wavelengths[1:-1],QE[1:-1, this_area_y, this_area_x], kind='linear')
-window_size, poly_order = 301, 2
+window_size, poly_order = 101, 2
 yy_sg = savgol_filter(itp(xx), window_size, poly_order)
 
 #raise Exception
