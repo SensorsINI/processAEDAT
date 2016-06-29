@@ -10,6 +10,13 @@ from pylab import *
 import time, os
 import shutil
 import caer_communication
+
+''' 
+If in the dark room set to true. This will always be the case as no measurement, 
+apart from PTC, can be done outside of the dark room. Set to False if you want 
+to run PTC outside to get conversion gain or just do dark measurement (where no 
+setup is needed).
+'''
 dark_room = True
 if(dark_room):
     import gpio_usb
