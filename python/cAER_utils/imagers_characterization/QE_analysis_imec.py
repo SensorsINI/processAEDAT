@@ -21,7 +21,7 @@ ioff()
 # GET CHIP INFO
 ###################
 #QE folder
-directory_meas = "/home/chenghan/inilabs/cAER_utils/imagers_characterization/measurements/QE_DAVIS346B_28_06_16-17_31_02/"
+directory_meas = "C:/Users/Diederik Paul Moeys/Desktop/QE_DAVIS346B_28_06_16-17_31_02/"
 camera_file = 'cameras/davis346_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
