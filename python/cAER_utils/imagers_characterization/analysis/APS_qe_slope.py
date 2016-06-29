@@ -69,6 +69,9 @@ class APS_qe_slope:
                     n_frames, ydim, xdim = np.shape(frame_areas)   
                     ydim_f , xdim_f = np.shape(frame_areas[0])
                     temporal_mean = np.zeros([ydim_f, xdim_f])
+                    for tx in range(xdim_f):
+                        for ty in range(ydim_f):
+                            temporal_mean[ty,tx] = np.mean(frame_areas[:,ty,tx])
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
                     u_y_tot[this_file, this_div_y, this_div_x] = spatio_temporal_mean
                     exposures[this_file, this_div_y, this_div_x] = exp
