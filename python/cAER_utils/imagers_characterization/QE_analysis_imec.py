@@ -66,7 +66,8 @@ aedat = APS_qe_slope.APS_qe_slope()
 wavelengths = np.zeros(len(wavelengths_in_dir))
 i_pd_vs = np.zeros([len(wavelengths_in_dir),y_div,x_div])+1*-1
 cg_uve = np.zeros([len(wavelengths_in_dir),y_div,x_div])+1*-1
-i_dark_vs = np.zeros([y_div,x_div])
+i_dark_vs = np.zeros([2,y_div,x_div])
+dark_count = 1
 
 for this_wavelength_file in range(len(wavelengths_in_dir)):
     if (wavelengths_in_dir[this_wavelength_file].lower().find('wavelength') > 0):
@@ -81,13 +82,14 @@ for this_wavelength_file in range(len(wavelengths_in_dir)):
 	cg_uve[this_wavelength_file,:,:] = np.zeros([y_div,x_div])+1*20
     elif (wavelengths_in_dir[this_wavelength_file].lower().find('dark') > 0):
         ptc_dir = directory_meas + wavelengths_in_dir[this_wavelength_file] + "/"
-        print "processing PTC in dark... "
+        print "processing PTC in dark # " + str(dark_count) + "/2"
         if('_ADCint' in ptc_dir):
             ADC_range = ADC_range_int
         else:
             ADC_range = ADC_range_ext
-        i_dark_vs = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
-
+        i_dark_vs[dark_count-1,:,:] = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
+        dark_count = dark_count+1
+        
 # Remove non-wavelengths
 files_num = len(wavelengths)
 to_remove = len(np.unique(np.where(wavelengths == 0)[0]))
@@ -105,7 +107,7 @@ cg_uve = np.reshape(cg_uve_real, [files_num-to_remove, y_div, x_div])
 #raise Exception
 i_pd_esm2 = np.zeros([len(wavelengths),y_div,x_div])
 for this_wavelength in range(len(wavelengths)):
-    i_pd_esm2[this_wavelength, :, :] = ((i_pd_vs[this_wavelength, :, :] - i_dark_vs)/(cg_uve[this_wavelength, :, :]/1000000.0))/pixel_area
+    i_pd_esm2[this_wavelength, :, :] = ((i_pd_vs[this_wavelength, :, :] - (i_dark_vs[0,:,:]+i_dark_vs[1,:,:])/2)/(cg_uve[this_wavelength, :, :]/1000000.0))/pixel_area
 
 # Calculate QE
 p_ref_diode_wcm2 = np.zeros([len(wavelengths)]) #power density
