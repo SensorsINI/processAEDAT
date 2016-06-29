@@ -136,16 +136,26 @@ The output is a structure with the following fields:
 			- polarity (colvector bool)
 		- frame
 			- valid (bool)
+			- reset (bool) In AEDAT2/jAER, reset reads are stored separately
+				from signal reads; this flag indicates a reset read, which
+				should then be subtracted from a subsequent signal read.
+			- roiId (uint8)
+			- colorChannel (uint8)
+			- colorFilter (uint8)
 			- frame timeStamp start (uint64)
 			- frame timeStamp end (uint64)
 			- timeStampExposureStart (uint64)
 			- timeStampExposureEnd (uint64)
-			- samples (matrix of uint16 r*c, where r is the number of rows and c is 
-				the number of columns.)
-			- xStart (only present if the frame doesn't start from x=0)
-			- yStart (only present if the frame doesn't start from y=0)
-			- roiId (only present if this frame has an ROI identifier)
-			- colChannelId (optional, if its not present, assume a mono array)
+			- samples (cellArray, with one cell for each frame; cells
+				contain a matrix of uint16 row*col*chn, where row is the number of rows,
+				col is the number of columns, and chn is the number of
+				(colour) channels. Where frames have only one channel, the
+				third dimension is squeezed out. 
+			- xLength (uint32)
+			- yLength (uint32)
+			- xPosition (uint32)
+			- yPosition (uint32)
+
 		- imu6
 			- valid (colvector bool)
 			- timeStamp (colvector uint64)

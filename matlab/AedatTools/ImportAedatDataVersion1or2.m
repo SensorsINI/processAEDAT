@@ -315,10 +315,10 @@ elseif strfind('davis', info.source)
 	% IMU events
 		% These come in blocks of 7, for the 7 different values produced in
 		% a single sample; the following code recomposes these
-	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))) && any(dvsLogical)
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))) && any(imuLogical)
 		
 		if mod(nnz(imuLogical), 7) > 0 
-			error('The number of IMU samples should be divisible by 7')
+			error('The number of IMU samples is not divisible by 7, so IMU samples are not interpretable')
 		end
 		output.data.imu6.timeStamp = allTs(imuLogical);
 		output.data.imu6.timeStamp = output.data.imu6.timeStamp(1 : 7 : end);	
@@ -333,7 +333,8 @@ elseif strfind('davis', info.source)
 
 		%IMU handling:
 		%7 words are sent in series, these being 3 axes for accel, temperature, and 3 axes for gyro
-		
+
+		rawdata=uint16(bitshift(rawdata,-datashift))
 		datashift=12;
 		accelScale = 1/16384;
 		gyroScale = 1/131;
@@ -342,7 +343,7 @@ elseif strfind('davis', info.source)
 
 		%     ax("AccelX", 0), ay("AccelY", 1), az("AccelZ", 2), temp("Temperature", 3), gx("GyroTiltX", 4), gy("GyroPanY", 5), gz("GyroRollZ", 6); 
 
-		imuDataMask = hex2dec('003FF000');
+		imuDataMask = hex2dec('0FFFF000');
 		rawData  = single(bitand(allAddr(imuLogical), imuDataMask));		
 		
 		data=typecast(rawdata,'int16'); % cast to signed 16 bit shorts

@@ -158,65 +158,58 @@ packetCount = 0;
 
 % Create structures to hold the output data
 
-special = struct;
-spe
-polarity = struct;
-frame = struct;
-imu6 = struct;
-sample = struct;
-ear = struct;
-special.valid = [];
-special.timeStamp = [];
-special.address = [];
-polarity.valid = [];
-polarity.timeStamp = [];
-polarity.x = [];
-polarity.y = [];
-polarity.polarity = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-frame. = [];
-			- valid (bool)
-			- frame timeStamp start (uint64)
-			- frame timeStamp end (uint64)
-			- timeStampExposureStart (uint64)
-			- timeStampExposureEnd (uint64)
-			- samples (matrix of uint16 r*c, where r is the number of rows and c is 
-				the number of columns.)
-			- xStart (only present if the frame doesn't start from x=0)
-			- yStart (only present if the frame doesn't start from y=0)
-			- roiId (only present if this frame has an ROI identifier)
-			- colChannelId (optional, if its not present, assume a mono array)
-		- imu6
-			- valid (colvector bool)
-			- timeStamp (colvector uint64)
-			- accelX (colvector single)
-			- accelY (colvector single)
-			- accelZ (colvector single)
-			- gyroX (colvector single)
-			- gyroY (colvector single)
-			- gyroZ (colvector single)
-			- temperature (colvector single)
-		- sample
-			- valid (colvector bool)
-			- timeStamp (colvector uint64)
-			- sampleType (colvector uint8)
-			- sample (colvector uint32)
-		- ear
-			- valid (colvector bool)
-			- timeStamp (colvector uint64)
-			- position (colvector uint8)
-			- channel (colvector uint16)
-			- neuron (colvector uint8)
-			- filter (colvector uint8)
+count.special		= 0;
+special.valid		= bool([]);
+special.timeStamp	= uint64([]);
+special.address		= uint32([]);
 
+count.polarity		= 0;
+polarity.valid		= bool([]);
+polarity.timeStamp	= ([]);
+polarity.x			= ([]);
+polarity.y			= ([]);
+polarity.polarity	= ([]);
+
+count.frame						= 0;
+frame.valid						= ([]);
+frame.reset						= ([]);
+frame.roiId						= ([]);
+frame.colorChannel				= ([]);
+frame.colorFilter				= ([]);
+frame.timeStampFrameStart		= uint64([]);
+frame.timeStampFrameEnd			= uint64([]);
+frame.timeStampExposureStart	= uint64([]);
+frame.timeStampExposureEnd		= uint64([]);
+frame.sample					= {};
+frame.xLength					= uint32([]);
+frame.yLength					= uint32([]);
+frame.xPosition					= uint32([]);
+frame.yPosition					= uint32([]);
+
+count.imu6			= 0;
+imu6.valid			= bool([]);
+imu6.timeStamp		= uint64([]);
+imu6.accelX			= single([]);
+imu6.accelY			= single([]);
+imu6.accelZ			= single([]);
+imu6.gyroX			= single([]);
+imu6.gyroY			= single([]);
+imu6.gyroZ			= single([]);
+imu6.temperature	= single([]);
+
+count.sample		= 0;
+sample.valid		= bool([]);
+sample.timeStamp	= uint64([]);
+sample.sampleType	= uint8([]);
+sample.sample		= uint32([]);
+		
+count.ear		= 0;
+ear.valid		= bool([]);
+ear.timeStamp	= uint64([]);
+ear.position 	= uint8([]);
+ear.channel 	= uint16([]);
+ear.neuron		= uint8([]);
+ear.filter		= uint8([]);
 
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
@@ -249,9 +242,23 @@ while ~feof(info.fileHandle)
 			% Special events
 			if eventType == 0 
 				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))
-					if special.
-					for eventNo = 
-					while(data[counter:counter + eventSize]):  # loop over all event packets
+					% First check if the array is big enough
+					currentLength = length(special.valid);
+					if currentLength == 0
+						special.valid		= false(eventNumber, 1);
+						special.timeStamp	= uint64(zeros(eventNumber, 1));
+						special.address		= uint32(zeros(eventNumber, 1));
+					else	
+						while eventNumber > currentLength - count.special
+							special.valid		= [special.valid;		false(currentLength, 1)];
+							special.timeStamp	= [special.timeStamp;	uint64(zeros(currentLength, 1))];
+							special.address		= [special.address;		uint32(zeros(currentLength, 1))];
+						end
+					end
+					% Iterate through the events, converting the data and
+					% populating the arrays (it doesn't seem to be possible
+					% to do this in array operations)
+					for eventNo = 1 : eventNumber
 						specialAddr = struct.unpack('I', data[counter:counter + 4])[0]
 						specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
 						specialAddr = (specialAddr >> 1) & 0x0000007F
