@@ -102,6 +102,8 @@ class APS_qe_slope:
             print("Sensitivity fit...")
             fig = plt.figure()
             ax = fig.add_subplot(111)
+            slope = 0
+            inter = 0
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             un, y_div, x_div = np.shape(u_y_tot)
             colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
