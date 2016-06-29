@@ -11,6 +11,10 @@ import matplotlib as plt
 from pylab import *
 import numpy as np
 import os
+from scipy.optimize import curve_fit
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
+
 #import winsound
 
 #winsound.Beep(300,2000)
@@ -21,7 +25,7 @@ ioff()
 # GET CHIP INFO
 ###################
 #QE folder
-directory_meas = "C:/Users/Diederik Paul Moeys/Desktop/QE_DAVIS346B_28_06_16-17_31_02/"
+directory_meas = "C:/Users/Diederik Paul Moeys/Desktop/QE_DAVIS346C_29_06_16-14_14_31/"
 camera_file = 'cameras/davis346_parameters.txt'
 
 info = np.genfromtxt(camera_file, dtype='str')
@@ -155,7 +159,7 @@ for this_wavelength in range(len(wavelengths)):
 out_file.close()
 
 # Plot
-print "Ploting.."
+print "Plotting.."
 figure_dir = directory_meas+'/figures/'
 if(not os.path.exists(figure_dir)):
     os.makedirs(figure_dir)
@@ -166,11 +170,20 @@ plt.title("Quantum Efficiency vs wavelength")
 #wn, y_div, x_div = np.shape(QE)
 colors = cm.rainbow(np.linspace(0, 1, x_div*y_div))
 color_tmp = 0;
+
+index_fit = np.where(QE[1:-1, this_area_y, this_area_x]!= 0)
+xx = np.linspace(wavelengths[index_fit[0][0]],wavelengths[index_fit[0][-1]], 1000)
+# interpolate + smooth
+itp = interp1d(wavelengths[1:-1],QE[1:-1, this_area_y, this_area_x], kind='linear')
+window_size, poly_order = 301, 2
+yy_sg = savgol_filter(itp(xx), window_size, poly_order)
+
 #raise Exception
 for this_area_x in range(x_div):
     for this_area_y in range(y_div):
-        plt.plot(wavelengths[:], 100.0*(QE[:, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
+        plt.plot(wavelengths[1:-1], 100.0*(QE[1:-1, this_area_y, this_area_x]), 'o--', color=colors[color_tmp], label='X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
         color_tmp = color_tmp+1
+        plt.plot(xx, 100.0*yy_sg, 'k', label='Fit for X: ' + str(frame_x_divisions[this_area_x]) + ', Y: ' + str(frame_y_divisions[this_area_y]) )
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.xlabel('Wavelength [nm] ') 
 plt.ylabel('Quantum Efficiency [%] ')
