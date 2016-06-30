@@ -230,7 +230,8 @@ while ~feof(info.fileHandle)
 		eventNumber = typecast(header(20:23), 'int32');
 		%eventValid = typecast(header(24:27), 'int32');
 		% Read the full packet
-		data = fread(info.fileHandle, eventNumber * eventSize);
+		numBytesInPacket = eventNumber * eventSize;
+		data = fread(info.fileHandle, numBytesInPacket);
 		% Find the first timestamp and check the timing constraints
 		mainTimeStamp = uint64(typecast(data(eventTsOffset : eventTsOffset + 4), ' int32')) + uint64(eventTsOverflow * 2^31);
 		if info.startTime <= mainTimeStamp && mainTimeStamp <= info.endTime
@@ -258,8 +259,11 @@ while ~feof(info.fileHandle)
 					% Iterate through the events, converting the data and
 					% populating the arrays (it doesn't seem to be possible
 					% to do this in array operations)
-					for eventNo = 1 : eventNumber
-						specialAddr = struct.unpack('I', data[counter:counter + 4])[0]
+					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
+						count.special = count.special + 1;
+						specialData = data(dataPointer : dataPointer + 3);
+						special.valid(count.special) = mod(data(dataPointer), 2); %Pick off the first bit
+						specialAddr() = struct.unpack('I', data[counter:counter + 4])[0]
 						specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
 						specialAddr = (specialAddr >> 1) & 0x0000007F
 						specialAddrAll.append(specialAddr)
