@@ -242,6 +242,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('FPN [DN] ')
             plt.savefig(figure_dir+"fpn_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"fpn_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # FPN vs signal as %
             fig = plt.figure()
             ax = fig.add_subplot(111)
@@ -258,6 +259,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('FPN [%] ')
             plt.savefig(figure_dir+"fpn_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"fpn_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             
             # mean x and y FPN vs signal in DN
             fig = plt.figure()
@@ -277,6 +279,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('FPN [DN] ')
             plt.savefig(figure_dir+"mean_xy_fpn_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"mean_xy_fpn_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # x and y FPN vs signal as %
             fig = plt.figure()
             ax = fig.add_subplot(111)
@@ -295,6 +298,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('FPN [%] ')
             plt.savefig(figure_dir+"mean_xy_fpn_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"mean_xy_fpn_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
+            plt.close("all")
             
             # row/column only x and y FPN vs signal in DN
             fig = plt.figure()
@@ -314,6 +318,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('FPN [DN] ')
             plt.savefig(figure_dir+"fpn_in_xy_dn_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"fpn_in_xy_dn_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # x and y FPN vs signal as %
             fig = plt.figure()
             ax = fig.add_subplot(111)
@@ -331,7 +336,8 @@ class APS_photon_transfer_curve:
             plt.xlabel('Mean [DN] ') 
             plt.ylabel('FPN [%] ')
             plt.savefig(figure_dir+"fpn_in_xy_perc_vs_sig.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"fpn_in_xy_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)     
+            plt.savefig(figure_dir+"fpn_in_xy_perc_vs_sig.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)  
+            plt.close("all")
                         
             # photon transfer curve 
             plt.figure()
@@ -348,6 +354,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('Var [$\mathregular{DN^2}$] ')
             plt.savefig(figure_dir+"ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # photon transfer curve log 
             if(ptc_dir.lower().find('dark') < 0):# Don't plot log for dark current
                 fig = plt.figure()
@@ -368,6 +375,7 @@ class APS_photon_transfer_curve:
                 plt.ylabel('STD [DN] ')
                 plt.savefig(figure_dir+"log_ptc.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                 plt.savefig(figure_dir+"log_ptc.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                plt.close("all")
             
             if((ptc_dir.lower().find('dark') < 0) and (ptc_dir.lower().find('debug') < 0)): # Don't fit for dark current
                 print("Log fit...")
@@ -415,6 +423,7 @@ class APS_photon_transfer_curve:
                     plt.ylabel('log(STD [DN])')
                     plt.savefig(figure_dir+"ptc_log_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                     plt.savefig(figure_dir+"ptc_log_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                    plt.close("all")
                 
                     print("Linear fit...")
                     fig = plt.figure()
@@ -455,6 +464,7 @@ class APS_photon_transfer_curve:
                     plt.ylabel('Var [$\mathregular{DN^2}$]')
                     plt.savefig(figure_dir+"ptc_linear_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                     plt.savefig(figure_dir+"ptc_linear_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                    plt.close("all")
             
             # Sensitivity plot 
             plt.figure()
@@ -471,6 +481,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('Mean[DN]') 
             plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # Sensitivity fit
             print("Sensitivity fit...")
             fig = plt.figure()
@@ -511,6 +522,7 @@ class APS_photon_transfer_curve:
             plt.ylabel('Mean[DN]') 
             plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
                     
                 
         else:
@@ -529,6 +541,7 @@ class APS_photon_transfer_curve:
             plt.xlabel('Voltage value [bit]')
             plt.savefig(figure_dir+"adc_test.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"adc_test.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             
             # Temporal noise of ADC 
             plt.figure()
@@ -546,6 +559,7 @@ class APS_photon_transfer_curve:
             plt.xlabel('Voltage value [bit]')
             plt.savefig(figure_dir+"adc_noise.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"adc_noise.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             
         #open report file
         report_file = figure_dir+"Report_results_APS"+".txt"

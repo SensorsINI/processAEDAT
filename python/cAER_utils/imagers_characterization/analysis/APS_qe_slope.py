@@ -101,6 +101,7 @@ class APS_qe_slope:
             plt.ylabel('Mean[DN]') 
             plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
             plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+            plt.close("all")
             # Sensitivity fit
             print("Sensitivity fit...")
             fig = plt.figure()
@@ -145,6 +146,7 @@ class APS_qe_slope:
                             plt.ylabel('Mean[DN]') 
                             plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
                             plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+                            plt.close("all")
                                 
                         except ValueError:
                             print("Poly Fit Failed for this recording.. skipping")
