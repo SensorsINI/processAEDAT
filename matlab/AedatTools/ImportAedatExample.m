@@ -1,13 +1,17 @@
 % Example script for how to invoke the importAedat function
 
-clear
+clearvars
 dbstop if error
 
 % Create a structure with which to pass in the input parameters.
 input = struct;
 
 % Put the filename, including full path, in the 'file' field.
-input.filePath = 'example.aedat';
+% Alternatively, make sure the file is already on the matlab path.
+
+
+
+input.filePath = 'example3.aedat';
 
 
 % Add any restrictions on what to read out. 
@@ -21,11 +25,16 @@ input.filePath = 'example.aedat';
 %input.startTime = 48;
 %input.endTime = 48.1;
 
+% This example only reads out from packets 1000 to 2000 (aedat3.x only)
+input.startPacket = 1000;
+input.endPacket = 2000;
+
+
 %This example limits the read out to certain types of event only
-input.dataTypes = {'polarity', 'special'};
+%input.dataTypes = {'polarity', 'special'};
 
 % Working with a file where the source hasn't been declared - do this explicitly:
-input.source = 'Davis240b';
+%input.source = 'Davis240b';
 
 % Invoke the function
 output = ImportAedat(input);

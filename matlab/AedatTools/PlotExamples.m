@@ -1,5 +1,7 @@
 % Assume ImportAedat has been run and that the resulting structure is
 % called 'output'
 
+dbstop if error
 
-PlotEvents(output, 12, 'time', '5000')
+%PlotPolarity(output, 10, 'time')
+PlotFrame(output, 10, 'time')
