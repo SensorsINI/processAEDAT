@@ -213,7 +213,7 @@ end
 % Declare function for finding specific event types in eventTypes cell array
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
-if strcmp(info.source, 'das1')
+if strcmp(info.source, 'Das1')
 	% DAS1 
 	sampleMask = hex2dec('1000');
 	sampleLogical = bitand(allAddr, sampleMask);
@@ -249,7 +249,7 @@ if strcmp(info.source, 'das1')
 		output.data.ear.neuron = uint8(bitshift(bitand(allAddr, neuronMask), -neuronShiftBits));
 	end
 	
-elseif strcmp(info.source, 'dvs128')
+elseif strcmp(info.source, 'Dvs128')
 	% DVS128
 	specialMask = hex2dec ('f000');
 	specialLogical = bitand(allAddr, specialMask);
@@ -274,7 +274,7 @@ elseif strcmp(info.source, 'dvs128')
 		polBit = 1;
 		output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
 	end					
-elseif strfind('davis', info.source) 
+elseif strfind(info.source, 'Davis') 
 	% DAVIS
 	% In the 32-bit address:
 	% bit 32 (1-based) being 1 indicates an APS sample
@@ -295,9 +295,10 @@ elseif strfind('davis', info.source)
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
 		output.data.special.timeStamp = allTs(specialLogical);
 		% No need to create address field, since there is only one type of special event
-
+	end
+	
 	% Polarity (DVS) events
-	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))) && any(dvsLogical)
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))) && any(polarityLogical)
 		output.data.polarity.timeStamp = allTs(polarityLogical);
 		% Y addresses
 		yMask = hex2dec('7FC00000');
@@ -316,12 +317,12 @@ elseif strfind('davis', info.source)
 		% These come in blocks of 7, for the 7 different values produced in
 		% a single sample; the following code recomposes these
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))) && any(imuLogical)
-		
+%{		
 		if mod(nnz(imuLogical), 7) > 0 
 			error('The number of IMU samples is not divisible by 7, so IMU samples are not interpretable')
 		end
 		output.data.imu6.timeStamp = allTs(imuLogical);
-		output.data.imu6.timeStamp = output.data.imu6.timeStamp(1 : 7 : end);	
+		output.data.imu6.timeStamp = output.data.imu6.timeStamp(1 : 7 : end);
 
 		- accelX (colvector single)
 		- accelY (colvector single)
@@ -358,7 +359,7 @@ elseif strfind('davis', info.source)
 		output.data.imu6.gyroZ			= rawData(7 : 7 : end) * gyroScale;	
 
 	
-				
+%}				
 	end
 
 	% If you want to do chip-specific address shifts or subtractions,

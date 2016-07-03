@@ -159,57 +159,19 @@ packetCount = 0;
 % Create structures to hold the output data
 
 count.special		= 0;
-special.valid		= bool([]);
-special.timeStamp	= uint64([]);
-special.address		= uint32([]);
+specialDataMask = '7E';
+specialDataShiftBits = 1;
 
 count.polarity		= 0;
-polarity.valid		= bool([]);
-polarity.timeStamp	= ([]);
-polarity.x			= ([]);
-polarity.y			= ([]);
-polarity.polarity	= ([]);
+polarityYMask = '1FFFC';
+polarityYShiftBits = 2;
+polarityXMask = 'FFFE0000';
+polarityXShiftBits = 17;
 
-count.frame						= 0;
-frame.valid						= ([]);
-frame.reset						= ([]);
-frame.roiId						= ([]);
-frame.colorChannel				= ([]);
-frame.colorFilter				= ([]);
-frame.timeStampFrameStart		= uint64([]);
-frame.timeStampFrameEnd			= uint64([]);
-frame.timeStampExposureStart	= uint64([]);
-frame.timeStampExposureEnd		= uint64([]);
-frame.sample					= {};
-frame.xLength					= uint32([]);
-frame.yLength					= uint32([]);
-frame.xPosition					= uint32([]);
-frame.yPosition					= uint32([]);
-
-count.imu6			= 0;
-imu6.valid			= bool([]);
-imu6.timeStamp		= uint64([]);
-imu6.accelX			= single([]);
-imu6.accelY			= single([]);
-imu6.accelZ			= single([]);
-imu6.gyroX			= single([]);
-imu6.gyroY			= single([]);
-imu6.gyroZ			= single([]);
-imu6.temperature	= single([]);
-
-count.sample		= 0;
-sample.valid		= bool([]);
-sample.timeStamp	= uint64([]);
-sample.sampleType	= uint8([]);
-sample.sample		= uint32([]);
-		
+count.frame		= 0;
+count.imu6		= 0;
+count.sample	= 0;
 count.ear		= 0;
-ear.valid		= bool([]);
-ear.timeStamp	= uint64([]);
-ear.position 	= uint8([]);
-ear.channel 	= uint16([]);
-ear.neuron		= uint8([]);
-ear.filter		= uint8([]);
 
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
@@ -220,7 +182,7 @@ while ~feof(info.fileHandle)
 	if info.startPacket > packetCount
 		% Ignore this packet as its count is too low
 		eventSize = typecast(header(4:7), 'int32');
-		eventCapacity = typecast(header(16:19), 'int32');
+		eventNumber = typecast(header(20:23), 'int32');
 		fseek(info.fileHandle, eventNumber * eventSize, 'cof');
 	else
 		eventSize = typecast(header(4:7), 'int32');
@@ -233,9 +195,11 @@ while ~feof(info.fileHandle)
 		numBytesInPacket = eventNumber * eventSize;
 		data = fread(info.fileHandle, numBytesInPacket);
 		% Find the first timestamp and check the timing constraints
-		mainTimeStamp = uint64(typecast(data(eventTsOffset : eventTsOffset + 4), ' int32')) + uint64(eventTsOverflow * 2^31);
+		packetTimestampOffset = uint64(eventTsOverflow * 2^31);
+		mainTimeStamp = uint64(typecast(data(eventTsOffset : eventTsOffset + 4), ' int32')) + packetTimestampOffset;
 		if info.startTime <= mainTimeStamp && mainTimeStamp <= info.endTime
 			eventType = typecast(header(0:1), 'int16');
+			
 			%eventSource = typecast(data(2:3), 'int16'); % Multiple sources not handled yet
 
 			% Handle the packet types individually:
@@ -257,37 +221,127 @@ while ~feof(info.fileHandle)
 						end
 					end
 					% Iterate through the events, converting the data and
-					% populating the arrays (it doesn't seem to be possible
-					% to do this in array operations)
+					% populating the arrays
 					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
 						count.special = count.special + 1;
-						specialData = data(dataPointer : dataPointer + 3);
-						special.valid(count.special) = mod(data(dataPointer), 2); %Pick off the first bit
-						specialAddr() = struct.unpack('I', data[counter:counter + 4])[0]
-						specialTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
-						specialAddr = (specialAddr >> 1) & 0x0000007F
-						specialAddrAll.append(specialAddr)
-						specialTsAll.append(specialTs)
-						counter = counter + eventSize 
+						special.valid(count.special) = mod(data(dataPointer), 2) == 1; %Pick off the first bit
+						special.timeStamp(count.special) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						special.address(count.special) = uint8(bitshift(bitand(data(dataPointer), specialDataMask), -specialDataShiftBits));
 					end
 				end
 			% Polarity events                
 			elseif eventType == 1  
-				if ~isfield(info, 'dataTypes') | any(cellfun(cellFind('polarity'), info.dataTypes))
-					while(data[counter:counter + eventSize]):  # loop over all event packets
-						polData = struct.unpack('I', data[counter:counter + 4])[0]
-						polTs = struct.unpack('I', data[counter + 4:counter + 8])[0]
-						polAddrX = (polData >> 18) & 0x00003FFF
-						polAddrY = (polData >> 4) & 0x00003FFF
-						polPol = (polData >> 1) & 0x00000001
-						polTsAll.append(polTs)
-						polAddrXAll.append(polAddrX)
-						polAddrYAll.append(polAddrY)
-						polPolAll.append(polPol)
-						counter = counter + eventSize
-
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))
+					% First check if the array is big enough
+					currentLength = length(polarity.valid);
+					if currentLength == 0
+						polarity.valid		= false(eventNumber, 1);
+						polarity.timeStamp	= uint64(zeros(eventNumber, 1));
+						polarity.x			= uint16(zeros(eventNumber, 1));
+						polarity.y			= uint16(zeros(eventNumber, 1));
+						polarity.polarity	= false(eventNumber, 1);
+					else	
+						while eventNumber > currentLength - count.special
+							polarity.valid		= [polarity.valid;		false(currentLength, 1)];
+							polarity.timeStamp	= [polarity.timeStamp;	uint64(zeros(currentLength, 1))];
+							polarity.x			= [polarity.x;			uint16(zeros(currentLength, 1))];
+							polarity.y			= [polarity.y;			uint16(zeros(currentLength, 1))];
+							polarity.polarity	= [polarity.polarity;	false(currentLength, 1)];
+						end
+					end
+					% Iterate through the events, converting the data and
+					% populating the arrays
+					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
+						count.polarity = count.polarity + 1;
+						polarity.valid(count.polarity) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
+						polarity.timeStamp(count.polarity) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						polarity.polarity(count.polarity) = mod(floor(data(dataPointer) / 2), 2) == 1; % Pick out the second bit
+						polarityData = typecast(data(dataPointer : dataPointer + 3), 'uint32');
+						polarity.y(count.polarity) = uint16(bitshift(bitand(polarityData, polarityYMask), -polarityYShiftBits));
+						polarity.x(count.polarity) = uint16(bitshift(bitand(polarityData, polarityXMask), -polarityXShiftBits));
 					end
 				end
+			elseif eventType == 2
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))
+					% First check if the array is big enough
+%{
+					currentLength = length(frame.valid);
+					if currentLength == 0
+						frame.valid		= false(eventNumber, 1);
+						frame.timeStamp	= uint64(zeros(eventNumber, 1));
+						...
+					
+frame.valid						= ([]);
+frame.reset						= ([]);
+frame.roiId						= ([]);
+frame.colorChannel				= ([]);
+frame.colorFilter				= ([]);
+frame.timeStampFrameStart		= uint64([]);
+frame.timeStampFrameEnd			= uint64([]);
+frame.timeStampExposureStart	= uint64([]);
+frame.timeStampExposureEnd		= uint64([]);
+frame.sample					= {};
+frame.xLength					= uint32([]);
+frame.yLength					= uint32([]);
+frame.xPosition					= uint32([]);
+frame.yPosition					= uint32([]);					
+					
+					else	
+						while eventNumber > currentLength - count.special
+							polarity.valid		= [polarity.valid;		false(currentLength, 1)];
+							polarity.timeStamp	= [polarity.timeStamp;	uint64(zeros(currentLength, 1))];
+							polarity.x			= [polarity.x;			uint16(zeros(currentLength, 1))];
+							polarity.y			= [polarity.y;			uint16(zeros(currentLength, 1))];
+							polarity.polarity	= [polarity.polarity;	false(currentLength, 1)];
+						end
+					end
+					% Iterate through the events, converting the data and
+					% populating the arrays
+					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
+						count.polarity = count.polarity + 1;
+						polarity.valid(count.polarity) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
+						polarity.timeStamp(count.polarity) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						polarity.polarity(count.polarity) = mod(floor(data(dataPointer) / 2), 2) == 1; % Pick out the second bit
+						polarityData = typecast(data(dataPointer : dataPointer + 3), 'uint32');
+						polarity.y(count.polarity) = uint16(bitshift(bitand(polarityData, polarityYMask), -polarityYShiftBits));
+						polarity.x(count.polarity) = uint16(bitshift(bitand(polarityData, polarityXMask), -polarityXShiftBits));
+					
+%}					
+				end
+			elseif eventType == 3
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))
+%{
+imu6.valid			= bool([]);
+imu6.timeStamp		= uint64([]);
+imu6.accelX			= single([]);
+imu6.accelY			= single([]);
+imu6.accelZ			= single([]);
+imu6.gyroX			= single([]);
+imu6.gyroY			= single([]);
+imu6.gyroZ			= single([]);
+imu6.temperature	= single([]);
+%}
+				end
+			elseif eventType == 5
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('sample'), info.dataTypes))
+%{
+sample.valid		= bool([]);
+sample.timeStamp	= uint64([]);
+sample.sampleType	= uint8([]);
+sample.sample		= uint32([]);
+%}
+				end
+			elseif eventType == 6
+				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('ear'), info.dataTypes))
+%{
+ear.valid		= bool([]);
+ear.timeStamp	= uint64([]);
+ear.position 	= uint8([]);
+ear.channel 	= uint16([]);
+ear.neuron		= uint8([]);
+ear.filter		= uint8([]);
+%}				
+				end			
 			end
 		end
 	end
