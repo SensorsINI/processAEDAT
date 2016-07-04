@@ -4,4 +4,4 @@
 dbstop if error
 
 %PlotPolarity(output, 10, 'time')
-PlotFrame(output, 10, 'time')
+PlotAedat(output, 10, 'time')

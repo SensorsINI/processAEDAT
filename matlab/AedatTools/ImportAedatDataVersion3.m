@@ -164,21 +164,21 @@ packetCount = 0;
 
 % Create structures to hold the output data
 
-count.special		= 0;
+special.numEvents	= 0;
 special.valid		= false(0); % initialising this tells the first pass 
 								 % to set up the arrays with the size 
 								 % necessary for the initial packet
 specialDataMask = hex2dec('7E');
 specialDataShiftBits = 1;
 
-count.polarity		= 0;
+polarity.numEvents	= 0;
 polarity.valid		= false(0);
 polarityYMask = hex2dec('1FFFC');
 polarityYShiftBits = 2;
 polarityXMask = hex2dec('FFFE0000');
 polarityXShiftBits = 17;
 
-count.frame		= 0;
+frame.numEvents	= 0;
 frame.valid		= false(0);
 frameColorChannelsMask = hex2dec('E');
 frameColorChannelsShiftBits = 1;
@@ -187,13 +187,13 @@ frameColorFilterShiftBits = 4;
 frameRoiIdMask = hex2dec('3F80');
 frameRoiIdShiftBits = 7;
 
-count.imu6		= 0;
+imu6.numEvents	= 0;
 imu6.valid		= false(0);
 
-count.sample	= 0;
+sample.numEvents	= 0;
 sample.valid		= false(0);
 
-count.ear		= 0;
+ear.numEvents	= 0;
 ear.valid		= false(0);
 
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
@@ -201,13 +201,13 @@ cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 % Go back to the beginning of the data
 fseek(info.fileHandle, info.beginningOfDataPointer, 'bof');
 
+header = uint8(fread(info.fileHandle, 28));
 while ~feof(info.fileHandle)
 	% Read the header of the next packet
 	packetCount = packetCount + 1;
 	if mod(packetCount, 100) == 0
 		disp(['packet: ' num2str(packetCount) '; file position: ' num2str(floor(ftell(info.fileHandle) / 1000000)) ' MB'])
 	end
-	header = uint8(fread(info.fileHandle, 28));
 	if info.startPacket > packetCount
 		% Ignore this packet as its count is too low
 		eventSize = typecast(header(5:8), 'int32');
@@ -245,7 +245,7 @@ while ~feof(info.fileHandle)
 						special.timeStamp	= uint64(zeros(eventNumber, 1));
 						special.address		= uint32(zeros(eventNumber, 1));
 					else	
-						while eventNumber > currentLength - count.special
+						while eventNumber > currentLength - special.numEvents
 							special.valid		= [special.valid;		false(currentLength, 1)];
 							special.timeStamp	= [special.timeStamp;	uint64(zeros(currentLength, 1))];
 							special.address		= [special.address;		uint32(zeros(currentLength, 1))];
@@ -256,10 +256,10 @@ while ~feof(info.fileHandle)
 					% Iterate through the events, converting the data and
 					% populating the arrays
 					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
-						count.special = count.special + 1;
-						special.valid(count.special) = mod(data(dataPointer), 2) == 1; %Pick off the first bit
-						special.timeStamp(count.special) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
-						special.address(count.special) = uint8(bitshift(bitand(data(dataPointer), specialDataMask), -specialDataShiftBits));
+						special.numEvents = special.numEvents + 1;
+						special.valid(special.numEvents) = mod(data(dataPointer), 2) == 1; %Pick off the first bit
+						special.timeStamp(special.numEvents) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						special.address(special.numEvents) = uint8(bitshift(bitand(data(dataPointer), specialDataMask), -specialDataShiftBits));
 					end
 				end
 			% Polarity events                
@@ -274,7 +274,7 @@ while ~feof(info.fileHandle)
 						polarity.y			= uint16(zeros(eventNumber, 1));
 						polarity.polarity	= false(eventNumber, 1);
 					else	
-						while eventNumber > currentLength - count.polarity
+						while eventNumber > currentLength - polarity.numEvents
 							polarity.valid		= [polarity.valid;		false(currentLength, 1)];
 							polarity.timeStamp	= [polarity.timeStamp;	uint64(zeros(currentLength, 1))];
 							polarity.x			= [polarity.x;			uint16(zeros(currentLength, 1))];
@@ -287,13 +287,13 @@ while ~feof(info.fileHandle)
 					% Iterate through the events, converting the data and
 					% populating the arrays
 					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
-						count.polarity = count.polarity + 1;
-						polarity.valid(count.polarity) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
-						polarity.timeStamp(count.polarity) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
-						polarity.polarity(count.polarity) = mod(floor(data(dataPointer) / 2), 2) == 1; % Pick out the second bit
+						polarity.numEvents = polarity.numEvents + 1;
+						polarity.valid(polarity.numEvents) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
+						polarity.timeStamp(polarity.numEvents) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						polarity.polarity(polarity.numEvents) = mod(floor(data(dataPointer) / 2), 2) == 1; % Pick out the second bit
 						polarityData = typecast(data(dataPointer : dataPointer + 3), 'uint32');
-						polarity.y(count.polarity) = uint16(bitshift(bitand(polarityData, polarityYMask), -polarityYShiftBits));
-						polarity.x(count.polarity) = uint16(bitshift(bitand(polarityData, polarityXMask), -polarityXShiftBits));
+						polarity.y(polarity.numEvents) = uint16(bitshift(bitand(polarityData, polarityYMask), -polarityYShiftBits));
+						polarity.x(polarity.numEvents) = uint16(bitshift(bitand(polarityData, polarityXMask), -polarityXShiftBits));
 					end
 				end
 			elseif eventType == 2
@@ -315,7 +315,7 @@ while ~feof(info.fileHandle)
 						frame.yPosition				= uint16(zeros(eventNumber, 1));
 						frame.samples				= cell(eventNumber, 1);
 					else	
-						while eventNumber > currentLength - count.frame
+						while eventNumber > currentLength - frame.numEvents
 							frame.valid					= [frame.valid; false(eventNumber, 1)];
 							frame.colorChannels			= [frame.colorChannels;			uint8(zeros(currentLength, 1))];
 							frame.colorFilter			= [frame.colorFilter;			uint8(zeros(currentLength, 1))];
@@ -337,30 +337,31 @@ while ~feof(info.fileHandle)
 					% Iterate through the events, converting the data and
 					% populating the arrays
 					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
-						count.frame = count.frame + 1;
-						frame.valid(count.frame) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
+						frame.numEvents = frame.numEvents + 1;
+						frame.valid(frame.numEvents) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
 						frameData = typecast(data(dataPointer : dataPointer + 3), 'uint32');
-						frame.colorChannels(count.frame) = uint16(bitshift(bitand(frameData, frameColorChannelsMask), -frameColorChannelsShiftBits));
-						frame.colorFilter(count.frame)	= uint16(bitshift(bitand(frameData, frameColorFilterMask),	-frameColorFilterShiftBits));
-						frame.roiId(count.frame)		= uint16(bitshift(bitand(frameData, frameRoiIdMask),		-frameRoiIdShiftBits));
-						frame.timeStampFrameStart(count.frame)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
-						frame.timeStampFrameEnd(count.frame)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 8 : dataPointer + 11), 'int32'));
-						frame.timeStampExposureStart(count.frame)	= packetTimestampOffset + uint64(typecast(data(dataPointer + 12 : dataPointer + 15), 'int32'));
-						frame.timeStampExposureEnd(count.frame)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 16 : dataPointer + 19), 'int32'));
-						frame.xLength(count.frame)		= typecast(data(dataPointer + 20 : dataPointer + 21), 'uint16'); % strictly speaking these are 4-byte signed integers, but there's no way they'll be that big in practice
-						frame.yLength(count.frame)		= typecast(data(dataPointer + 24 : dataPointer + 25), 'uint16');
-						frame.xPosition(count.frame)	= typecast(data(dataPointer + 28 : dataPointer + 29), 'uint16');
-						frame.yPosition(count.frame)	= typecast(data(dataPointer + 32 : dataPointer + 33), 'uint16');
-						numSamples = int32(frame.xLength(count.frame)) * int32(frame.yLength(count.frame)) * int32(frame.colorChannels(count.frame)); % Conversion to int32 allows addition with 'dataPointer' below
+						frame.colorChannels(frame.numEvents) = uint16(bitshift(bitand(frameData, frameColorChannelsMask), -frameColorChannelsShiftBits));
+						frame.colorFilter(frame.numEvents)	= uint16(bitshift(bitand(frameData, frameColorFilterMask),	-frameColorFilterShiftBits));
+						frame.roiId(frame.numEvents)		= uint16(bitshift(bitand(frameData, frameRoiIdMask),		-frameRoiIdShiftBits));
+						frame.timeStampFrameStart(frame.numEvents)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
+						frame.timeStampFrameEnd(frame.numEvents)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 8 : dataPointer + 11), 'int32'));
+						frame.timeStampExposureStart(frame.numEvents)	= packetTimestampOffset + uint64(typecast(data(dataPointer + 12 : dataPointer + 15), 'int32'));
+						frame.timeStampExposureEnd(frame.numEvents)		= packetTimestampOffset + uint64(typecast(data(dataPointer + 16 : dataPointer + 19), 'int32'));
+						frame.xLength(frame.numEvents)		= typecast(data(dataPointer + 20 : dataPointer + 21), 'uint16'); % strictly speaking these are 4-byte signed integers, but there's no way they'll be that big in practice
+						frame.yLength(frame.numEvents)		= typecast(data(dataPointer + 24 : dataPointer + 25), 'uint16');
+						frame.xPosition(frame.numEvents)	= typecast(data(dataPointer + 28 : dataPointer + 29), 'uint16');
+						frame.yPosition(frame.numEvents)	= typecast(data(dataPointer + 32 : dataPointer + 33), 'uint16');
+						numSamples = int32(frame.xLength(frame.numEvents)) * int32(frame.yLength(frame.numEvents)) * int32(frame.colorChannels(frame.numEvents)); % Conversion to int32 allows addition with 'dataPointer' below
 						sampleData = cast(typecast(data(dataPointer + 36 : dataPointer + 35 + numSamples * 2), 'uint16'), 'uint16');
-						frame.samples{count.frame}		= reshape(sampleData, frame.colorChannels(count.frame), frame.xLength(count.frame), frame.yLength(count.frame));
-						if frame.colorChannels(count.frame) == 1
-							frame.samples{count.frame} = squeeze(frame.samples{count.frame});
+						frame.samples{frame.numEvents}		= reshape(sampleData, frame.colorChannels(frame.numEvents), frame.xLength(frame.numEvents), frame.yLength(frame.numEvents));
+						if frame.colorChannels(frame.numEvents) == 1
+							frame.samples{frame.numEvents} = squeeze(frame.samples{frame.numEvents});
+							frame.samples{frame.numEvents} = permute(frame.samples{frame.numEvents}, [2 1]);
 						else
 							% Change the dimensions of the frame array to
 							% the standard for matlab: column, then row,
 							% then channel number
-							frame.samples{count.frame} = permute(frame.samples{count.frame}, [3 2 1]);
+							frame.samples{frame.numEvents} = permute(frame.samples{frame.numEvents}, [3 2 1]);
 						end
 					end
 				end
@@ -401,6 +402,7 @@ ear.filter		= uint8([]);
 			end
 		end
 	end
+	header = uint8(fread(info.fileHandle, 28)); % read the next header for the while loop
 end
 
 % Calculate some basic stats
@@ -409,68 +411,111 @@ end
 
 output.info = info;
 
-% clip arrays to correct size and add tehm to the output structure
-if count.special > 0
-	special.valid = special.valid(1 : count.special);
-	special.timeStamp = special.timeStamp(1 : count.special);
-	special.address = special.address(1 : count.special);
+% Clip arrays to correct size and add them to the output structure.
+% Also find first and last timeStamps
+
+output.info.firstTimeStamp = inf;
+output.info.lastTimeStamp = 0;
+
+if special.numEvents > 0
+	special.valid = special.valid(1 : special.numEvents);
+	special.timeStamp = special.timeStamp(1 : special.numEvents);
+	special.address = special.address(1 : special.numEvents);
 	output.data.special = special;
+	if output.data.special.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.special.timeStamp(1);
+	end
+	if output.data.special.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.special.timeStamp(end);
+	end	
 end
 
-if count.polarity > 0
-	polarity.valid		= polarity.valid(1 : count.polarity);
-	polarity.timeStamp	= polarity.timeStamp(1 : count.polarity);
-	polarity.y			= polarity.y(1 : count.polarity);
-	polarity.x			= polarity.x(1 : count.polarity);
-	polarity.polarity	= polarity.polarity(1 : count.polarity);
+if polarity.numEvents > 0
+	polarity.valid		= polarity.valid(1 : polarity.numEvents);
+	polarity.timeStamp	= polarity.timeStamp(1 : polarity.numEvents);
+	polarity.y			= polarity.y(1 : polarity.numEvents);
+	polarity.x			= polarity.x(1 : polarity.numEvents);
+	polarity.polarity	= polarity.polarity(1 : polarity.numEvents);
 	output.data.polarity = polarity;
+	if output.data.polarity.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.polarity.timeStamp(1);
+	end
+	if output.data.polarity.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.polarity.timeStamp(end);
+	end	
 end
 
-if count.frame > 0
-	frame.valid					= frame.valid(1 : count.frame);
-	frame.roiId					= frame.roiId(1 : count.frame);
-	frame.colorChannels			= frame.colorChannels(1 : count.frame);
-	frame.colorFilter			= frame.colorFilter(1 : count.frame);
-	frame.timeStampFrameStart	= frame.timeStampFrameStart(1 : count.frame);
-	frame.timeStampFrameEnd		= frame.timeStampFrameEnd(1 : count.frame);
-	frame.timeStampExposureStart = frame.timeStampExposureStart(1 : count.frame);
-	frame.timeStampExposureEnd	= frame.timeStampExposureEnd(1 : count.frame);
-	frame.samples				= frame.samples(1 : count.frame);
-	frame.xLength				= frame.xLength(1 : count.frame);
-	frame.yLength				= frame.yLength(1 : count.frame);
-	frame.xPosition				= frame.xPosition(1 : count.frame);
-	frame.yPosition				= frame.yPosition(1 : count.frame);
+if frame.numEvents > 0
+	frame.valid					= frame.valid(1 : frame.numEvents);
+	frame.roiId					= frame.roiId(1 : frame.numEvents);
+	frame.colorChannels			= frame.colorChannels(1 : frame.numEvents);
+	frame.colorFilter			= frame.colorFilter(1 : frame.numEvents);
+	frame.timeStampFrameStart	= frame.timeStampFrameStart(1 : frame.numEvents);
+	frame.timeStampFrameEnd		= frame.timeStampFrameEnd(1 : frame.numEvents);
+	frame.timeStampExposureStart = frame.timeStampExposureStart(1 : frame.numEvents);
+	frame.timeStampExposureEnd	= frame.timeStampExposureEnd(1 : frame.numEvents);
+	frame.samples				= frame.samples(1 : frame.numEvents);
+	frame.xLength				= frame.xLength(1 : frame.numEvents);
+	frame.yLength				= frame.yLength(1 : frame.numEvents);
+	frame.xPosition				= frame.xPosition(1 : frame.numEvents);
+	frame.yPosition				= frame.yPosition(1 : frame.numEvents);
 	output.data.frame = frame;
+	if output.data.frame.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.frame.timeStamp(1);
+	end
+	if output.data.frame.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.frame.timeStamp(end);
+	end	
 end
 
-if count.imu6 > 0
-	imu6.valid		= imu6.(1 : count.imu6);
-	imu6.timeStamp	= imu6.(1 : count.imu6);
-	imu6.gyroX		= imu6.gyroX(1 : count.imu6);
-	imu6.gyroY		= imu6.gyroY(1 : count.imu6);
-	imu6.gyroZ		= imu6.gyroZ(1 : count.imu6);
-	imu6.accelX		= imu6.accelX(1 : count.imu6);
-	imu6.accelY		= imu6.accelY(1 : count.imu6);
-	imu6.accelZ		= imu6.accelZ(1 : count.imu6);
-	imu6.temperature = imu6.temperature(1 : count.imu6);
+if imu6.numEvents > 0
+	imu6.valid		= imu6.(1 : imu6.numEvents);
+	imu6.timeStamp	= imu6.(1 : imu6.numEvents);
+	imu6.gyroX		= imu6.gyroX(1 : imu6.numEvents);
+	imu6.gyroY		= imu6.gyroY(1 : imu6.numEvents);
+	imu6.gyroZ		= imu6.gyroZ(1 : imu6.numEvents);
+	imu6.accelX		= imu6.accelX(1 : imu6.numEvents);
+	imu6.accelY		= imu6.accelY(1 : imu6.numEvents);
+	imu6.accelZ		= imu6.accelZ(1 : imu6.numEvents);
+	imu6.temperature = imu6.temperature(1 : imu6.numEvents);
 	output.data.imu6 = imu6;
+	if output.data.imu6.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.imu6.timeStamp(1);
+	end
+	if output.data.imu6.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.imu6.timeStamp(end);
+	end	
 end
 
-if count.sample > 0
-	sample.valid		= sample.valid(1 : count.sample);
-	sample.timeStamp	= sample.timeStamp(1 : count.sample);
-	sample.sampleType	= sample.sampleType(1 : count.sample);
-	sample.sample		= sample.sample(1 : count.sample);
+if sample.numEvents > 0
+	sample.valid		= sample.valid(1 : sample.numEvents);
+	sample.timeStamp	= sample.timeStamp(1 : sample.numEvents);
+	sample.sampleType	= sample.sampleType(1 : sample.numEvents);
+	sample.sample		= sample.sample(1 : sample.numEvents);
 	output.data.sample = sample;
+	if output.data.sample.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.sample.timeStamp(1);
+	end
+	if output.data.sample.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.sample.timeStamp(end);
+	end	
 end
 
-if count.ear > 0
-	ear.valid		= ear.valid(1 : count.ear);
-	ear.timeStamp	= ear.timeStamp(1 : count.ear);
-	ear.position	= ear.position(1 : count.ear);
-	ear.channel		= ear.channel(1 : count.ear);
-	ear.neuron		= ear.neuron(1 : count.ear);
-	ear.filter		= ear.filter(1 : count.ear);
+if ear.numEvents > 0
+	ear.valid		= ear.valid(1 : ear.numEvents);
+	ear.timeStamp	= ear.timeStamp(1 : ear.numEvents);
+	ear.position	= ear.position(1 : ear.numEvents);
+	ear.channel		= ear.channel(1 : ear.numEvents);
+	ear.neuron		= ear.neuron(1 : ear.numEvents);
+	ear.filter		= ear.filter(1 : ear.numEvents);
 	output.data.ear = ear;
+	if output.data.ear.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.ear.timeStamp(1);
+	end
+	if output.data.ear.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.ear.timeStamp(end);
+	end	
 end
 
+
+Implement valid only...

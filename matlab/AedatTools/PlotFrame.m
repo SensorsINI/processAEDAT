@@ -36,6 +36,7 @@ for plotCount = 1 : numPlots
 	imagesc(input.data.frame.samples{eventIndex})
 	colormap('gray')
 	axis equal tight
+	set(gca, 'YDir', 'reverse')
 	title([num2str(double(input.data.frame.timeStampExposureStart(eventIndex)) / 1000000) ' s'])
 end
 

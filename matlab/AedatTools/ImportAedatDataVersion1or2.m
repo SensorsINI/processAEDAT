@@ -369,4 +369,63 @@ end
 
 output.info = info;
 
+% calculate numEvents fields; also find first and last timeStamps
+output.info.firstTimeStamp = inf;
+output.info.lastTimeStamp = 0;
+
+if isfield(output.data, 'special')
+	output.data.special.numEvents = length(output.data.special.timeStamp);
+	if output.data.special.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.special.timeStamp(1);
+	end
+	if output.data.special.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.special.timeStamp(end);
+	end
+end
+if isfield(output.data, 'polarity')
+	output.data.polarity.numEvents = length(output.data.polarity.timeStamp);
+	if output.data.polarity.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.polarity.timeStamp(1);
+	end
+	if output.data.polarity.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.polarity.timeStamp(end);
+	end
+end
+if isfield(output.data, 'frame')
+	output.data.frame.numEvents = length(output.data.frame.timeStamp);
+	if output.data.frame.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.frame.timeStamp(1);
+	end
+	if output.data.frame.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.frame.timeStamp(end);
+	end
+end
+if isfield(output.data, 'imu6')
+	output.data.imu6.numEvents = length(output.data.imu6.timeStamp);
+	if output.data.imu6.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.imu6.timeStamp(1);
+	end
+	if output.data.imu6.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.imu6.timeStamp(end);
+	end
+end
+if isfield(output.data, 'sample')
+	output.data.sample.numEvents = length(output.data.sample.timeStamp);
+	if output.data.sample.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.sample.timeStamp(1);
+	end
+	if output.data.sample.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.sample.timeStamp(end);
+	end
+end
+if isfield(output.data, 'ear')
+	output.data.ear.numEvents = length(output.data.ear.timeStamp);
+	if output.data.ear.timeStamp(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.ear.timeStamp(1);
+	end
+	if output.data.ear.timeStamp(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.ear.timeStamp(end);
+	end
+end
+
 
