@@ -1,6 +1,7 @@
 # ############################################################
 # python class that analyses QE measurements of imec 
 # author  Diederik Paul Moeys - diederikmoeys@live.com
+# author Chenghan Li
 # ############################################################
 import sys
 sys.path.append('utils/')
@@ -31,12 +32,12 @@ ioff()
 # GET CHIP INFO
 ###################
 #QE folder
-directory_meas = ["C:/Users/Diederik Paul Moeys/Desktop/QE_DAVIS208_30_06_16-13_57_03/"]#,
-#                  "C:/Users/Diederik Paul Moeys/Desktop/QE_DAVIS240C/"]
-camera_file = ['cameras/davis208_parameters.txt']#,
-#               'cameras/davis240c_parameters.txt']
+directory_meas = ["Z:/Characterizations/Measurements_final/QE/QE_DAVIS208_MONO_30_06_16-13_57_03/",
+                  "Z:/Characterizations/Measurements_final/QE/QE_DAVIS240C_30_06_16-17_52_22/"]
+camera_file = ['cameras/davis208_parameters.txt',
+               'cameras/davis240c_parameters.txt']
                
-QE = np.zeros([len(directory_meas),len(wavelengths),y_div,x_div])
+QE = np.zeros([len(directory_meas),71,1,1])
 sensor_name_list = []
 
 for index_chip in range(len(directory_meas)):
@@ -49,12 +50,13 @@ for index_chip in range(len(directory_meas)):
         conv_gain_uve = 20.0
     elif sensor == 'DAVIS208':
         conv_gain_uve = 20.0
+        sensor = "sDAVIS"
     elif sensor == 'DAVIS346B':
         conv_gain_uve = 20.0
     elif sensor == 'DAVIS346C':
         conv_gain_uve = 20.0
 
-    sensor_name_list.append(info[0])
+    sensor_name_list.append(sensor)
     sensor_type =  info[1]
     bias_file = info[2]
     if(info[3] == 'False'):
@@ -95,8 +97,7 @@ for index_chip in range(len(directory_meas)):
     wavelengths = np.zeros(len(wavelengths_in_dir))
     i_pd_vs = np.zeros([len(wavelengths_in_dir),y_div,x_div])+1*-1
     cg_uve = np.zeros([len(wavelengths_in_dir),y_div,x_div])+1*-1
-    i_dark_vs = np.zeros([2,y_div,x_div])
-    dark_count = 1
+    i_dark_vs = np.zeros([y_div,x_div])
     
     for this_wavelength_file in range(len(wavelengths_in_dir)):
         if (wavelengths_in_dir[this_wavelength_file].lower().find('wavelength') > 0):
@@ -111,13 +112,12 @@ for index_chip in range(len(directory_meas)):
             cg_uve[this_wavelength_file,:,:] = np.zeros([y_div,x_div])+1*conv_gain_uve
         elif (wavelengths_in_dir[this_wavelength_file].lower().find('dark') > 0):
             ptc_dir = directory_meas[index_chip] + wavelengths_in_dir[this_wavelength_file] + "/"
-            print "processing PTC in dark # " + str(dark_count) + "/2"
+            print "processing PTC in dark"
             if('_ADCint' in ptc_dir):
                 ADC_range = ADC_range_int
             else:
                 ADC_range = ADC_range_ext
-            i_dark_vs[dark_count-1,:,:] = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
-            dark_count = dark_count+1
+            i_dark_vs[:,:] = aedat.qe_slope_analysis(sensor, ptc_dir, frame_y_divisions, frame_x_divisions, ADC_range, ADC_values) # Photon transfer curve for the dark
             
     # Remove non-wavelengths
     files_num = len(wavelengths)
@@ -136,7 +136,7 @@ for index_chip in range(len(directory_meas)):
     #raise Exception
     i_pd_esm2 = np.zeros([len(wavelengths),y_div,x_div])
     for this_wavelength in range(len(wavelengths)):
-        i_pd_esm2[this_wavelength, :, :] = ((i_pd_vs[this_wavelength, :, :] - (i_dark_vs[0,:,:]+i_dark_vs[1,:,:])/2)/(cg_uve[this_wavelength, :, :]/1000000.0))/pixel_area
+        i_pd_esm2[this_wavelength, :, :] = ((i_pd_vs[this_wavelength, :, :] - i_dark_vs[:,:])/(cg_uve[this_wavelength, :, :]/1000000.0))/pixel_area
     
     # Calculate QE
     p_ref_diode_wcm2 = np.zeros([len(wavelengths)]) #power density
@@ -180,7 +180,10 @@ for index_chip in range(len(directory_meas)):
                 out_file.write("Quantum efficiency is: " + str(QE[index_chip,this_wavelength, this_area_y, this_area_x]) + "\n")
                 out_file.write("------------------------------------------------------\n")
     out_file.close()
-#np.save(directory_meas[index_chip]+"/saved_variables/",QE,wavelengths,sensor_name_list,frame_x_divisions,frame_y_divisions)
+    var_dir = directory_meas[index_chip]+'saved_variables/'
+    if(not os.path.exists(var_dir)):
+        os.makedirs(var_dir)
+    np.savez(var_dir+"variables_"+sensor_name_list[index_chip]+".npz",QE=QE,wavelengths=wavelengths,sensor_name_list=sensor_name_list,frame_x_divisions=frame_x_divisions,frame_y_divisions=frame_y_divisions)
 
 
 # Plot
