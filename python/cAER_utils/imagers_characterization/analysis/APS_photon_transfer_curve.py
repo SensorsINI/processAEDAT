@@ -95,17 +95,17 @@ class APS_photon_transfer_curve:
                     ydim_f , xdim_f = np.shape(frame_areas[0])
                     temporal_mean = np.zeros([ydim_f, xdim_f])
                     temporal_variance = np.zeros([ydim_f, xdim_f])
-                    #temporal_variance_EMVA = 0
-                    #factor = (1.0/(2.0*float(xdim_f*ydim_f)))
+                    temporal_variance_EMVA = 0
+                    factor = (1.0/(2.0*float(xdim_f*ydim_f)))
                     #raise Exception
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
                             temporal_mean[ty,tx] = np.mean(frame_areas[:,ty,tx])
-                            temporal_variance[ty,tx] =  np.sum((frame_areas[:,ty,tx]-temporal_mean[ty,tx])**2)/n_frames
-                            #temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[10,ty,tx]- frame_areas[11,ty,tx])**2.0
-                    #temporal_variance_EMVA = factor*temporal_variance_EMVA
-                    sigma_y = np.mean(temporal_variance)
-                    #sigma_y = temporal_variance_EMVA
+                            #temporal_variance[ty,tx] =  np.sum((frame_areas[:,ty,tx]-temporal_mean[ty,tx])**2)/n_frames
+                            temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[20,ty,tx]- frame_areas[21,ty,tx])**2.0
+                    temporal_variance_EMVA = factor*temporal_variance_EMVA
+                    #sigma_y = np.mean(temporal_variance)
+                    sigma_y = temporal_variance_EMVA
                     spatio_temporal_mean = np.mean(np.mean(temporal_mean,0),0)
                     spatio_var_temporal_mean = 0.0
                     y_var_temporal_mean = np.zeros([xdim_f])
