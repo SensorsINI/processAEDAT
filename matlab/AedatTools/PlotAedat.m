@@ -3,6 +3,14 @@ function PlotAedat(input, numPlots, distributeBy)
 % This function calls the 'Plot...' function for each of the support event
 % types
 
+if ~exist('numPlots', 'var')
+	numPlots = 3;
+end
+
+if ~exist('distributeBy', 'var')
+	distributeBy = 'time';
+end
+
 if isfield(input.data, 'special')
 	PlotSpecial(input); % This function displays all special events
 end

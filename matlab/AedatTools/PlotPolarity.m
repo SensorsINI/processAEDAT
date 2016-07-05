@@ -16,6 +16,17 @@ a certain ratio of an array full is reached.
 % (Hardcoded constant - could become a parameter)
 proportionOfPixels = 0.1;
 
+% The 'contrast' for display of events, as used in jAER.
+contrast = 3;
+
+if ~exist('numPlots', 'var')
+	numPlots = 3;
+end
+
+if ~exist('distributeBy', 'var')
+	distributeBy = 'time';
+end
+
 % Distribute plots in a raster with a 3:4 ratio
 numPlotsX = round(sqrt(numPlots / 3 * 4));
 numPlotsY = ceil(numPlots / numPlotsX);
@@ -50,10 +61,25 @@ for plotCount = 1 : numPlots
 	selectedLogical = [false(firstIndex - 1, 1); ...
 					true(lastIndex - firstIndex + 1, 1); ...
 					false(numEvents - lastIndex, 1)];
-	onLogical = selectedLogical & input.data.polarity.polarity;
-	offLogical = selectedLogical & ~input.data.polarity.polarity;
-	plot(input.data.polarity.x(onLogical), input.data.polarity.y(onLogical), '.g')
-	plot(input.data.polarity.x(offLogical), input.data.polarity.y(offLogical), '.r')
+	
+	% This is how to do a straight plot with contrast of 1, where off (red)
+	% events overwrite on (green) events. 
+	% onLogical = selectedLogical & input.data.polarity.polarity;
+	% offLogical = selectedLogical & ~input.data.polarity.polarity;
+	% plot(input.data.polarity.x(onLogical), input.data.polarity.y(onLogical), '.g');
+	% plot(input.data.polarity.x(offLogical), input.data.polarity.y(offLogical), '.r');
+	
+	% However, we will create an image from events with contrast, as used
+	% in jAER
+	% accumulate the array from the event indices, using an increment of 1
+	% for on and a decrement of 1 for off.
+	arrayLogical = accumarray([input.data.polarity.y(selectedLogical) input.data.polarity.x(selectedLogical)] + 1, input.data.polarity.polarity(selectedLogical) * 2 - 1);
+	% Clip the values according to the contrast
+	arrayLogical(arrayLogical > contrast) = contrast;
+	arrayLogical(arrayLogical < - contrast) = -contrast;
+	arrayLogical = round((arrayLogical + contrast + 1) * 64 / (contrast*2 + 1));
+	image(arrayLogical)
+	colormap(gray)
 	axis equal tight
 	title([num2str(double(input.data.polarity.timeStamp(eventIndex)) / 1000000) ' s'])
 end

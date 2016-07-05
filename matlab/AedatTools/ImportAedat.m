@@ -77,9 +77,11 @@ This function expects a single input, which is a structure with the following fi
 		provided, any packets with a lower count that this will not be returned.
 	- endPacket (optional) Only accepted for fileformat 3. If
 		provided, any packets with a higher count that this will not be returned.
-	-dataTypes (optional) cellarray. If present, only data types specified 
+	- dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
 		special; polarity; frame; imu6; imu9; sample; ear; config (other types as they are implemented)
+	- validOnly (optional; aedat3.x only) bool. If present, non-valid
+		events are removed.
 	When using startEvent and endEvent, any events excluded
 	because of the time window or dataType are not replaced, so the amount
 	of data returned may be much less than the difference between

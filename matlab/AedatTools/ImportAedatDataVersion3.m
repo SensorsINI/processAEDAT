@@ -418,10 +418,19 @@ output.info.firstTimeStamp = inf;
 output.info.lastTimeStamp = 0;
 
 if special.numEvents > 0
-	special.valid = special.valid(1 : special.numEvents);
-	special.timeStamp = special.timeStamp(1 : special.numEvents);
-	special.address = special.address(1 : special.numEvents);
-	output.data.special = special;
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = special.valid;
+		special = rmfield(special, 'valid'); % Only keep the valid field if non-valid events are possible
+		special.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(special.numEvents, 1); false(length(special.valid) - special.numEvents, 1)]; 
+		special.valid = special.valid(keepLogical); % Only keep the valid field if non-valid events are possible
+	end
+	if special.numEvents > 0
+		special.timeStamp = special.timeStamp(keepLogical);
+		special.address = special.address(keepLogical);
+		output.data.special = special;
+	end
 	if output.data.special.timeStamp(1) < output.info.firstTimeStamp
 		output.info.firstTimeStamp = output.data.special.timeStamp(1);
 	end
@@ -431,12 +440,21 @@ if special.numEvents > 0
 end
 
 if polarity.numEvents > 0
-	polarity.valid		= polarity.valid(1 : polarity.numEvents);
-	polarity.timeStamp	= polarity.timeStamp(1 : polarity.numEvents);
-	polarity.y			= polarity.y(1 : polarity.numEvents);
-	polarity.x			= polarity.x(1 : polarity.numEvents);
-	polarity.polarity	= polarity.polarity(1 : polarity.numEvents);
-	output.data.polarity = polarity;
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = polarity.valid;
+		polarity = rmfield(polarity, 'valid'); % Only keep the valid field if non-valid events are possible
+		polarity.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(polarity.numEvents, 1); false(length(polarity.valid) - polarity.numEvents, 1)]; 
+		polarity.valid = polarity.valid(keepLogical); % Only keep the valid field if non-valid events are possible
+	end
+	if polarity.numEvents > 0
+		polarity.timeStamp	= polarity.timeStamp(keepLogical);
+		polarity.y			= polarity.y(keepLogical);
+		polarity.x			= polarity.x(keepLogical);
+		polarity.polarity	= polarity.polarity(keepLogical);
+		output.data.polarity = polarity;
+	end
 	if output.data.polarity.timeStamp(1) < output.info.firstTimeStamp
 		output.info.firstTimeStamp = output.data.polarity.timeStamp(1);
 	end
@@ -446,39 +464,57 @@ if polarity.numEvents > 0
 end
 
 if frame.numEvents > 0
-	frame.valid					= frame.valid(1 : frame.numEvents);
-	frame.roiId					= frame.roiId(1 : frame.numEvents);
-	frame.colorChannels			= frame.colorChannels(1 : frame.numEvents);
-	frame.colorFilter			= frame.colorFilter(1 : frame.numEvents);
-	frame.timeStampFrameStart	= frame.timeStampFrameStart(1 : frame.numEvents);
-	frame.timeStampFrameEnd		= frame.timeStampFrameEnd(1 : frame.numEvents);
-	frame.timeStampExposureStart = frame.timeStampExposureStart(1 : frame.numEvents);
-	frame.timeStampExposureEnd	= frame.timeStampExposureEnd(1 : frame.numEvents);
-	frame.samples				= frame.samples(1 : frame.numEvents);
-	frame.xLength				= frame.xLength(1 : frame.numEvents);
-	frame.yLength				= frame.yLength(1 : frame.numEvents);
-	frame.xPosition				= frame.xPosition(1 : frame.numEvents);
-	frame.yPosition				= frame.yPosition(1 : frame.numEvents);
-	output.data.frame = frame;
-	if output.data.frame.timeStamp(1) < output.info.firstTimeStamp
-		output.info.firstTimeStamp = output.data.frame.timeStamp(1);
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = frame.valid;
+		frame = rmfield(frame, 'valid'); % Only keep the valid field if non-valid events are possible
+		frame.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(frame.numEvents, 1); false(length(frame.valid) - frame.numEvents, 1)]; 
+		frame.valid = frame.valid(keepLogical); % Only keep the valid field if non-valid events are possible
 	end
-	if output.data.frame.timeStamp(end) > output.info.lastTimeStamp
-		output.info.lastTimeStamp = output.data.frame.timeStamp(end);
+	if frame.numEvents > 0
+		frame.roiId					= frame.roiId(keepLogical);
+		frame.colorChannels			= frame.colorChannels(keepLogical);
+		frame.colorFilter			= frame.colorFilter(keepLogical);
+		frame.timeStampFrameStart	= frame.timeStampFrameStart(keepLogical);
+		frame.timeStampFrameEnd		= frame.timeStampFrameEnd(keepLogical);
+		frame.timeStampExposureStart = frame.timeStampExposureStart(keepLogical);
+		frame.timeStampExposureEnd	= frame.timeStampExposureEnd(keepLogical);
+		frame.samples				= frame.samples(keepLogical);
+		frame.xLength				= frame.xLength(keepLogical);
+		frame.yLength				= frame.yLength(keepLogical);
+		frame.xPosition				= frame.xPosition(keepLogical);
+		frame.yPosition				= frame.yPosition(keepLogical);
+		output.data.frame = frame;
+	end	
+	if output.data.frame.timeStampExposureStart(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.frame.timeStampExposureStart(1);
+	end
+	if output.data.frame.timeStampExposureEnd(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.frame.timeStampExposureEnd(end);
 	end	
 end
 
 if imu6.numEvents > 0
-	imu6.valid		= imu6.(1 : imu6.numEvents);
-	imu6.timeStamp	= imu6.(1 : imu6.numEvents);
-	imu6.gyroX		= imu6.gyroX(1 : imu6.numEvents);
-	imu6.gyroY		= imu6.gyroY(1 : imu6.numEvents);
-	imu6.gyroZ		= imu6.gyroZ(1 : imu6.numEvents);
-	imu6.accelX		= imu6.accelX(1 : imu6.numEvents);
-	imu6.accelY		= imu6.accelY(1 : imu6.numEvents);
-	imu6.accelZ		= imu6.accelZ(1 : imu6.numEvents);
-	imu6.temperature = imu6.temperature(1 : imu6.numEvents);
-	output.data.imu6 = imu6;
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = imu6.valid;
+		imu6 = rmfield(imu6, 'valid'); % Only keep the valid field if non-valid events are possible
+		imu6.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(imu6.numEvents, 1); false(length(imu6.valid) - imu6.numEvents, 1)]; 
+		imu6.valid = imu6.valid(keepLogical); % Only keep the valid field if non-valid events are possible
+	end
+	if imu6.numEvents > 0
+		imu6.timeStamp	= imu6.timeStamp(keepLogical);
+		imu6.gyroX		= imu6.gyroX(keepLogical);
+		imu6.gyroY		= imu6.gyroY(keepLogical);
+		imu6.gyroZ		= imu6.gyroZ(keepLogical);
+		imu6.accelX		= imu6.accelX(keepLogical);
+		imu6.accelY		= imu6.accelY(keepLogical);
+		imu6.accelZ		= imu6.accelZ(keepLogical);
+		imu6.temperature = imu6.temperature(keepLogical);
+		output.data.imu6 = imu6;
+	end		
 	if output.data.imu6.timeStamp(1) < output.info.firstTimeStamp
 		output.info.firstTimeStamp = output.data.imu6.timeStamp(1);
 	end
@@ -488,11 +524,20 @@ if imu6.numEvents > 0
 end
 
 if sample.numEvents > 0
-	sample.valid		= sample.valid(1 : sample.numEvents);
-	sample.timeStamp	= sample.timeStamp(1 : sample.numEvents);
-	sample.sampleType	= sample.sampleType(1 : sample.numEvents);
-	sample.sample		= sample.sample(1 : sample.numEvents);
-	output.data.sample = sample;
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = sample.valid;
+		sample = rmfield(sample, 'valid'); % Only keep the valid field if non-valid events are possible
+		sample.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(sample.numEvents, 1); false(length(sample.valid) - sample.numEvents, 1)]; 
+		sample.valid = sample.valid(keepLogical); % Only keep the valid field if non-valid events are possible
+	end
+	if imu6.numEvents > 0
+		sample.timeStamp	= sample.timeStamp(keepLogical);
+		sample.sampleType	= sample.sampleType(keepLogical);
+		sample.sample		= sample.sample(keepLogical);
+		output.data.sample = sample;
+	end		
 	if output.data.sample.timeStamp(1) < output.info.firstTimeStamp
 		output.info.firstTimeStamp = output.data.sample.timeStamp(1);
 	end
@@ -502,13 +547,23 @@ if sample.numEvents > 0
 end
 
 if ear.numEvents > 0
-	ear.valid		= ear.valid(1 : ear.numEvents);
-	ear.timeStamp	= ear.timeStamp(1 : ear.numEvents);
-	ear.position	= ear.position(1 : ear.numEvents);
-	ear.channel		= ear.channel(1 : ear.numEvents);
-	ear.neuron		= ear.neuron(1 : ear.numEvents);
-	ear.filter		= ear.filter(1 : ear.numEvents);
-	output.data.ear = ear;
+	if isfield(info, 'validOnly') && info.validOnly
+		keepLogical = ear.valid;
+		ear = rmfield(ear, 'valid'); % Only keep the valid field if non-valid events are possible
+		ear.numEvents = nnz(keepLogical);
+	else
+		keepLogical = [true(ear.numEvents, 1); false(length(ear.valid) - ear.numEvents, 1)]; 
+		ear.valid = ear.valid(keepLogical); % Only keep the valid field if non-valid events are possible
+	end
+	if ear.numEvents > 0
+		ear.valid		= ear.valid(keepLogical);
+		ear.timeStamp	= ear.timeStamp(keepLogical);
+		ear.position	= ear.position(keepLogical);
+		ear.channel		= ear.channel(keepLogical);
+		ear.neuron		= ear.neuron(keepLogical);
+		ear.filter		= ear.filter(keepLogical);
+		output.data.ear = ear;
+	end		
 	if output.data.ear.timeStamp(1) < output.info.firstTimeStamp
 		output.info.firstTimeStamp = output.data.ear.timeStamp(1);
 	end
@@ -516,6 +571,3 @@ if ear.numEvents > 0
 		output.info.lastTimeStamp = output.data.ear.timeStamp(end);
 	end	
 end
-
-
-Implement valid only...

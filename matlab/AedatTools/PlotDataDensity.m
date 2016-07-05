@@ -5,8 +5,8 @@ function PlotDataDensity(input, numBins)
 
 Takes 'input' - a data structure containing an imported .aedat file, 
 as created by ImportAedat. For each data type present, 
-it gives a graph of data density. All the graphs are super imposed. The
-number of time bins used to create the graph is a parameter. 
+it gives a graph of data density. All the graphs are superimposed. The
+number of time bins used to create the graph is an argument of the function. 
 %}
 
 if ~exist('numBins', 'var')
@@ -27,7 +27,7 @@ if isfield(input.data, 'special')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
 		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		lastTimeStampIndex = max(firstTimeStampIndex, find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last'));
 		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
 	plot(timeBinCentresS, density)
@@ -36,56 +36,55 @@ end
 if isfield(input.data, 'polarity')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
-		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundaries(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundaries(bin + 1), 1, 'last');
-		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBin;
+		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
+		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
-	plot(density)
-	legendLocal = [legendLocal 'special'];
+	plot(timeBinCentresS, density)
+	legendLocal = [legendLocal 'polarity'];
 end
 if isfield(input.data, 'frame')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
-		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundaries(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundaries(bin + 1), 1, 'last');
-		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBin;
+		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
+		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
-	plot(density)
-	legendLocal = [legendLocal 'special'];
+	plot(timeBinCentresS, density)
+	legendLocal = [legendLocal 'frame'];
 end
 if isfield(input.data, 'imu6')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
-		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundaries(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundaries(bin + 1), 1, 'last');
-		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBin;
+		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
+		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
-	plot(density)
-	legendLocal = [legendLocal 'special'];
+	plot(timeBinCentresS, density)
+	legendLocal = [legendLocal 'imu6'];
 end
 if isfield(input.data, 'sample')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
-		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundaries(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundaries(bin + 1), 1, 'last');
-		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBin;
+		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
+		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
-	plot(density)
-	legendLocal = [legendLocal 'special'];
+	plot(timeBinCentresS, density)
+	legendLocal = [legendLocal 'sample'];
 end
 if isfield(input.data, 'ear')
 	density = zeros(numBins, 1);
 	for bin = 1 : numBins 
-		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundaries(bin), 1, 'first');
-		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundaries(bin + 1), 1, 'last');
-		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBin;
+		firstTimeStampIndex = find(input.data.special.timeStamp >= timeBinBoundariesUs(bin), 1, 'first');
+		lastTimeStampIndex = find(input.data.special.timeStamp < timeBinBoundariesUs(bin + 1), 1, 'last');
+		density(bin) = (lastTimeStampIndex - firstTimeStampIndex) / durationOfBinUs;
 	end
-	plot(density)
-	legendLocal = [legendLocal 'special'];
+	plot(timeBinCentresS, density)
+	legendLocal = [legendLocal 'ear'];
 end
 
 xlabel('Time (s)')
 ylabel('Data density (events per second)')
 legend(legendLocal)
-
 
