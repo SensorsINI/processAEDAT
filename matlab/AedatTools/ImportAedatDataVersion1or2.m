@@ -150,6 +150,12 @@ end
 if ~isfield(info, 'endEvent')	
 	info.endEvent = info.numEventsInFile;
 end
+if isfield(info, 'startPacket')
+	error('The startPacket parameter is set, but range by packets is not available for .aedat version < 3 files')
+end
+if isfield(info, 'endPacket')
+	error('The endPacket parameter is set, but range by events is not available for .aedat version < 3 files')
+end
 	
 if info.endEvent > info.numEventsInFile
 	disp([	'The file contains ' num2str(info.numEventsInFile) ...

@@ -149,6 +149,12 @@ if info.startPacket > info.endPacket
 	error([	'The startPacket parameter is ' num2str(info.startPacket) ...
 		', but the endPacket parameter is ' num2str(info.endPacket) ]);
 end
+if isfield(info, 'startEvent')
+	error('The startEvent parameter is set, but range by events is not available for .aedat version 3.x files')
+end
+if isfield(info, 'endEvent')
+	error('The endEvent parameter is set, but range by events is not available for .aedat version 3.x files')
+end
 if ~isfield(info, 'startTime')
 	info.startTime = 0;
 end
@@ -201,9 +207,13 @@ cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 % Go back to the beginning of the data
 fseek(info.fileHandle, info.beginningOfDataPointer, 'bof');
 
-header = uint8(fread(info.fileHandle, 28));
-while ~feof(info.fileHandle)
+while true % implement the exit conditions inside the loop - allows to distinguish between different types of exit
 	% Read the header of the next packet
+	header = uint8(fread(info.fileHandle, 28));
+	if feof(info.fileHandle)
+		info.numPackets = packetCount;
+		break
+	end
 	packetCount = packetCount + 1;
 	if mod(packetCount, 100) == 0
 		disp(['packet: ' num2str(packetCount) '; file position: ' num2str(floor(ftell(info.fileHandle) / 1000000)) ' MB'])
@@ -402,7 +412,6 @@ ear.filter		= uint8([]);
 			end
 		end
 	end
-	header = uint8(fread(info.fileHandle, 28)); % read the next header for the while loop
 end
 
 % Calculate some basic stats
