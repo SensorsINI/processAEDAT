@@ -12,6 +12,8 @@ http://inilabs.com/support/software/fileformat/
     structure.
 """
 
+import string as str
+
 def ImportAedatHeaders(info) :
 
 
@@ -39,76 +41,73 @@ def ImportAedatHeaders(info) :
         # File format
         if line[ : 8] == '!AER-DAT' :
             info['formatVersion'] = int(line[8 : -4])
-            print 'File format: %.2f' % info['formatVersion']
+            print 'File format: #.2f' # info['formatVersion']
 
+        # Pick out the source
+        # Version 2.0 encodes it like this:
+        if line[ : 8] == 'AEChip: ':
+            # Ignore everything the class path and only use what follows the final dot 
+            startPrefix = rfind(line, '.')
+            info['sourceFromFile'] = ImportAedatBasicSourceName(line[startPrefix + 1 : ])
+        # Version 3.0 encodes it like this
+        # The following ignores any trace of previous sources (prefixed with a minus sign)
+        if line[ : 7] == 'Source ' : 
+            startPrefix = find(line, ':'); # There should be only one colon
+            if 'sourceFromFile' in info :
+                # One source has already been added; convert to a cell array if
+                # it has not already been done
+            
+                # NOT HANDLED YET:            
+         
+                #if ~iscell(info.sourceFromFile)
+                #    info.sourceFromFile = {info.sourceFromFile};
+                #info.sourceFromFile = [info.sourceFromFile line[startPrefix + 2 : ];
+            else :
+                info['sourceFromFile'] = line[startPrefix + 2 : ]
+	
+        
+        # Pick out date and time of recording
+        	
+        # Version 2.0 encodes it like this:
+        # # created Thu Dec 03 14:47:00 CET 2015
+        if line[ : 8] == 'created ' :
+            info['dateTime'] = line[9 : ]
+        	
+        # Version 3.0 encodes it like this:
+        # # Start-Time: #Y-#m-#d #H:#M:#S (TZ#z)\r\n
+        if line[ : 12] == 'Start-Time: ' :
+        	info['dateTime'] = line[13 : ]
 
-        """
-        % Pick out the source
-        % Version 2.0 encodes it like this:
-        if strncmp(line, 'AEChip: ', 8)
-            % Ignore everything the class path and only use what follows the final dot 
-            startPrefix = find(line=='.', 1, 'last');
-            info.sourceFromFile = importAedat_basicSourceName(line(startPrefix + 1 : end));
-        end
-        % Version 3.0 encodes it like this
-        % The following ignores any trace of previous sources (prefixed with a minus sign)
-        if strncmp(line, 'Source ', 7) 
-            startPrefix = find(line==':'); % There should be only one colon
-            if isfield(info, 'sourceFromFile')
-                % One source has already been added; convert to a cell array if
-                % it has not already been done
-                if ~iscell(info.sourceFromFile)
-                    info.sourceFromFile = {info.sourceFromFile};
-                end
-                info.sourceFromFile = [info.sourceFromFile line(startPrefix + 2 : end)];
-        	else
-                info.sourceFromFile = line(startPrefix + 2 : end);
-        	end		
-        end
+        """        
+        # Parse xml, adding it to output as a cell array, in a field called 'xml'.
+        # This is done by maintaining a cell array which is inside out as it is
+        # constructed - as a level of the hierarchy is descended, everything is
+        # pushed down into the first position of a cell array, and as the
+        # hierarchy is ascended, the first node is popped back up and the nodes 
+        # that have been added to the right are pushed down inside it. 
         
-        % Pick out date and time of recording
-        	
-        % Version 2.0 encodes it like this:
-        % # created Thu Dec 03 14:47:00 CET 2015
-        if strncmp(line, 'created ', 8) 
-        	info.dateTime = line(9 : end);
-        end
-        	
-        % Version 3.0 encodes it like this:
-        % # Start-Time: %Y-%m-%d %H:%M:%S (TZ%z)\r\n
-        if strncmp(line, 'Start-Time: ', 12) 
-        	info.dateTime = line(13 : end);
-        end
-        
-        % Parse xml, adding it to output as a cell array, in a field called 'xml'.
-        % This is done by maintaining a cell array which is inside out as it is
-        % constructed - as a level of the hierarchy is descended, everything is
-        % pushed down into the first position of a cell array, and as the
-        % hierarchy is ascended, the first node is popped back up and the nodes 
-        % that have been added to the right are pushed down inside it. 
-        	
-        % If <node> then descend hierarchy - do this by taking the existing
-        % cell array and putting it into another cell array
+        # If <node> then descend hierarchy - do this by taking the existing
+        # cell array and putting it into another cell array
         if strncmp(line, '<node', 5)
         	nameOfNode = line(length('<node name="') + 1 : end - length('">'));
         	info.xml = {info.xml nameOfNode};
         		
-        % </node> - ascend hierarchy - take everything to the right of the
-        % initial cell array and put it inside the inital cell array
+        # </node> - ascend hierarchy - take everything to the right of the
+        # initial cell array and put it inside the inital cell array
         elseif strncmp(line, '</node>', 7)
         	parent = info.xml{1};
         	child = info.xml(2:end);
         	info.xml = [parent {child}];
         		
-          % <entry> - Add a field to the struct
+          # <entry> - Add a field to the struct
         	elseif strncmp(line, '<entry ', 7)
-        	% Find the division between key and value
+        	# Find the division between key and value
         	endOfKey = strfind(line, '" value="');
         	key = line(length('<entry key="') + 1 : endOfKey - 1);
         	value = line(endOfKey + length('" value="') : end - length('"/>')); 
         info.xml{end + 1} = {key value};
         end
-        % Gets the next line, including line ending chars
+        # Gets the next line, including line ending chars
          line = native2unicode(fgets(info.fileHandle)); 
         """
         # Read ahead the first character of the next line to complete the while loop
@@ -120,20 +119,20 @@ def ImportAedatHeaders(info) :
     info['fileHandle'].seek(-1, 1)
     
     """
-    % If a device is specified in input, does it match the derived source?
+    # If a device is specified in input, does it match the derived source?
     if isfield(info, 'source')
     	info.source = importAedat_basicSourceName(info.source);
     	if isfield(info, 'sourceFromFile') && ~strcmp(info.source, info.sourceFromFile)
-    		fprintf('The source given as input, "%s", doesn''t match the source declared in the file, "%s"; assuming the source given as input.\n', inputSource, info.Source);
+    		fprintf('The source given as input, "#s", doesn''t match the source declared in the file, "#s"; assuming the source given as input.\n', inputSource, info.Source);
     	end
     elseif ~isfield(info, 'sourceFromFile')
-    % If no source was detected, assume it was from a DVS128	
+    # If no source was detected, assume it was from a DVS128	
     info.source = 'Dvs128';
     else
         info.source = info.sourceFromFile;
     end
     if isfield(info, 'sourceFromFile') 
-        % Clean up
+        # Clean up
         rmfield(info, 'sourceFromFile');
     end
         

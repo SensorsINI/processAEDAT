@@ -24,44 +24,132 @@ import struct
 import numpy as np                       
 
 def ImportAedatDataVersion3(info):
-    
-    output = {} # This will correspond to outputs.data at the higher level
 
-    #return arrays - actually these are lists
-    #PolValidAll =[] Not handled yet
-    polTsAll =[]
-    polAddrXAll = []
-    polAddrYAll = []
-    polPolAll = []
+    # Check the startEvent and endEvent parameters
+    if not ('startPacket' in info) :
+        info['startPacket'] = 1
+    if not ('endPacket' in info) :
+        info['endPacket'] = np.inf
+    if info['startPacket'] > info['endPacket'] :
+        raise Exception('The startPacket parameter is %d, but the endPacket parameter is %d' % (info['startPacket'], info['endPacket']))
+    if 'startEvent' in info :
+        raise Exception('The startEvent parameter is set, but range by events is not available for .aedat version 3.x files')
+    if 'endEvent' in info :
+        raise Exception('The endEvent parameter is set, but range by events is not available for .aedat version 3.x files')
+    if not ('startTime' in info) :
+        info['startTime'] = 0
+    if not ('endTime' in info) :
+        info['endTime'] = np.inf
+    if info['startTime'] > info['endTime'] :
+        raise Exception('The startTime parameter is %d, but the endTime parameter is %d' % (info['startTime'], info['endTime']))
+    
+    packetCount = 0
+
+    packetTypes = []
+    packetPointers = []
+    
+    #build with linked lists, then at the end convert to arrays
+    specialNumEvents = []
+    specialValid = []
+    specialTimeStamp = []
+    specialAddress = []
+
+    polarityNumEvents = []
+    polarityValid = []
+    polarityTimeStamp = []
+    polarityY = []
+    polarityX = []
+    polarityPolarity = []
+
+    frameNumEvents              = []
+    frameValid                  = []
+    frameTimeStampFrameStart    = []
+    frameTimeStampFrameEnd      = []
+    frameTimeStampExposureStart = []
+    frameTimeStampExposureEnd   = []
+    frameColorChannels			 = []
+    frameColorFilter			 = []
+    frameRoiId                  = []
+    frameXLength                = []
+    frameYLength                = []
+    frameXPosition              = []
+    frameYPosition              = []
+    frameSamples                = []
+    
+    imu6NumEvents = []
+    imu6Valid     = []
+    imu6TimeStamp = []
+    imu6AccelX    = []
+    imu6AccelY    = []
+    imu6AccelZ    = []
+    imu6GyroX     = []
+    imu6GyroY     = []
+    imu6GyroZ     = []
+    imu6Temperature = []
+
+    sampleNumEvents = []
+    sampleValid = []
+    sampleTimeStamp = []
+    sampleSampleType	= []
+    sampleSample		= []
+
+    earNumEvents  = []
+    earValid      = []
+    earTimeStamp  = []
+    earPosition 	= []
+    earChannel	= []
+    earNeuron		= []
+    earFilter		= []
+
+    point1DNumEvents = []
+    point1DValid     = []
+    point1DTimeStamp = []
+    point1DValue     = []
+
+    point2DNumEvents = []
+    point2DValid     = []
+    point2DTimeStamp = []
+    point2DValue1    = []
+    point2DValue2    = []
+    
+    currentTimeStamp = 0
+    
+    while True : # time based and packet-counted readout not implemented yet
+        # read the header of the next packet
+        header = info['fileHandle'].read(28)
+        if info['fileHandle'].eof :
+            info['numPackets'] = packetCount
+            break
+        packetPointers[packetCount] = info['fileHandle'].tell - 28
+        if mod(packetCount, 100) == 0 :
+            print 'packet: %d; file position: %d MB' % (packetCount, math.floor(info['fileHandle'].tell / 1000000))         
+        if info['startPacket'] > packetCount :
+            # Ignore this packet as its count is too low
+            eventSize = struct.unpack('I', data[4:8])[0]
+            eventNumber = struct.unpack('I', data[20:24])[0]
+            info['fileHandle'].seek(eventNumber * eventSize, 1)
+        else
+            eventSize = struct.unpack('I', data[4:8])[0]
+            eventTsOffset = struct.unpack('I', data[8:12])[0]
+            eventTsOverflow = struct.unpack('I', data[12:16])[0]
+            #eventCapacity = struct.unpack('I', data[16:20])[0] # Not needed
+            eventNumber = struct.unpack('I', data[20:24])[0]
+            #eventValid = struct.unpack('I', data[24:28])[0] # Not needed
+            # Read the full packet
+            numBytesInPacket = eventNumber * eventSize
+            data = info['fileHandle'].read(numBytesInPacket)
+        	   # Find the first timestamp and check the timing constraints
+            packetTimestampOffset = uint64(eventTsOverflow * 2^31);
+            mainTimeStamp = uint64(typecast(data(eventTsOffset + 1 : eventTsOffset + 4), 'int32')) + packetTimestampOffset;
+            if info.startTime <= mainTimeStamp && mainTimeStamp <= info.endTime
+        			eventType = typecast(header(1:2), 'int16');
+        			packetTypes(packetCount) = eventType;
+        			
+        			%eventSource = typecast(data(3:4), 'int16'); % Multiple sources not handled yet
         
-    #SpecialValidAll =[] Not handled yet
-    specialTsAll =[]
-    specialAddrAll =[]
-    
-    #APS frames
-    frameAll = []
-    tsStartFrameAll = []
-    tsEndFrameAll = []
-    tsStartExposureAll = []
-    tsEndExposureAll = []
-    lengthXAll = []
-    lengthYAll = []
-    
-    currentTimeStamp = 0;
-    
-    # read the header of the first packet
-    data = info['fileHandle'].read(28)
-    while data : # time based and packet-counted readout not implemented yet
-        eventType = struct.unpack('H', data[0:2])[0]
-        #eventSource = struct.unpack('H', data[2:4])[0] Multiple sources not handled yet
-        eventSize = struct.unpack('I', data[4:8])[0]
-        eventTsOffset = struct.unpack('I', data[8:12])[0]
-        eventTsOverflow = struct.unpack('I', data[12:16])[0] # Handle this later
-        eventCapacity = struct.unpack('I', data[16:20])[0]
-        #eventNumber = struct.unpack('I', data[20:24])[0]
-        #eventValid = struct.unpack('I', data[24:28])[0] # Handle this later
-        # Read the full packet
-        data = info['fileHandle'].read(eventCapacity * eventSize)    
+        			% Handle the packet types individually:
+
+            
         
         # Checking timestamp monotonicity
         tempTimeStamp = struct.unpack('i', data[eventTsOffset : eventTsOffset + 4])[0]
@@ -120,6 +208,9 @@ def ImportAedatDataVersion3(info):
 
         # read the header of the next packet
         data = info['fileHandle'].read(28)
+
+    output = {} # This will correspond to outputs.data at the higher level
+
     
     if specialTsAll : # Test if there are any special events
         specialTsAll = np.array(specialTsAll)

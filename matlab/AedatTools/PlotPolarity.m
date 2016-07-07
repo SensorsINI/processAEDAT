@@ -31,7 +31,7 @@ end
 numPlotsX = round(sqrt(numPlots / 3 * 4));
 numPlotsY = ceil(numPlots / numPlotsX);
 
-numEvents = length(input.data.polarity.valid); % ignore issue of valid / invalid for now ...
+numEvents = length(input.data.polarity.timeStamp); % ignore issue of valid / invalid for now ...
 if strcmp(distributeBy, 'time')
 	minTime = min(input.data.polarity.timeStamp);
 	maxTime = max(input.data.polarity.timeStamp);

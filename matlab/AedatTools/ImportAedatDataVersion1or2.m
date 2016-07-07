@@ -297,6 +297,13 @@ elseif strfind(info.source, 'Davis')
 	polarityLogical = ~apsOrImuLogical & ~signalOrSpecialLogical;
 	specialLogical = ~apsOrImuLogical & signalOrSpecialLogical;
 
+	% These masks are used for both frames and polarity events, so are
+	% defined outside of the following if statement
+	yMask = hex2dec('7FC00000');
+	yShiftBits = 22;
+	xMask = hex2dec('003FF000');
+	xShiftBits = 12;
+
 	% Special events
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
 		output.data.special.timeStamp = allTs(specialLogical);
@@ -307,54 +314,67 @@ elseif strfind(info.source, 'Davis')
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))) && any(polarityLogical)
 		output.data.polarity.timeStamp = allTs(polarityLogical);
 		% Y addresses
-		yMask = hex2dec('7FC00000');
-		yShiftBits = 22;
 		output.data.polarity.y = uint16(bitshift(bitand(allAddr(polarityLogical), yMask), -yShiftBits));
 		% X addresses
-		xMask = hex2dec('003FF000');
-		xShiftBits = 12;
 		output.data.polarity.x = uint16(bitshift(bitand(allAddr(polarityLogical), xMask), -xShiftBits));
 		% Polarity bit
 		polBit = 12;		
 		output.data.polarity.polarity = bitget(allAddr(polarityLogical), polBit) == 1;
-	end					
+	end	
+	
+	% Frame events - NOTE This code currently only handles global shutter
+	% readout ...
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))) && any(frameLogical)
+		output.data.frame.timeStamp = allTs(frameLogical);
+
+		frameLastEventMask = hex2dec ('FFFFFC00');
+		frameLastEvent = hex2dec ('80000000'); %starts with biggest address
+		
+		frameSampleMask = bin2dec('1111111111');
+		
+		frameData = allAddr(frameLogical);
+		frameTs = allTs(frameLogical);
+
+		frameX = uint16(bitshift(bitand(frameData, xMask),-xShiftBits));
+		frameY = uint16(bitshift(bitand(frameData, yMask),-yShiftBits));
+		frameSignal = boolean(bitshift(bitand(frameData, signalOrSpecialMask),-4));
+		frameSample = uint16(bitand(frameData, frameSampleMask));
+		bitget(frameData, 32 - log2(signalOrSpecialMask)) == true;
+		
+		% To identify frame boundaries, search for a minor and a major monotonic 
+		% ramp in the x and y directions. In general the ramp could be in
+		% either direction and y could be either minor or major. 
+		frameXDiff = sum(frameX(2 : end) ~= frameX(1 : end - 1)) > ...
+						sum(frameY(2 : end) ~= frameY(1 : end - 1));
+		frameYDiff = ;
+		MajorIsX = 
+		
+	end
 
 	% IMU events
 		% These come in blocks of 7, for the 7 different values produced in
 		% a single sample; the following code recomposes these
+		%7 words are sent in series, these being 3 axes for accel, temperature, and 3 axes for gyro
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('imu6'), info.dataTypes))) && any(imuLogical)
-%{		
+
 		if mod(nnz(imuLogical), 7) > 0 
 			error('The number of IMU samples is not divisible by 7, so IMU samples are not interpretable')
 		end
 		output.data.imu6.timeStamp = allTs(imuLogical);
 		output.data.imu6.timeStamp = output.data.imu6.timeStamp(1 : 7 : end);
 
-		- accelX (colvector single)
-		- accelY (colvector single)
-		- accelZ (colvector single)
-		- gyroX (colvector single)
-		- gyroY (colvector single)
-		- gyroZ (colvector single)
-		- temperature (colvector single)
-
-		%IMU handling:
-		%7 words are sent in series, these being 3 axes for accel, temperature, and 3 axes for gyro
-
-		rawdata=uint16(bitshift(rawdata,-datashift))
-		datashift=12;
+		%Conversion factors
 		accelScale = 1/16384;
 		gyroScale = 1/131;
 		temperatureScale = 1/340;
 		temperatureOffset=35;
 
-		%     ax("AccelX", 0), ay("AccelY", 1), az("AccelZ", 2), temp("Temperature", 3), gx("GyroTiltX", 4), gy("GyroPanY", 5), gz("GyroRollZ", 6); 
-
 		imuDataMask = hex2dec('0FFFF000');
-		rawData  = single(bitand(allAddr(imuLogical), imuDataMask));		
+		imuDataShiftBits = 12;
+		rawData = single(bitshift(bitand(allAddr(imuLogical), imuDataMask), -imuDataShiftBits));		
 		
-		data=typecast(rawdata,'int16'); % cast to signed 16 bit shorts
-		data=double(data); % cast to double so conversion to g's and deg/s works
+%		data=typecast(rawdata,'int16'); % cast to signed 16 bit shorts
+%		data=double(data); % cast to double so conversion to g's and deg/s works
 		
 		output.data.imu6.accelX			= rawData(1 : 7 : end) * accelScale;	
 		output.data.imu6.accelY			= rawData(2 : 7 : end) * accelScale;	
@@ -363,9 +383,7 @@ elseif strfind(info.source, 'Davis')
 		output.data.imu6.gyroX			= rawData(5 : 7 : end) * gyroScale;	
 		output.data.imu6.gyroY			= rawData(6 : 7 : end) * gyroScale;	
 		output.data.imu6.gyroZ			= rawData(7 : 7 : end) * gyroScale;	
-
-	
-%}				
+		
 	end
 
 	% If you want to do chip-specific address shifts or subtractions,
