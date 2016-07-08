@@ -1,6 +1,6 @@
 function plotloadaeDACcochams1c(allTsT, allAddrT)
 %function [tsleft, laddress, tsright, raddress]=plotloadaecochams1b(allTs, allAddr)
-%function [tsl laddr tsr raddr]=plotloadaedatret64cochaerb(allTs, allAddr)
+%Author Shih-Chii 2015
 %[allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2012-06-15woodchucks.aedat');
 % plots spikes from cochleaams1b from a 64 channel binaural cochlea,
 %each channel has 2 banks of neurons, one from SOS, one from bpf output of SOS

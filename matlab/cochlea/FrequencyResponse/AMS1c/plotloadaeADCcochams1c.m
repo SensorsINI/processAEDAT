@@ -1,13 +1,9 @@
-function plotloadaeADCcochams1c(allTsT, allAddrT)
+function plotloadaeADCcochams1c(filename, allTsT, allAddrT)
 %function [tsleft, laddress, tsright, raddress]=plotloadaecochams1b(allTs, allAddr)
-%function [tsl laddr tsr raddr]=plotloadaedatret64cochaerb(allTs, allAddr)
-%[allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2012-06-15woodchucks.aedat');
-% [allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T10-52-25+0200-0WoodChuckswOnChipPreamp.aedat');
-%[allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T11-11-59+0200-woodchuckpreamp.aedat');
-%[allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T11-51-17+0200woodchuckstake3.aedat');
-[allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T14-31-53+0200-teaparty2.aedat');
+%Author Shih-Chii Liu 2015
+[allAddrT, allTsT]=loadaerdat(filename);
+%decodes both spikes and ADC samples
 % [allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T11-44-15+0200-silence.aedat');
-% [allAddrT, allTsT]=loadaerdat('CochleaAMS1c-2013-04-02T11-21-21+0200-claps.aedat');
 % plots spikes from cochleaams1b from a 64 channel binaural cochlea,
 %each channel has 2 banks of neurons, one from SOS, one from bpf output of SOS
 %Lower 8 bits for TX and higher 8 bits for TY, only 2 bits of5 8 used for TY
@@ -15,12 +11,6 @@ function plotloadaeADCcochams1c(allTsT, allAddrT)
 %TX2 to TX7 specifies channel number of cochlea, Channel 0 is hi freq, Channel 63 is low frequency
 %TY bits specify one of 4 neurons with range of VTs
 %timestamps from allTs are in microseconds
-%    pause(dur*1e-6);
-%splits data into left and right cochleas
-%    addr=ae(1,:);
-%
-% Compute cross-correlogram
- %      aeCochleaRetCorr(tl,laddr,tr,raddr)
 
 
 cochleaaddrmask=hex2dec('2000'); %Mask tells if the address is from ADC or Cochlea spikes
@@ -57,7 +47,7 @@ renorm_valueADC1=double((2500/1024)*renorm_valueADC1);
 
 sampperiod=median(diff(allTsADC1));
 %soundsc(renorm_valueADC0, 1/sampperiod);
-wavwrite((renorm_valueADC0-mean(renorm_valueADC0))/1000, 1/sampperiod, 16,'Sample.wav');
+audiowrite((renorm_valueADC0-mean(renorm_valueADC0))/1000, 1/sampperiod, 16,'Sample.wav');
 
 %%To find Cochlea AER output
 sosbpfid=double(bitand(allAddr,1)); %first bit, TX0
