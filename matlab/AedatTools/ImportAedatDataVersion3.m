@@ -313,17 +313,30 @@ while true % implement the exit conditions inside the loop - allows to distingui
 							%disp(['Polarity array resized to ' num2str(currentLength)])
 						end
 					end
+					% Matricise computation on a packet?
+					dataMatrix = reshape(data, [eventSize, eventNumber]);
+					dataTempTimeStamp = dataMatrix(5:8, :);
+					polarityTimeStamp(polarityNumEvents + (1 : eventNumber)) = packetTimestampOffset + uint64(typecast(dataTempTimeStamp(:), 'int32'));
+					dataTempAddress = dataMatrix(1:4, :);
+					dataTempAddress = typecast(dataTempAddress(:), 'uint32');
+					polarityValid(polarityNumEvents + (1 : eventNumber)) = mod(dataTempAddress, 2) == 1; % Pick off the first bit
+					polarityPolarity(polarityNumEvents + (1 : eventNumber)) = mod(floor(dataTempAddress / 2), 2) == 1; % Pick out the second bit
+					polarityY(polarityNumEvents + (1 : eventNumber)) = uint16(bitshift(bitand(dataTempAddress, polarityYMask), -polarityYShiftBits));
+					polarityX(polarityNumEvents + (1 : eventNumber)) = uint16(bitshift(bitand(dataTempAddress, polarityXMask), -polarityXShiftBits));
+					polarityNumEvents = polarityNumEvents + eventNumber;
+					
+%{					
 					% Iterate through the events, converting the data and
 					% populating the arrays
 					for dataPointer = 1 : eventSize : numBytesInPacket % This points to the first byte for each event
 						polarityNumEvents = polarityNumEvents + 1;
 						polarityValid(polarityNumEvents) = mod(data(dataPointer), 2) == 1; % Pick off the first bit
 						polarityTimeStamp(polarityNumEvents) = packetTimestampOffset + uint64(typecast(data(dataPointer + 4 : dataPointer + 7), 'int32'));
-						polarityPolarity(polarityNumEvents) = mod(floor(data(dataPointer) / 2), 2) == 1; % Pick out the second bit
 						polarityData = typecast(data(dataPointer : dataPointer + 3), 'uint32');
 						polarityY(polarityNumEvents) = uint16(bitshift(bitand(polarityData, polarityYMask), -polarityYShiftBits));
 						polarityX(polarityNumEvents) = uint16(bitshift(bitand(polarityData, polarityXMask), -polarityXShiftBits));
 					end
+%}
 				end
 			elseif eventType == 2
 				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))
@@ -708,5 +721,13 @@ if point2DNumEvents > 0
 	if output.data.point2D.timeStamp(end) > output.info.lastTimeStamp
 		output.info.lastTimeStamp = output.data.point2D.timeStamp(end);
 	end	
+end
+
+% Calculate data volume by event type - this excludes final packet for
+% simplicity
+packetSizes = [output.info.packetPointers(2 : end) - output.info.packetPointers(1 : end - 1) - 28; 0];
+output.info.dataVolumeByEventType = {};
+for eventType = 0 : max(output.info.packetTypes) % counting down means the array is only assigned once
+	output.info.dataVolumeByEventType(eventType + 1, 1 : 2) = [{ImportAedatEventTypes(eventType)} sum(packetSizes(output.info.packetTypes == eventType))];
 end
 

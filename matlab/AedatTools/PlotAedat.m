@@ -29,5 +29,11 @@ end
 if isfield(input.data, 'ear')
 	PlotEar(input, numPlots, distributeBy);
 end
+if isfield(input.data, 'point1D')
+	PlotPoint1D(input, numPlots, distributeBy);
+end
+if isfield(input.data, 'point2D')
+	PlotPoint2D(input, numPlots, distributeBy);
+end
 
 

@@ -10,7 +10,7 @@ where the x axis is time and the y axis is special event type.
 
 figure
 hold all
-times = single(input.data.special.timeStamp)' / 1000000;
+times = double(input.data.special.timeStamp)' / 1000000;
 addresses = single(input.data.special.address)';
 plot([times; times], [addresses - 0.4; addresses + 0.4], 'b')
 xlabel('Time (s)')
