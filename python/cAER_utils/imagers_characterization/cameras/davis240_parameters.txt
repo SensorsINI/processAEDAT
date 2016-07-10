@@ -18,7 +18,7 @@ False
 # 7 # Internal ADC range internal adcs reference DAVIS346B between F2 and E1
 1.29
 # 8 # External ADC range external adcs reference is the same for all chips, http://www.ti.com/lit/ds/symlink/ths1030.pdf (External ADC datasheet)
-0.648
+1.501
 # 9 # ADC levels
 1024
 # 10 # X divisions (no spaces, comma separated) [[0,346]]
