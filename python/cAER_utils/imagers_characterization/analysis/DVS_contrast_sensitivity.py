@@ -168,14 +168,14 @@ class DVS_contrast_sensitivity:
                                 #    matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1        
                                 if(pol[this_ev] == 0):
                                     matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
-                #raise Exception                    
+                raise Exception                    
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
                 matrix_count_on = matrix_count_on - (num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0) # because noise events are recorded for num_oscillations-2.0 cycles, the estimated noise events is during the rising half of a cycle
                 matrix_count_off = matrix_count_off - (num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0)
-                SNR_on_array = 20.0*np.log10(matrix_count_on/(num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0))
-                SNR_off_array = 20.0*np.log10(matrix_count_off/(num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0))
+                SNR_on_array = 20.0*np.log10(matrix_count_on/((num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0)))
+                SNR_off_array = 20.0*np.log10(matrix_count_off/((num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0)))
                 contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(matrix_count_on/(num_oscillations-1.0))) - 1.0 # sensitivity is calculated based on theoretical model, ignoring refractory period, same for all the sensitivity calculation below
                 contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off/(num_oscillations-1.0)))
                 
@@ -266,7 +266,7 @@ class DVS_contrast_sensitivity:
                         print "Off noise median events per pixel per cycle: " + str(off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
                         print "On noise median events per pixel per cycle: " + str(on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
                         print "On SNR median" + str(SNR_on_median[this_file,this_div_x,this_div_y])
-                        print "Off SNR median" + str(SNR_on_median[this_file,this_div_x,this_div_y])
+                        print "Off SNR median" + str(SNR_off_median[this_file,this_div_x,this_div_y])
                     print "Off average events per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     print "On average events per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     print "Off noise average events per pixel per cycle: " + str(off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
