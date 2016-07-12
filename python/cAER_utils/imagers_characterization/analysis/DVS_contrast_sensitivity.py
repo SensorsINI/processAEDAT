@@ -81,8 +81,8 @@ class DVS_contrast_sensitivity:
         contrast_sensitivity_on_median_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         err_off_percent_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         err_on_percent_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
-        SNR_on_median = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
-        SNR_off_median = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        SNR_on = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        SNR_off = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
         for this_file in range(len(files_in_dir)):            
             print ""
@@ -136,8 +136,6 @@ class DVS_contrast_sensitivity:
 
             if(single_pixels_analysis):
                 print "single_pixels_analysis.."
-                SNR_off_array = np.zeros([camera_dim[0], camera_dim[1]])
-                SNR_on_array = np.zeros([camera_dim[0], camera_dim[1]])
                 matrix_count_off = np.zeros([camera_dim[0], camera_dim[1]])
                 matrix_count_on = np.zeros([camera_dim[0], camera_dim[1]])
                 matrix_count_off_noise = np.zeros([camera_dim[0], camera_dim[1]])
@@ -167,15 +165,12 @@ class DVS_contrast_sensitivity:
                                 #if(pol[this_ev] == 1):
                                 #    matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1        
                                 if(pol[this_ev] == 0):
-                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1
-                raise Exception                    
+                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1                   
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
                 matrix_count_on = matrix_count_on - (num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0) # because noise events are recorded for num_oscillations-2.0 cycles, the estimated noise events is during the rising half of a cycle
                 matrix_count_off = matrix_count_off - (num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0)
-                SNR_on_array = 20.0*np.log10(matrix_count_on/((num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0)))
-                SNR_off_array = 20.0*np.log10(matrix_count_off/((num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0)))
                 contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(matrix_count_on/(num_oscillations-1.0))) - 1.0 # sensitivity is calculated based on theoretical model, ignoring refractory period, same for all the sensitivity calculation below
                 contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off/(num_oscillations-1.0)))
                 
@@ -247,9 +242,9 @@ class DVS_contrast_sensitivity:
                         off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
                         
                         # SNR
-                        SNR_on_median[this_file,this_div_x,this_div_y] = np.median( SNR_on_array[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
-                        SNR_off_median[this_file,this_div_x,this_div_y] = np.median( SNR_off_array[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
-        
+                        SNR_on[this_file,this_div_x,this_div_y] = 20.0*np.log10(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]/on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
+                        SNR_off[this_file,this_div_x,this_div_y] = 20.0*np.log10(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y]/off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
+                        
                     print "Area: X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
                     print "This contrast: " + str(this_contrast)
                     print "This oscillations: " + str(num_oscillations)
@@ -265,8 +260,8 @@ class DVS_contrast_sensitivity:
                         print "On median events per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]) 
                         print "Off noise median events per pixel per cycle: " + str(off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
                         print "On noise median events per pixel per cycle: " + str(on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
-                        print "On SNR median" + str(SNR_on_median[this_file,this_div_x,this_div_y])
-                        print "Off SNR median" + str(SNR_off_median[this_file,this_div_x,this_div_y])
+                        print "On SNR median: " + str(SNR_on[this_file,this_div_x,this_div_y])
+                        print "Off SNR median: " + str(SNR_off[this_file,this_div_x,this_div_y])
                     print "Off average events per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     print "On average events per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     print "Off noise average events per pixel per cycle: " + str(off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
@@ -624,7 +619,7 @@ class DVS_contrast_sensitivity:
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div_y in range(len(frame_y_divisions)):
-                   plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], SNR_on_median[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON SNR - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+                   plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], SNR_on[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON SNR - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel("ON Contrast sensitivity [%]")
@@ -639,7 +634,7 @@ class DVS_contrast_sensitivity:
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
                 for this_div_y in range(len(frame_y_divisions)):
-                   plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], SNR_off_median[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF SNR - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+                   plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], SNR_off[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF SNR - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel("OFF Contrast sensitivity [%]")
