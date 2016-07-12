@@ -27,7 +27,7 @@ import load_files
 import operator
 
 class DVS_contrast_sensitivity:
-    def cs_analysis(self, sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 10.0, single_pixels_analysis=True, rmse_reconstruction=False):
+    def cs_analysis(self, sensor, cs_dir, figure_dir, frame_y_divisions, frame_x_divisions, sine_freq = 1.0, num_oscillations = 10.0, single_pixels_analysis=True, rmse_reconstruction=False, camera_dim= [100,100]):
         '''
             Contrast sensitivity analisys. Input signal is a sine wave from the integrating sphere
         '''
@@ -136,14 +136,14 @@ class DVS_contrast_sensitivity:
 
             if(single_pixels_analysis):
                 print "single_pixels_analysis.."
-                SNR_off_array = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                SNR_on_array = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                matrix_count_off = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                matrix_count_on = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                matrix_count_off_noise = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                matrix_count_on_noise = np.zeros([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                contrast_matrix_off = np.ones([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])
-                contrast_matrix_on = np.ones([frame_x_divisions[-1][1]+1-frame_x_divisions[0][0], frame_y_divisions[-1][1]+1-frame_y_divisions[0][0]])                                     
+                SNR_off_array = np.zeros([camera_dim[0], camera_dim[1]])
+                SNR_on_array = np.zeros([camera_dim[0], camera_dim[1]])
+                matrix_count_off = np.zeros([camera_dim[0], camera_dim[1]])
+                matrix_count_on = np.zeros([camera_dim[0], camera_dim[1]])
+                matrix_count_off_noise = np.zeros([camera_dim[0], camera_dim[1]])
+                matrix_count_on_noise = np.zeros([camera_dim[0], camera_dim[1]])
+                contrast_matrix_off = np.ones([camera_dim[0], camera_dim[1]])
+                contrast_matrix_on = np.ones([camera_dim[0], camera_dim[1]])                                     
                 this_sync_ts = 0
                 for this_ev in range(len(ts)):
                     if (ts[this_ev] >= (sync_ts[-1] + 4.0*sine_phase) and ts[this_ev] < (sync_ts[-1] + 4.0*sine_phase*(num_oscillations-1.0))): # noise events
