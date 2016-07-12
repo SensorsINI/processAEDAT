@@ -11,8 +11,8 @@ cameras/cdavis640rgbw_PTC1.xml
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
 127.0.0.1
-# 5 # Camera dimensions [X,Y] 
-[640,480]
+# 5 # Camera dimensions [X,Y] APS: [640,480] DVS: [320,240]
+[320,240]
 # 6 # Camera selected dimensions [X,Y]
 [640,480]
 # 7 # Internal ADC range internal adcs reference CDAVIS between E2 (4: 0.36) and D1 (44: 2.189)
@@ -21,10 +21,10 @@ False
 0.648
 # 9 # ADC levels
 1024
-# 10 # X divisions (no spaces, comma separated)
-[[120,520]]
-# 11 #  Y divisions (no spaces, comma separated)
-[[120,360]]
+# 10 # X divisions (no spaces, comma separated) APS: [[120,520]] DVS: [[60,260]]
+[[60,260]]
+# 11 #  Y divisions (no spaces, comma separated) APS: [[120,360]] DVS: [[60,180]]
+[[60,180]]
 
 # #########################################################
 # Contrast sensitivity parameters
