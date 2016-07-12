@@ -236,10 +236,10 @@ class DVS_contrast_sensitivity:
                         off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
                         
                         # noise events statistics
-                        on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
-                        off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
-                        on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
-                        off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
+                        on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
+                        off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
+                        on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
+                        off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
                         
                         # SNR
                         SNR_on[this_file,this_div_x,this_div_y] = 20.0*np.log10(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]/on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
@@ -413,6 +413,65 @@ class DVS_contrast_sensitivity:
                     if(single_pixels_analysis):
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
+                        
+                    # Save variables
+                    var_dir = cs_dir+'saved_variables/'
+                    if(not os.path.exists(var_dir)):
+                        os.makedirs(var_dir)
+                    np.savez(var_dir+"variables_"+sensor+".npz",
+                             frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
+                             num_oscillations=num_oscillations,rec_time=rec_time,
+                             contrast_level=contrast_level,base_level=base_level,on_level=on_level,
+                             diff_level=diff_level,off_level=off_level,
+                             contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
+                             contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
+                             contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
+                             contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
+                             err_off_percent_array=err_off_percent_array,
+                             err_on_percent_array=err_on_percent_array,
+                             matrix_count_off=matrix_count_off,
+                             matrix_count_on=matrix_count_on,
+                             matrix_count_off_noise=matrix_count_off_noise,
+                             matrix_count_on_noise=matrix_count_on_noise,
+                             contrast_matrix_off=contrast_matrix_off,
+                             contrast_matrix_on=contrast_matrix_on,                             
+                             off_event_count_average_per_pixel=off_event_count_average_per_pixel,
+                             on_event_count_average_per_pixel=on_event_count_average_per_pixel,
+                             off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                             on_event_count_median_per_pixel=on_event_count_median_per_pixel,
+                             off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
+                             on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
+                             off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
+                             on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
+                             SNR_on=SNR_on,SNR_off=SNR_off)
+                             if(sensor == 'DAVIS208'):
+                                 np.savez(var_dir+"variables_"+sensor+".npz",
+                                          frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
+                                          num_oscillations=num_oscillations,rec_time=rec_time,
+                                          contrast_level=contrast_level,base_level=base_level,on_level=on_level,
+                                          diff_level=diff_level,off_level=off_level,
+                                          contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
+                                          contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
+                                          contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
+                                          contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
+                                          err_off_percent_array=err_off_percent_array,
+                                          err_on_percent_array=err_on_percent_array,
+                                          matrix_count_off=matrix_count_off,
+                                          matrix_count_on=matrix_count_on,
+                                          matrix_count_off_noise=matrix_count_off_noise,
+                                          matrix_count_on_noise=matrix_count_on_noise,
+                                          contrast_matrix_off=contrast_matrix_off,
+                                          contrast_matrix_on=contrast_matrix_on,                             
+                                          off_event_count_average_per_pixel=off_event_count_average_per_pixel,
+                                          on_event_count_average_per_pixel=on_event_count_average_per_pixel,
+                                          off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                                          on_event_count_median_per_pixel=on_event_count_median_per_pixel,
+                                          off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
+                                          on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
+                                          off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
+                                          on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
+                                          SNR_on=SNR_on,SNR_off=SNR_off,
+                                          refss_level=refss_level)
             # FPN plots
             if(single_pixels_analysis):
                 # Plot spike counts
