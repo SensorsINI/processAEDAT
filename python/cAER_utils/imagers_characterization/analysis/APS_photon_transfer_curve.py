@@ -31,7 +31,7 @@ class APS_photon_transfer_curve:
             Photon transfer curve and sensitivity plot
          
         '''    
-        figure_dir = ptc_dir+'/figures/'
+        figure_dir = ptc_dir+'figures/'
         if(not os.path.exists(figure_dir)):
             os.makedirs(figure_dir)
         #pixel_area = (18e-6*18e-6)
@@ -94,15 +94,18 @@ class APS_photon_transfer_curve:
                     #u_y = (1.0/(n_frames*ydim*xdim)) * np.sum(np.sum(frame_areas,0))  # 
                     ydim_f , xdim_f = np.shape(frame_areas[0])
                     temporal_mean = np.zeros([ydim_f, xdim_f])
+                    spatio_mean = np.zeros([n_frames])
                     temporal_variance = np.zeros([ydim_f, xdim_f])
                     temporal_variance_EMVA = 0
                     factor = (1.0/(2.0*float(xdim_f*ydim_f)))
+                    for this_frame in range(n_frames):
+                        spatio_mean[this_frame]=np.mean(np.mean(frame_areas[this_frame,:,:],0),0)
                     #raise Exception
                     for tx in range(xdim_f):
                         for ty in range(ydim_f):
                             temporal_mean[ty,tx] = np.mean(frame_areas[:,ty,tx])
                             #temporal_variance[ty,tx] =  np.sum((frame_areas[:,ty,tx]-temporal_mean[ty,tx])**2)/n_frames
-                            temporal_variance_EMVA = temporal_variance_EMVA + (frame_areas[20,ty,tx]- frame_areas[21,ty,tx])**2.0
+                            temporal_variance_EMVA = temporal_variance_EMVA + ((frame_areas[20,ty,tx]-spatio_mean[20])- (frame_areas[21,ty,tx]-spatio_mean[21]))**2.0
                     temporal_variance_EMVA = factor*temporal_variance_EMVA
                     #sigma_y = np.mean(temporal_variance)
                     sigma_y = temporal_variance_EMVA
@@ -562,6 +565,7 @@ class APS_photon_transfer_curve:
             plt.close("all")
             
         #open report file
+        print("Generating report...")
         report_file = figure_dir+"Report_results_APS"+".txt"
         out_file = open(report_file,"w")  
         for this_area_x in range(x_div):
@@ -609,10 +613,18 @@ class APS_photon_transfer_curve:
                     out_file.write("FPN in y row/column only (DN): " + str(format(FPN_in_y_all[this_file, this_area_y, this_area_x], '.4f')) + " DN\n")
             out_file.write("-----------------------------------------------------------------------------------------\n")
         out_file.close()
+        print("Saving results...")
+        var_dir = ptc_dir+'saved_variables/'
+        if(not os.path.exists(var_dir)):
+            os.makedirs(var_dir)
+            print("Results saved in /saved_variables/")
+        np.savez(var_dir+"variables_"+sensor+".npz",exposures=exposures,spatiotemporal_mean=u_y_tot,temporal_var_DN2=sigma_tot,FPN_DN=FPN_all,FPN_in_X_DN=FPN_in_x_all,FPN_in_y_DN=FPN_in_y_all,sensor=sensor,frame_x_divisions=frame_x_divisions,frame_y_divisions=frame_y_divisions)
+
         if(ptc_dir.lower().find('dark') < 0):
             return i_pd_vs, Gain_uVe_lin
         else:
             return i_pd_vs
+        
 
 #        winsound.Beep(500,2000)
 
