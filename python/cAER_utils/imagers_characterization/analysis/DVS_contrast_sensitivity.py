@@ -301,7 +301,7 @@ class DVS_contrast_sensitivity:
                         else:
                             err_on_percent = np.nan
                         print "Off confidence interval of 95% within " + str('{0:.3f}'.format(err_off_percent))+ "% of mean"
-                        print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean"
+                        print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean\n"
                         err_off_percent_array [this_file,this_div_x,this_div_y] = err_off_percent
                         err_on_percent_array [this_file,this_div_x,this_div_y] = err_on_percent
                     
@@ -408,8 +408,8 @@ class DVS_contrast_sensitivity:
 #                                print(stringa)
 #                                plt.close("all")
                     
-                    print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
-                    print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
+#                    print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
+#                    print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
                     if(single_pixels_analysis):
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
