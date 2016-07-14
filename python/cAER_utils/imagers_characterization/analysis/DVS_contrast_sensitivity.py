@@ -270,23 +270,6 @@ class DVS_contrast_sensitivity:
                     
                     # Plot histograms of Off and On counts
                     if(single_pixels_analysis):
-                        fig= plt.figure()
-                        ax = fig.add_subplot(121)
-                        ax.set_title('ON events/pix/cycle histogram')
-                        plt.xlabel ("ON events per pixel per cycle")
-                        plt.ylabel ("Number of pixels")
-                        line_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_on[line_on < 20], 20)
-                        ax = fig.add_subplot(122)
-                        ax.set_title('OFF events/pix/cycle histogram')
-                        plt.xlabel ("OFF events per pixel per cycle")
-                        plt.ylabel ("Number of pixels")
-                        line_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_off[line_off < 20], 20)
-                        fig.tight_layout()     
-                        plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
-                        plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
-                        plt.close("all")
                         
                         # Confidence interval = error metric                    
                         err_off = self.confIntMean(np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))

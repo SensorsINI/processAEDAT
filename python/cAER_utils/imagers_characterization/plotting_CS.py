@@ -17,10 +17,11 @@ chip_folder = ["Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_
                "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_42_35_1nd/",
                "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_58_17_2nd/",
                "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-17_05_43_3rd/"]
+base_level_real= [1000,100,10,1]
 sensor = 'DAVIS208'
 
 for index_chip in range(len(chip_folder)):
-    CS_data_file = chip_folder[index_chip] + '/saved_variables/' + 'variables_'+sensor+'.npz'
+    CS_data_file = chip_folder[index_chip] + 'saved_variables/' + 'variables_'+sensor+'.npz'
     figure_dir = chip_folder[index_chip] + 'figures/'
     if(not os.path.exists(figure_dir)):
         os.makedirs(figure_dir)       
@@ -78,7 +79,8 @@ for index_chip in range(len(chip_folder)):
         diff_level = CS_data[CS_data.files[29]]
         on_event_count_median_per_pixel = CS_data[CS_data.files[30]]
         matrix_count_on_noise = CS_data[CS_data.files[31]]
-    
+        
+    base_level=base_level_real
     ############
     # plotting #
     ############
@@ -96,20 +98,20 @@ for index_chip in range(len(chip_folder)):
                 plt.xlabel ("ON events per pixel per cycle")
                 plt.ylabel ("Number of pixels")
                 line_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                im = plt.hist(line_on[line_on <30], 30, color=color_tmp)
+                im = plt.hist(line_on[line_on <30], 30, color=colors[color_tmp])
                 color_tmp = color_tmp+1
                 line_on_noise = np.reshape(matrix_count_on_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                im = plt.hist(line_on_noise[line_on_noise < 30], 30, color=color_tmp)
+                im = plt.hist(line_on_noise[line_on_noise < 30], 30, color=colors[color_tmp])
                 ax = fig.add_subplot(122)
                 color_tmp = 0
                 ax.set_title('OFF events/pix/cycle histogram')
                 plt.xlabel ("OFF events per pixel per cycle")
                 plt.ylabel ("Number of pixels")
                 line_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                im = plt.hist(line_off[line_off < 30], 30, color=color_tmp)
+                im = plt.hist(line_off[line_off < 30], 30, color=colors[color_tmp])
                 color_tmp = color_tmp+1
                 line_off_noise = np.reshape(matrix_count_off_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                im = plt.hist(line_off_noise[line_off_noise < 30], 30, color=color_tmp)
+                im = plt.hist(line_off_noise[line_off_noise < 30], 30, color=colors[color_tmp])
                 fig.tight_layout()     
                 plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
                 plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
@@ -174,52 +176,6 @@ for index_chip in range(len(chip_folder)):
         plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
         plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
         plt.close("all")      
-    
-    fig=plt.figure()
-    ax = fig.add_subplot(111)
-    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
-    color_tmp = 0
-    for this_div_x in range(len(frame_x_divisions)) :
-        for this_div_y in range(len(frame_y_divisions)):
-    #               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-    #               color_tmp = color_tmp+1               
-    #               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-    #               color_tmp = color_tmp+1
-           plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-           color_tmp = color_tmp+1
-           plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-           color_tmp = color_tmp+1
-    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    ax.set_title('Median contrast sensitivity vs base level')
-    plt.xlabel("Base level [Lux]")
-    plt.ylabel("Contrast sensitivity")
-    #        plt.ylim((0,100))
-    plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-    plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-    plt.close("all")
-    
-    fig=plt.figure()# Dynamic range from this
-    ax = fig.add_subplot(111)
-    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
-    color_tmp = 0
-    for this_div_x in range(len(frame_x_divisions)) :
-        for this_div_y in range(len(frame_y_divisions)):
-        #               plt.plot(base_level[:,this_div_x, this_div_y], off_event_count_average_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-        #               color_tmp = color_tmp+1               
-        #               plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_average_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-        #               color_tmp = color_tmp+1
-           plt.plot(base_level[:,this_div_x, this_div_y], off_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-           color_tmp = color_tmp+1
-           plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-           color_tmp = color_tmp+1
-    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    ax.set_title('ON and OFF median event counts vs base level')
-    plt.xlabel("Base level [Lux]")
-    plt.ylabel("ON and OFF event counts")
-    #        plt.ylim((0,100))
-    plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-    plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-    plt.close("all")
     
     fig=plt.figure()
     ax = fig.add_subplot(111)
@@ -309,3 +265,49 @@ for index_chip in range(len(chip_folder)):
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         plt.close("all")
+
+fig=plt.figure()
+ax = fig.add_subplot(111)
+colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
+color_tmp = 0
+for this_div_x in range(len(frame_x_divisions)) :
+    for this_div_y in range(len(frame_y_divisions)):
+#               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               color_tmp = color_tmp+1               
+#               plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#               color_tmp = color_tmp+1
+       plt.plot(base_level, 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       color_tmp = color_tmp+1
+       plt.plot(base_level, 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       color_tmp = color_tmp+1
+lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+ax.set_title('Median contrast sensitivity vs base level')
+plt.xlabel("Base level [Lux]")
+plt.ylabel("Contrast sensitivity")
+#        plt.ylim((0,100))
+plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+plt.close("all")
+
+fig=plt.figure()# Dynamic range from this
+ax = fig.add_subplot(111)
+colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
+color_tmp = 0
+for this_div_x in range(len(frame_x_divisions)) :
+    for this_div_y in range(len(frame_y_divisions)):
+    #               plt.plot(base_level[:,this_div_x, this_div_y], off_event_count_average_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    #               color_tmp = color_tmp+1               
+    #               plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_average_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    #               color_tmp = color_tmp+1
+       plt.plot(base_level, off_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       color_tmp = color_tmp+1
+       plt.plot(base_level, on_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       color_tmp = color_tmp+1
+lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+ax.set_title('ON and OFF median event counts vs base level')
+plt.xlabel("Base level [Lux]")
+plt.ylabel("ON and OFF event counts")
+#        plt.ylim((0,100))
+plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+plt.close("all")
