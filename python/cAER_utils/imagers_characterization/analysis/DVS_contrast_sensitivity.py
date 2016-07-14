@@ -254,18 +254,18 @@ class DVS_contrast_sensitivity:
                     print "This diff level: " + str(this_diff_level)
                     print "This off level: " + str(this_off_level)  
                     if(sensor == 'DAVIS208'):
-                        print "This refss level: " + str(this_refss_level) 
+                        print "This refss level: " + str(this_refss_level) +'\n'
                     if(single_pixels_analysis):
                         print "Off median events per pixel per cycle: " + str(off_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
-                        print "On median events per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]) 
+                        print "On median events per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]) +'\n'
                         print "Off noise median events per pixel per cycle: " + str(off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
-                        print "On noise median events per pixel per cycle: " + str(on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
+                        print "On noise median events per pixel per cycle: " + str(on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])+'\n'
                         print "On SNR median: " + str(SNR_on[this_file,this_div_x,this_div_y])
-                        print "Off SNR median: " + str(SNR_off[this_file,this_div_x,this_div_y])
-                    print "Off average events per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
-                    print "On average events per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
-                    print "Off noise average events per pixel per cycle: " + str(off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
-                    print "On noise average events per pixel per cycle: " + str(on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+                        print "Off SNR median: " + str(SNR_off[this_file,this_div_x,this_div_y])+'\n'
+#                    print "Off average events per pixel per cycle: " + str(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+#                    print "On average events per pixel per cycle: " + str(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+#                    print "Off noise average events per pixel per cycle: " + str(off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
+#                    print "On noise average events per pixel per cycle: " + str(on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y])
                     
                     # Plot histograms of Off and On counts
                     if(single_pixels_analysis):
