@@ -76,77 +76,89 @@ if(sensor == 'DAVIS208'): # Check for your sensor the order!
     on_event_count_median_per_pixel = CS_data[CS_data.files[30]]
     matrix_count_on_noise = CS_data[CS_data.files[31]]
 
-####################
-# plotting options #
-####################
-plot_signal_exposure = True
-plot_PTC_linear_fit = True
-plot_FPN = True
-
 ############
 # plotting #
 ############
+num_files,x,y = np.shape(matrix_count_on) 
 
-## Plot spike counts
-#fig= plt.figure()
-#ax = fig.add_subplot(121)
-#matrix_count_on = np.fliplr(np.transpose(matrix_count_on))##depend on camera orientation!!
-#matrix_count_off = np.fliplr(np.transpose(matrix_count_off))
-#matrix_count_off_div = matrix_count_off/(num_oscillations-1.0)
-#matrix_count_on_div = matrix_count_on/(num_oscillations-1.0)
-#matrix_count_on_div[matrix_count_on_div>20] = 20 # CLip to see properly!
-#matrix_count_off_div[matrix_count_off_div>20] = 20
-#ax.set_title('Count ON/pix/cycle')
-#plt.xlabel ("X")
-#plt.ylabel ("Y")
-#im = plt.imshow(matrix_count_on_div, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
-#ax = fig.add_subplot(122)
-#ax.set_title('Count OFF/pix/cycle')
-#plt.xlabel ("X")
-#plt.ylabel ("Y")
-#im = plt.imshow(matrix_count_off_div, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
-#plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])                        
-#fig.tight_layout()                    
-#fig.subplots_adjust(right=0.8)
-#cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-#fig.colorbar(im, cax=cbar_ax)     
-#plt.draw()
-#plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".png",  format='png', dpi=1000)
-#plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
-#plt.close("all")
-#
-## Deltas = Contrast sensitivities
-#contrast_matrix_on = np.flipud(np.fliplr(np.transpose(contrast_matrix_on)))
-#contrast_matrix_off = np.flipud(np.fliplr(np.transpose(contrast_matrix_off)))
-#fig = plt.figure()
-#plt.subplot(3,2,1)
-#plt.title("ON thresholds")
-#plt.imshow(contrast_matrix_on)
-#plt.colorbar()
-#plt.subplot(3,2,2)
-#plt.title("OFF thresholds")          
-#plt.imshow(contrast_matrix_off)
-#plt.colorbar()
-#plt.subplot(3,2,3)
-#plt.title("ON integrated on X axis")
-#plt.plot(np.sum(contrast_matrix_on,axis=0)) 
-#plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
-#plt.subplot(3,2,4)
-#plt.title("OFF integrated on X axis")
-#plt.plot(np.sum(contrast_matrix_off,axis=0))
-#plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])   
-#plt.subplot(3,2,5)
-#plt.title("ON integrated on Y axis")
-#plt.plot(np.sum(contrast_matrix_on,axis=1))  
-#plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
-#plt.subplot(3,2,6)
-#plt.title("OFF integrated on Y axis")
-#plt.plot(np.sum(contrast_matrix_off,axis=1))
-#plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])  
-#fig.tight_layout()  
-#plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
-#plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
-#plt.close("all")      
+for this_file in range(num_files): 
+    fig= plt.figure()
+    ax = fig.add_subplot(121)
+    ax.set_title('ON events/pix/cycle histogram')
+    plt.xlabel ("ON events per pixel per cycle")
+    plt.ylabel ("Number of pixels")
+    line_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
+    im = plt.hist(line_on[line_on < 20], 20)
+    ax = fig.add_subplot(122)
+    ax.set_title('OFF events/pix/cycle histogram')
+    plt.xlabel ("OFF events per pixel per cycle")
+    plt.ylabel ("Number of pixels")
+    line_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
+    im = plt.hist(line_off[line_off < 20], 20)
+    fig.tight_layout()     
+    plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
+    plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
+    plt.close("all")
+
+    fig= plt.figure()
+    ax = fig.add_subplot(121)
+    matrix_count_on[this_file,:,:] = np.fliplr(np.transpose(matrix_count_on[this_file,:,:]))##depend on camera orientation!!
+    matrix_count_off[this_file,:,:] = np.fliplr(np.transpose(matrix_count_off[this_file,:,:]))
+    matrix_count_off_div = matrix_count_off[this_file,:,:]/(num_oscillations-1.0)
+    matrix_count_on_div = matrix_count_on[this_file,:,:]/(num_oscillations-1.0)
+    matrix_count_on_div[matrix_count_on_div>20] = 20 # CLip to see properly!
+    matrix_count_off_div[matrix_count_off_div>20] = 20
+    ax.set_title('Count ON/pix/cycle')
+    plt.xlabel ("X")
+    plt.ylabel ("Y")
+    im = plt.imshow(matrix_count_on_div, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
+    ax = fig.add_subplot(122)
+    ax.set_title('Count OFF/pix/cycle')
+    plt.xlabel ("X")
+    plt.ylabel ("Y")
+    im = plt.imshow(matrix_count_off_div, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
+    plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])                        
+    fig.tight_layout()                    
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(im, cax=cbar_ax)     
+    plt.draw()
+    plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".png",  format='png', dpi=1000)
+    plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
+    plt.close("all")
+    
+    # Deltas = Contrast sensitivities
+    contrast_matrix_on[this_file,:,:] = np.flipud(np.fliplr(np.transpose(contrast_matrix_on[this_file,:,:])))
+    contrast_matrix_off[this_file,:,:] = np.flipud(np.fliplr(np.transpose(contrast_matrix_off[this_file,:,:])))
+    fig = plt.figure()
+    plt.subplot(3,2,1)
+    plt.title("ON thresholds")
+    plt.imshow(contrast_matrix_on[this_file,:,:])
+    plt.colorbar()
+    plt.subplot(3,2,2)
+    plt.title("OFF thresholds")          
+    plt.imshow(contrast_matrix_off[this_file,:,:])
+    plt.colorbar()
+    plt.subplot(3,2,3)
+    plt.title("ON integrated on X axis")
+    plt.plot(np.sum(contrast_matrix_on[this_file,:,:],axis=0)) 
+    plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
+    plt.subplot(3,2,4)
+    plt.title("OFF integrated on X axis")
+    plt.plot(np.sum(contrast_matrix_off[this_file,:,:],axis=0))
+    plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])   
+    plt.subplot(3,2,5)
+    plt.title("ON integrated on Y axis")
+    plt.plot(np.sum(contrast_matrix_on[this_file,:,:],axis=1))  
+    plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
+    plt.subplot(3,2,6)
+    plt.title("OFF integrated on Y axis")
+    plt.plot(np.sum(contrast_matrix_off[this_file,:,:],axis=1))
+    plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])  
+    fig.tight_layout()  
+    plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
+    plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
+    plt.close("all")      
 
 fig=plt.figure()
 ax = fig.add_subplot(111)
@@ -181,9 +193,9 @@ for this_div_x in range(len(frame_x_divisions)) :
     #               color_tmp = color_tmp+1               
     #               plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_average_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
     #               color_tmp = color_tmp+1
-       plt.plot(base_level[:,this_div_x, this_div_y], off_event_count_median_per_pixel[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       plt.plot(base_level[:,this_div_x, this_div_y], off_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
        color_tmp = color_tmp+1
-       plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_median_per_pixel[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_median_per_pixel[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
        color_tmp = color_tmp+1
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set_title('ON and OFF median event counts vs base level')
@@ -204,9 +216,9 @@ for this_div_x in range(len(frame_x_divisions)) :
     #               color_tmp = color_tmp+1               
     #               plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
     #               color_tmp = color_tmp+1
-       plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
        color_tmp = color_tmp+1
-       plt.plot(off_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+       plt.plot(on_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
        color_tmp = color_tmp+1
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 #        plt.ylim([0,20])

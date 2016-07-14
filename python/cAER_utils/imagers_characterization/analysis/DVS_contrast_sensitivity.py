@@ -83,6 +83,12 @@ class DVS_contrast_sensitivity:
         err_on_percent_array = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         SNR_on = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
         SNR_off = np.zeros([len(files_in_dir),len(frame_x_divisions),len(frame_y_divisions)])
+        matrix_count_off = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_on = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_off_noise = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_on_noise = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        contrast_matrix_off = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        contrast_matrix_on = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])   
         # Extract the parameters from the file name as well as all the data from the .aedat3 file
         for this_file in range(len(files_in_dir)):            
             print ""
@@ -136,19 +142,14 @@ class DVS_contrast_sensitivity:
 
             if(single_pixels_analysis):
                 print "single_pixels_analysis.."
-                matrix_count_off = np.zeros([camera_dim[0], camera_dim[1]])
-                matrix_count_on = np.zeros([camera_dim[0], camera_dim[1]])
-                matrix_count_off_noise = np.zeros([camera_dim[0], camera_dim[1]])
-                matrix_count_on_noise = np.zeros([camera_dim[0], camera_dim[1]])
-                contrast_matrix_off = np.ones([camera_dim[0], camera_dim[1]])
-                contrast_matrix_on = np.ones([camera_dim[0], camera_dim[1]])                                     
+                                      
                 this_sync_ts = 0
                 for this_ev in range(len(ts)):
                     if (ts[this_ev] >= (sync_ts[-1] + 4.0*sine_phase) and ts[this_ev] < (sync_ts[-1] + 4.0*sine_phase*(num_oscillations-1.0))): # noise events
                         if (pol[this_ev] == 1):
-                            matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1
+                            matrix_count_on_noise[this_file,xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[this_file,xaddr[this_ev],yaddr[this_ev]]+1
                         if (pol[this_ev] == 0):
-                            matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
+                            matrix_count_off_noise[this_file,xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[this_file,xaddr[this_ev],yaddr[this_ev]]+1
                     elif(ts[this_ev]<=sync_ts[-1]):
                         if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase)) and (this_sync_ts<=len(sync_ts)-1)):
                             #raise Exception                            
@@ -158,21 +159,21 @@ class DVS_contrast_sensitivity:
                             if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
                                 #raise Exception
                                 if(pol[this_ev] == 1):
-                                    matrix_count_on[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[xaddr[this_ev],yaddr[this_ev]]+1        
+                                    matrix_count_on[this_file,xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[this_file,xaddr[this_ev],yaddr[this_ev]]+1        
                                 #if(pol[this_ev] == 0):
                                 #    matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[xaddr[this_ev],yaddr[this_ev]]+1
                             elif (ts[this_ev] >= (sync_ts[this_sync_ts] + sine_phase) and ts[this_ev] < (sync_ts[this_sync_ts] + 3.0*sine_phase)): # falling half of the sine wave
                                 #if(pol[this_ev] == 1):
                                 #    matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[xaddr[this_ev],yaddr[this_ev]]+1        
                                 if(pol[this_ev] == 0):
-                                    matrix_count_off[xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[xaddr[this_ev],yaddr[this_ev]]+1                   
+                                    matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]]+1                   
                 # FPN and separate contrast sensitivities
                 #contrast_matrix_off = this_contrast/(matrix_count_off/num_oscillations)
                 #contrast_matrix_on = this_contrast/(matrix_count_on/num_oscillations)
-                matrix_count_on = matrix_count_on - (num_oscillations-1.0)*matrix_count_on_noise/((num_oscillations-2.0)*2.0) # because noise events are recorded for num_oscillations-2.0 cycles, the estimated noise events is during the rising half of a cycle
-                matrix_count_off = matrix_count_off - (num_oscillations-1.0)*matrix_count_off_noise/((num_oscillations-2.0)*2.0)
-                contrast_matrix_on = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(matrix_count_on/(num_oscillations-1.0))) - 1.0 # sensitivity is calculated based on theoretical model, ignoring refractory period, same for all the sensitivity calculation below
-                contrast_matrix_off = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off/(num_oscillations-1.0)))
+                matrix_count_on[this_file,:,:] = matrix_count_on[this_file,:,:] - (num_oscillations-1.0)*matrix_count_on_noise[this_file,:,:]/((num_oscillations-2.0)*2.0) # because noise events are recorded for num_oscillations-2.0 cycles, the estimated noise events is during the rising half of a cycle
+                matrix_count_off[this_file,:,:] = matrix_count_off[this_file,:,:] - (num_oscillations-1.0)*matrix_count_off_noise[this_file,:,:]/((num_oscillations-2.0)*2.0)
+                contrast_matrix_on[this_file,:,:] = ((1.0 + 0.5*this_contrast)/(1.0 - 0.5*this_contrast))**(1.0/(matrix_count_on[this_file,:,:]/(num_oscillations-1.0))) - 1.0 # sensitivity is calculated based on theoretical model, ignoring refractory period, same for all the sensitivity calculation below
+                contrast_matrix_off[this_file,:,:] = 1.0 - ((1.0 - 0.5*this_contrast)/(1.0 + 0.5*this_contrast))**(1.0/(matrix_count_off[this_file,:,:]/(num_oscillations-1.0)))
                 
             # For every division in x and y at particular contrast and base level
             for this_div_x in range(len(frame_x_divisions)) :
@@ -229,17 +230,17 @@ class DVS_contrast_sensitivity:
                     
                     # Calculate Median
                     if(single_pixels_analysis):         
-                        [dim1, dim2] = np.shape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
-                        on_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
-                        off_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
-                        on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
-                        off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
+                        [dim1, dim2] = np.shape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
+                        on_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
+                        off_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/(num_oscillations-1.0)
+                        on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
+                        off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*(num_oscillations-1.0))
                         
                         # noise events statistics
-                        on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
-                        off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
-                        on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
-                        off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off_noise[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
+                        on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_on_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
+                        off_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y] = np.median( matrix_count_off_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])/((num_oscillations-2.0)*2.0)
+                        on_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_on_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
+                        off_noise_event_count_average_per_pixel[this_file,this_div_x,this_div_y] = float(sum(matrix_count_off_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]))/(dim1*dim2*((num_oscillations-2.0)*2.0))
                         
                         # SNR
                         SNR_on[this_file,this_div_x,this_div_y] = 20.0*np.log10(on_event_count_median_per_pixel[this_file,this_div_x,this_div_y]/on_noise_event_count_median_per_pixel[this_file,this_div_x,this_div_y])
@@ -274,13 +275,13 @@ class DVS_contrast_sensitivity:
                         ax.set_title('ON events/pix/cycle histogram')
                         plt.xlabel ("ON events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
-                        line_on = np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
+                        line_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
                         im = plt.hist(line_on[line_on < 20], 20)
                         ax = fig.add_subplot(122)
                         ax.set_title('OFF events/pix/cycle histogram')
                         plt.xlabel ("OFF events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
-                        line_off = np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
+                        line_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
                         im = plt.hist(line_off[line_off < 20], 20)
                         fig.tight_layout()     
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
@@ -288,8 +289,8 @@ class DVS_contrast_sensitivity:
                         plt.close("all")
                         
                         # Confidence interval = error metric                    
-                        err_off = self.confIntMean(np.reshape(matrix_count_off[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))
-                        err_on = self.confIntMean(np.reshape(matrix_count_on[frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))                    
+                        err_off = self.confIntMean(np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))
+                        err_on = self.confIntMean(np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0))                    
 #                        print "Off confidence interval of 95%: " + str(err_off)
 #                        print "On confidence interval of 95%: " + str(err_on)
                         if(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] != 0.0):
@@ -419,10 +420,10 @@ class DVS_contrast_sensitivity:
                 # Plot spike counts
                 fig= plt.figure()
                 ax = fig.add_subplot(121)
-                matrix_count_on = np.fliplr(np.transpose(matrix_count_on))##depend on camera orientation!!
-                matrix_count_off = np.fliplr(np.transpose(matrix_count_off))
-                matrix_count_off_div = matrix_count_off/(num_oscillations-1.0)
-                matrix_count_on_div = matrix_count_on/(num_oscillations-1.0)
+                matrix_count_on[this_file,:,:] = np.fliplr(np.transpose(matrix_count_on[this_file,:,:]))##depend on camera orientation!!
+                matrix_count_off[this_file,:,:] = np.fliplr(np.transpose(matrix_count_off[this_file,:,:]))
+                matrix_count_off_div = matrix_count_off[this_file,:,:]/(num_oscillations-1.0)
+                matrix_count_on_div = matrix_count_on[this_file,:,:]/(num_oscillations-1.0)
                 matrix_count_on_div[matrix_count_on_div>20] = 20 # CLip to see properly!
                 matrix_count_off_div[matrix_count_off_div>20] = 20
                 ax.set_title('Count ON/pix/cycle')
@@ -445,32 +446,32 @@ class DVS_contrast_sensitivity:
                 plt.close("all")
                 
                 # Deltas = Contrast sensitivities
-                contrast_matrix_on = np.flipud(np.fliplr(np.transpose(contrast_matrix_on)))
-                contrast_matrix_off = np.flipud(np.fliplr(np.transpose(contrast_matrix_off)))
+                contrast_matrix_on[this_file,:,:] = np.flipud(np.fliplr(np.transpose(contrast_matrix_on[this_file,:,:])))
+                contrast_matrix_off[this_file,:,:] = np.flipud(np.fliplr(np.transpose(contrast_matrix_off[this_file,:,:])))
                 fig = plt.figure()
                 plt.subplot(3,2,1)
                 plt.title("ON thresholds")
-                plt.imshow(contrast_matrix_on)
+                plt.imshow(contrast_matrix_on[this_file,:,:])
                 plt.colorbar()
                 plt.subplot(3,2,2)
                 plt.title("OFF thresholds")          
-                plt.imshow(contrast_matrix_off)
+                plt.imshow(contrast_matrix_off[this_file,:,:])
                 plt.colorbar()
                 plt.subplot(3,2,3)
                 plt.title("ON integrated on X axis")
-                plt.plot(np.sum(contrast_matrix_on,axis=0)) 
+                plt.plot(np.sum(contrast_matrix_on[this_file,:,:],axis=0)) 
                 plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
                 plt.subplot(3,2,4)
                 plt.title("OFF integrated on X axis")
-                plt.plot(np.sum(contrast_matrix_off,axis=0))
+                plt.plot(np.sum(contrast_matrix_off[this_file,:,:],axis=0))
                 plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])   
                 plt.subplot(3,2,5)
                 plt.title("ON integrated on Y axis")
-                plt.plot(np.sum(contrast_matrix_on,axis=1))  
+                plt.plot(np.sum(contrast_matrix_on[this_file,:,:],axis=1))  
                 plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
                 plt.subplot(3,2,6)
                 plt.title("OFF integrated on Y axis")
-                plt.plot(np.sum(contrast_matrix_off,axis=1))
+                plt.plot(np.sum(contrast_matrix_off[this_file,:,:],axis=1))
                 plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])  
                 fig.tight_layout()  
                 plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
@@ -518,32 +519,7 @@ class DVS_contrast_sensitivity:
         var_dir = cs_dir+'saved_variables/'
         if(not os.path.exists(var_dir)):
             os.makedirs(var_dir)
-        np.savez(var_dir+"variables_"+sensor+".npz",
-                 frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
-                 num_oscillations=num_oscillations,rec_time=rec_time,
-                 contrast_level=contrast_level,base_level=base_level,on_level=on_level,
-                 diff_level=diff_level,off_level=off_level,
-                 contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
-                 contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
-                 contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
-                 contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
-                 err_off_percent_array=err_off_percent_array,
-                 err_on_percent_array=err_on_percent_array,
-                 matrix_count_off=matrix_count_off,
-                 matrix_count_on=matrix_count_on,
-                 matrix_count_off_noise=matrix_count_off_noise,
-                 matrix_count_on_noise=matrix_count_on_noise,
-                 contrast_matrix_off=contrast_matrix_off,
-                 contrast_matrix_on=contrast_matrix_on,                             
-                 off_event_count_average_per_pixel=off_event_count_average_per_pixel,
-                 on_event_count_average_per_pixel=on_event_count_average_per_pixel,
-                 off_event_count_median_per_pixel=off_event_count_median_per_pixel,
-                 on_event_count_median_per_pixel=on_event_count_median_per_pixel,
-                 off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
-                 on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
-                 off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
-                 on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
-                 SNR_on=SNR_on,SNR_off=SNR_off)
+        
         if(sensor == 'DAVIS208'):
             np.savez(var_dir+"variables_"+sensor+".npz",
                      frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
@@ -572,7 +548,34 @@ class DVS_contrast_sensitivity:
                      on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
                      SNR_on=SNR_on,SNR_off=SNR_off,
                      refss_level=refss_level)        
-        
+        else:
+            np.savez(var_dir+"variables_"+sensor+".npz",
+                     frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
+                     num_oscillations=num_oscillations,rec_time=rec_time,
+                     contrast_level=contrast_level,base_level=base_level,on_level=on_level,
+                     diff_level=diff_level,off_level=off_level,
+                     contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
+                     contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
+                     contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
+                     contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
+                     err_off_percent_array=err_off_percent_array,
+                     err_on_percent_array=err_on_percent_array,
+                     matrix_count_off=matrix_count_off,
+                     matrix_count_on=matrix_count_on,
+                     matrix_count_off_noise=matrix_count_off_noise,
+                     matrix_count_on_noise=matrix_count_on_noise,
+                     contrast_matrix_off=contrast_matrix_off,
+                     contrast_matrix_on=contrast_matrix_on,                             
+                     off_event_count_average_per_pixel=off_event_count_average_per_pixel,
+                     on_event_count_average_per_pixel=on_event_count_average_per_pixel,
+                     off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                     on_event_count_median_per_pixel=on_event_count_median_per_pixel,
+                     off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
+                     on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
+                     off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
+                     on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
+                     SNR_on=SNR_on,SNR_off=SNR_off)      
+                     
         plt.figure()
         ax = fig.add_subplot(111)
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
