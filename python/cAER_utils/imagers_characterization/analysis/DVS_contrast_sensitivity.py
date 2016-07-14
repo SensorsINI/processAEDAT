@@ -414,64 +414,6 @@ class DVS_contrast_sensitivity:
                         print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
                         print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
                         
-            # Save variables
-            var_dir = cs_dir+'saved_variables/'
-            if(not os.path.exists(var_dir)):
-                os.makedirs(var_dir)
-            np.savez(var_dir+"variables_"+sensor+".npz",
-                     frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
-                     num_oscillations=num_oscillations,rec_time=rec_time,
-                     contrast_level=contrast_level,base_level=base_level,on_level=on_level,
-                     diff_level=diff_level,off_level=off_level,
-                     contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
-                     contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
-                     contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
-                     contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
-                     err_off_percent_array=err_off_percent_array,
-                     err_on_percent_array=err_on_percent_array,
-                     matrix_count_off=matrix_count_off,
-                     matrix_count_on=matrix_count_on,
-                     matrix_count_off_noise=matrix_count_off_noise,
-                     matrix_count_on_noise=matrix_count_on_noise,
-                     contrast_matrix_off=contrast_matrix_off,
-                     contrast_matrix_on=contrast_matrix_on,                             
-                     off_event_count_average_per_pixel=off_event_count_average_per_pixel,
-                     on_event_count_average_per_pixel=on_event_count_average_per_pixel,
-                     off_event_count_median_per_pixel=off_event_count_median_per_pixel,
-                     on_event_count_median_per_pixel=on_event_count_median_per_pixel,
-                     off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
-                     on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
-                     off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
-                     on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
-                     SNR_on=SNR_on,SNR_off=SNR_off)
-            if(sensor == 'DAVIS208'):
-                np.savez(var_dir+"variables_"+sensor+".npz",
-                         frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
-                         num_oscillations=num_oscillations,rec_time=rec_time,
-                         contrast_level=contrast_level,base_level=base_level,on_level=on_level,
-                         diff_level=diff_level,off_level=off_level,
-                         contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
-                         contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
-                         contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
-                         contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
-                         err_off_percent_array=err_off_percent_array,
-                         err_on_percent_array=err_on_percent_array,
-                         matrix_count_off=matrix_count_off,
-                         matrix_count_on=matrix_count_on,
-                         matrix_count_off_noise=matrix_count_off_noise,
-                         matrix_count_on_noise=matrix_count_on_noise,
-                         contrast_matrix_off=contrast_matrix_off,
-                         contrast_matrix_on=contrast_matrix_on,                             
-                         off_event_count_average_per_pixel=off_event_count_average_per_pixel,
-                         on_event_count_average_per_pixel=on_event_count_average_per_pixel,
-                         off_event_count_median_per_pixel=off_event_count_median_per_pixel,
-                         on_event_count_median_per_pixel=on_event_count_median_per_pixel,
-                         off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
-                         on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
-                         off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
-                         on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
-                         SNR_on=SNR_on,SNR_off=SNR_off,
-                         refss_level=refss_level)
             # FPN plots
             if(single_pixels_analysis):
                 # Plot spike counts
@@ -572,7 +514,67 @@ class DVS_contrast_sensitivity:
 #            plt.savefig(reconstructions_dir+"contrast_sensitivity_vs_rmse.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 #            plt.close("all")
         
+        # Save variables
+        var_dir = cs_dir+'saved_variables/'
+        if(not os.path.exists(var_dir)):
+            os.makedirs(var_dir)
+        np.savez(var_dir+"variables_"+sensor+".npz",
+                 frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
+                 num_oscillations=num_oscillations,rec_time=rec_time,
+                 contrast_level=contrast_level,base_level=base_level,on_level=on_level,
+                 diff_level=diff_level,off_level=off_level,
+                 contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
+                 contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
+                 contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
+                 contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
+                 err_off_percent_array=err_off_percent_array,
+                 err_on_percent_array=err_on_percent_array,
+                 matrix_count_off=matrix_count_off,
+                 matrix_count_on=matrix_count_on,
+                 matrix_count_off_noise=matrix_count_off_noise,
+                 matrix_count_on_noise=matrix_count_on_noise,
+                 contrast_matrix_off=contrast_matrix_off,
+                 contrast_matrix_on=contrast_matrix_on,                             
+                 off_event_count_average_per_pixel=off_event_count_average_per_pixel,
+                 on_event_count_average_per_pixel=on_event_count_average_per_pixel,
+                 off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                 on_event_count_median_per_pixel=on_event_count_median_per_pixel,
+                 off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
+                 on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
+                 off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
+                 on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
+                 SNR_on=SNR_on,SNR_off=SNR_off)
+        if(sensor == 'DAVIS208'):
+            np.savez(var_dir+"variables_"+sensor+".npz",
+                     frame_x_divisions=frame_x_divisions, frame_y_divisions=frame_y_divisions,
+                     num_oscillations=num_oscillations,rec_time=rec_time,
+                     contrast_level=contrast_level,base_level=base_level,on_level=on_level,
+                     diff_level=diff_level,off_level=off_level,
+                     contrast_sensitivity_off_average_array=contrast_sensitivity_off_average_array,
+                     contrast_sensitivity_on_average_array=contrast_sensitivity_on_average_array,
+                     contrast_sensitivity_off_median_array=contrast_sensitivity_off_median_array,
+                     contrast_sensitivity_on_median_array=contrast_sensitivity_on_median_array,
+                     err_off_percent_array=err_off_percent_array,
+                     err_on_percent_array=err_on_percent_array,
+                     matrix_count_off=matrix_count_off,
+                     matrix_count_on=matrix_count_on,
+                     matrix_count_off_noise=matrix_count_off_noise,
+                     matrix_count_on_noise=matrix_count_on_noise,
+                     contrast_matrix_off=contrast_matrix_off,
+                     contrast_matrix_on=contrast_matrix_on,                             
+                     off_event_count_average_per_pixel=off_event_count_average_per_pixel,
+                     on_event_count_average_per_pixel=on_event_count_average_per_pixel,
+                     off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                     on_event_count_median_per_pixel=on_event_count_median_per_pixel,
+                     off_noise_event_count_average_per_pixel=off_noise_event_count_average_per_pixel,
+                     on_noise_event_count_average_per_pixel=on_noise_event_count_average_per_pixel,
+                     off_noise_event_count_median_per_pixel=off_noise_event_count_median_per_pixel,
+                     on_noise_event_count_median_per_pixel=on_noise_event_count_median_per_pixel,
+                     SNR_on=SNR_on,SNR_off=SNR_off,
+                     refss_level=refss_level)        
+        
         plt.figure()
+        ax = fig.add_subplot(111)
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
@@ -587,7 +589,7 @@ class DVS_contrast_sensitivity:
                    plt.plot(base_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.set_title('Median contrast sensitivity vs base level')
+        ax.set_title('Median contrast sensitivity vs base level')
         plt.xlabel("Base level [Lux]")
         plt.ylabel("Contrast sensitivity")
 #        plt.ylim((0,100))
@@ -596,6 +598,7 @@ class DVS_contrast_sensitivity:
         plt.close("all")
 
         plt.figure()# Dynamic range from this
+        ax = fig.add_subplot(111)
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
@@ -610,7 +613,7 @@ class DVS_contrast_sensitivity:
                    plt.plot(base_level[:,this_div_x, this_div_y], on_event_count_median_per_pixel[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                    color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.set_title('ON and OFF median event counts vs base level')
+        ax.set_title('ON and OFF median event counts vs base level')
         plt.xlabel("Base level [Lux]")
         plt.ylabel("ON and OFF event counts")
 #        plt.ylim((0,100))
@@ -619,6 +622,7 @@ class DVS_contrast_sensitivity:
         plt.close("all")
 
         plt.figure()
+        ax = fig.add_subplot(111)
         colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
         color_tmp = 0
         for this_div_x in range(len(frame_x_divisions)) :
@@ -634,7 +638,7 @@ class DVS_contrast_sensitivity:
                    color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 #        plt.ylim([0,20])
-        plt.set_title('Median contrast sensitivity vs bias level')
+        ax.set_title('Median contrast sensitivity vs bias level')
         plt.xlabel("Bias level [FineValue]")
         plt.ylabel("Contrast sensitivity")
 #        plt.ylim((0,100))
@@ -644,6 +648,7 @@ class DVS_contrast_sensitivity:
         
         if(single_pixels_analysis):
             plt.figure()
+            ax = fig.add_subplot(111)
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
@@ -654,7 +659,7 @@ class DVS_contrast_sensitivity:
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 #            plt.ylim([0,20])
-            plt.set_title('ON and OFF FPN vs contrast sensitivity')
+            ax.set_title('ON and OFF FPN vs contrast sensitivity')
             plt.xlabel("Contrast sensitivity")
 #            plt.xlim((0,100))
             plt.ylabel("95% conf interval in percentage from median")
@@ -664,6 +669,7 @@ class DVS_contrast_sensitivity:
             
             #SNR ON
             plt.figure()
+            ax = fig.add_subplot(111)
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
@@ -674,7 +680,7 @@ class DVS_contrast_sensitivity:
                    color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.xlabel("ON Contrast sensitivity [%]")
-            plt.set_title('ON and OFF SNR vs contrast sensitivity')
+            ax.set_title('ON and OFF SNR vs contrast sensitivity')
 #            plt.xlim((0,100))
             plt.ylabel("Median SNR [dB]")
             plt.savefig(contrast_sensitivities_dir+"snr_vs_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
@@ -683,6 +689,7 @@ class DVS_contrast_sensitivity:
         
         if(sensor == 'DAVIS208'):
             plt.figure()
+            ax = fig.add_subplot(111)
             colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
             color_tmp = 0
             for this_div_x in range(len(frame_x_divisions)) :
@@ -697,7 +704,7 @@ class DVS_contrast_sensitivity:
                        plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'x', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
                        color_tmp = color_tmp+1
             lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            plt.set_title('ON and OFF contrast sensitivities vs refss bias level')
+            ax.set_title('ON and OFF contrast sensitivities vs refss bias level')
             plt.xlabel("Refss level [FineValue]")
 #            plt.ylim([0,20])
             plt.ylabel("Contrast sensitivity")
