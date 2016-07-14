@@ -24,6 +24,8 @@ contrast_on_overall = []
 contrast_off_overall = []
 count_on_overall = []
 count_off_overall = []
+snr_on_overall = []
+snr_off_overall = []
 
 for index_chip in range(len(chip_folder)):
     CS_data_file = chip_folder[index_chip] + 'saved_variables/' + 'variables_'+sensor+'.npz'
@@ -33,9 +35,6 @@ for index_chip in range(len(chip_folder)):
     fpn_dir = figure_dir + 'fpn/'
     if(not os.path.exists(fpn_dir)):
         os.makedirs(fpn_dir)
-    reconstructions_dir = figure_dir + 'reconstructions/'
-    if(not os.path.exists(reconstructions_dir)):
-        os.makedirs(reconstructions_dir)
     contrast_sensitivities_dir = figure_dir + 'contrast_sensitivities/'
     if(not os.path.exists(contrast_sensitivities_dir)):
         os.makedirs(contrast_sensitivities_dir)
@@ -84,12 +83,14 @@ for index_chip in range(len(chip_folder)):
         diff_level = CS_data[CS_data.files[29]]
         on_event_count_median_per_pixel = CS_data[CS_data.files[30]]
         matrix_count_on_noise = CS_data[CS_data.files[31]]
-        
+    print "Loaded data from: " + chip_folder[index_chip]
     base_level=base_level_real
     contrast_on_overall.append(contrast_sensitivity_on_median_array)
     contrast_off_overall.append(contrast_sensitivity_off_median_array)
     count_on_overall.append(on_event_count_median_per_pixel)
     count_off_overall.append(off_event_count_median_per_pixel)
+    snr_on_overall.append(snr_on_overall)
+    snr_off_overall.append(snr_off_overall)
     ############
     # plotting #
     ############
@@ -152,7 +153,7 @@ for index_chip in range(len(chip_folder)):
                 plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".png",  format='png', dpi=1000)
                 plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
                 plt.close("all")
-        
+        print "histograms done"
         # Deltas = Contrast sensitivities
         contrast_matrix_on_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_on[this_file,:,:])))
         contrast_matrix_off_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_off[this_file,:,:])))
@@ -185,7 +186,7 @@ for index_chip in range(len(chip_folder)):
         plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
         plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
         plt.close("all")      
-    
+    print "plotting contrast sensitivities"
     fig=plt.figure()
     ax = fig.add_subplot(111)
     colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
@@ -274,19 +275,22 @@ for index_chip in range(len(chip_folder)):
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         plt.close("all")
-
+        print "done for file"
+print "overall plots"
 count_off_overall= np.reshape(count_off_overall,len(base_level_real))
 count_on_overall= np.reshape(count_on_overall,len(base_level_real))
 contrast_off_overall= np.reshape(contrast_off_overall,len(base_level_real))
 contrast_on_overall= np.reshape(contrast_on_overall,len(base_level_real))
+snr_off_overall = np.reshape(snr_off_overall,len(base_level_real))
+snr_on_overall = np.reshape(snr_on_overall,len(base_level_real))
 
 fig=plt.figure()
 ax = fig.add_subplot(111)
 colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
 color_tmp = 0
-plt.plot(base_level, 100*contrast_off_overall, 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+plt.semilogx(base_level, 100*contrast_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 color_tmp = color_tmp+1
-plt.plot(base_level, 100*contrast_on_overall, 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+plt.semilogx(base_level, 100*contrast_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set_title('Median contrast sensitivity vs base level')
 plt.xlabel("Base level [Lux]")
@@ -300,9 +304,9 @@ fig=plt.figure()# Dynamic range from this
 ax = fig.add_subplot(111)
 colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
 color_tmp = 0
-plt.plot(base_level, count_off_overall, 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+plt.semilogx(base_level, count_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 color_tmp = color_tmp+1
-plt.plot(base_level, count_on_overall, 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+plt.semilogx(base_level, count_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set_title('ON and OFF median event counts vs base level')
 plt.xlabel("Base level [Lux]")
@@ -310,4 +314,20 @@ plt.ylabel("ON and OFF event counts")
 #        plt.ylim((0,100))
 plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
 plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+plt.close("all")
+
+fig=plt.figure()# SNR
+ax = fig.add_subplot(111)
+colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
+color_tmp = 0
+plt.semilogx(base_level, snr_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+color_tmp = color_tmp+1
+plt.semilogx(base_level, snr_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+ax.set_title('ON and OFF median event counts vs base level')
+plt.xlabel("Base level [Lux]")
+plt.ylabel("ON and OFF SNR [dB]")
+#        plt.ylim((0,100))
+plt.savefig(contrast_sensitivities_dir+"snr_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(contrast_sensitivities_dir+"snr_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
 plt.close("all")
