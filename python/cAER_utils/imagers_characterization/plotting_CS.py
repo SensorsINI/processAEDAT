@@ -14,10 +14,10 @@ import operator
 # select data files to import and output directory #
 ####################################################
 chip_folder = ["Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-15_39_34_0/",
-               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_42_35_1nd/"]#,
-#               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_58_17_2nd/",
-#               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-17_05_43_3rd/"]
-base_level_real= [1000,100]#,10,1]
+               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_42_35_1nd/",
+               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_58_17_2nd/",
+               "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-17_05_43_3rd/"]
+base_level_real= [1000,100,10,1]
 sensor = 'DAVIS208'
 
 contrast_on_overall = []
@@ -276,9 +276,9 @@ for index_chip in range(len(chip_folder)):
         plt.close("all")
 
 count_off_overall= np.reshape(count_off_overall,len(base_level_real))
-count_on_overall= np.reshape(count_off_overall,len(base_level_real))
+count_on_overall= np.reshape(count_on_overall,len(base_level_real))
 contrast_off_overall= np.reshape(contrast_off_overall,len(base_level_real))
-contrast_on_overall= np.reshape(contrast_off_overall,len(base_level_real))
+contrast_on_overall= np.reshape(contrast_on_overall,len(base_level_real))
 
 fig=plt.figure()
 ax = fig.add_subplot(111)
@@ -287,7 +287,6 @@ color_tmp = 0
 plt.plot(base_level, 100*contrast_off_overall, 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 color_tmp = color_tmp+1
 plt.plot(base_level, 100*contrast_on_overall, 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-color_tmp = color_tmp+1
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set_title('Median contrast sensitivity vs base level')
 plt.xlabel("Base level [Lux]")
@@ -304,7 +303,6 @@ color_tmp = 0
 plt.plot(base_level, count_off_overall, 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
 color_tmp = color_tmp+1
 plt.plot(base_level, count_on_overall, 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-color_tmp = color_tmp+1
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set_title('ON and OFF median event counts vs base level')
 plt.xlabel("Base level [Lux]")
