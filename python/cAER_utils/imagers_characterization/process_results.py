@@ -42,7 +42,13 @@ do_oscillations = False
 #                  "Z:/Characterizations/Measurements_final/DAVIS240C/PTC/DAVIS240C_ADCext_ptc_1000lux_05_07_16-09_11_29light/"]
 
 #Contrast
-directory_meas = ["Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/DAVIS208_contrast_sensitivity_09_06_16-17_14_43/"]
+#directory_meas = ["Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/DAVIS208_contrast_sensitivity_09_06_16-17_19_24/",
+#                  "Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/DAVIS208_contrast_sensitivity_09_06_16-17_27_34/",
+#                  "Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/DAVIS208_contrast_sensitivity_09_06_16-17_14_43/"]
+directory_meas = ["Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-15_39_34_0/",
+                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_42_35_1nd/",
+                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-16_58_17_2nd/",
+                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_14_07_16-17_05_43_3rd/"]
 
 #directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/DARK/DAVIS208_ADCint_ptc_07_06_16-15_51_10_dark_short_coveredleds/"
 #directory_meas = "Z:/Characterizations/Measurements_final/DAVIS208/PTC/Measurements_07_06_2016/DARK/DAVIS208_ADCint_ptc_07_06_16-15_41_37_dark_short/"
@@ -54,7 +60,11 @@ directory_meas = ["Z:/Characterizations/Measurements_final/DAVIS208/contrast_sen
 #directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_10_43_dark_short/"
 #directory_meas= "Z:/Characterizations/Measurements_final/346F/chip1/DAVIS346B_ADCint_ptc_20_06_16-16_26_43_dark_long/"
 
-camera_file = ['cameras/davis208_parameters.txt']
+camera_file = [#'cameras/davis208_parameters.txt',
+               'cameras/davis208_parameters.txt',
+               'cameras/davis208_parameters.txt',
+               'cameras/davis208_parameters.txt',
+               'cameras/davis208_parameters.txt']
 #camera_file = 'cameras/davis346_parameters.txt'
 
 for index_chip in range(len(directory_meas)):
