@@ -394,16 +394,23 @@ while true % implement the exit conditions inside the loop - allows to distingui
 						frameXPosition(frameNumEvents)	= typecast(data(dataPointer + 28 : dataPointer + 29), 'uint16');
 						frameYPosition(frameNumEvents)	= typecast(data(dataPointer + 32 : dataPointer + 33), 'uint16');
 						numSamples = int32(frameXLength(frameNumEvents)) * int32(frameYLength(frameNumEvents)) * int32(frameColorChannels(frameNumEvents)); % Conversion to int32 allows addition with 'dataPointer' below
-						sampleData = cast(typecast(data(dataPointer + 36 : dataPointer + 35 + numSamples * 2), 'uint16'), 'uint16');
-						frameSamples{frameNumEvents}		= reshape(sampleData, frameColorChannels(frameNumEvents), frameXLength(frameNumEvents), frameYLength(frameNumEvents));
-						if frameColorChannels(frameNumEvents) == 1
-							frameSamples{frameNumEvents} = squeeze(frameSamples{frameNumEvents});
-							frameSamples{frameNumEvents} = permute(frameSamples{frameNumEvents}, [2 1]);
+						% At least one recording has a file ending half way
+						% through the frame data due to a laptop dying,
+						% hence the following check
+						if length(data) >= dataPointer + 35 + numSamples * 2
+							sampleData = cast(typecast(data(dataPointer + 36 : dataPointer + 35 + numSamples * 2), 'uint16'), 'uint16');
+							frameSamples{frameNumEvents}		= reshape(sampleData, frameColorChannels(frameNumEvents), frameXLength(frameNumEvents), frameYLength(frameNumEvents));
+							if frameColorChannels(frameNumEvents) == 1
+								frameSamples{frameNumEvents} = squeeze(frameSamples{frameNumEvents});
+								frameSamples{frameNumEvents} = permute(frameSamples{frameNumEvents}, [2 1]);
+							else
+								% Change the dimensions of the frame array to
+								% the standard for matlab: column, then row,
+								% then channel number
+								frameSamples{frameNumEvents} = permute(frameSamples{frameNumEvents}, [3 2 1]);
+							end
 						else
-							% Change the dimensions of the frame array to
-							% the standard for matlab: column, then row,
-							% then channel number
-							frameSamples{frameNumEvents} = permute(frameSamples{frameNumEvents}, [3 2 1]);
+							frameSamples{frameNumEvents} = zeros(frameYLength(frameNumEvents), frameXLength(frameNumEvents), frameColorChannels(frameNumEvents));
 						end
 					end
 				end

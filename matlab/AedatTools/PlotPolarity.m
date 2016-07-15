@@ -1,4 +1,4 @@
-function PlotPolarity(input, numPlots, distributeBy)
+function PlotPolarity(input, numPlots, distributeBy, proportionOfPixels)
 
 %{
 Takes 'input' - a data structure containing an imported .aedat file, 
@@ -14,7 +14,9 @@ a certain ratio of an array full is reached.
 
 % The proportion of an array-full of events which is shown on a plot
 % (Hardcoded constant - could become a parameter)
-proportionOfPixels = 0.1;
+if ~exist('proportionOfPixels', 'var')
+	proportionOfPixels = 0.1;
+end
 
 % The 'contrast' for display of events, as used in jAER.
 contrast = 3;
@@ -81,6 +83,7 @@ for plotCount = 1 : numPlots
 	image(arrayLogical)
 	colormap(gray)
 	axis equal tight
+	set(gca,'YDir', 'reverse')
 	title([num2str(double(input.data.polarity.timeStamp(eventIndex)) / 1000000) ' s'])
 end
 

@@ -257,7 +257,7 @@ if strcmp(info.source, 'Das1')
 	
 elseif strcmp(info.source, 'Dvs128')
 	% DVS128
-	specialMask = hex2dec ('f000');
+	specialMask = hex2dec ('8000');
 	specialLogical = bitand(allAddr, specialMask);
 	polarityLogical = ~specialLogical;
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('special'), info.dataTypes))) && any(specialLogical)
@@ -324,6 +324,7 @@ elseif strfind(info.source, 'Davis')
 	
 	% Frame events - NOTE This code currently only handles global shutter
 	% readout ...
+	%{
 	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))) && any(frameLogical)
 		output.data.frame.timeStamp = allTs(frameLogical);
 
@@ -348,8 +349,8 @@ elseif strfind(info.source, 'Davis')
 						sum(frameY(2 : end) ~= frameY(1 : end - 1));
 		frameYDiff = ;
 		MajorIsX = 
-		
 	end
+%}		
 
 	% IMU events
 		% These come in blocks of 7, for the 7 different values produced in
