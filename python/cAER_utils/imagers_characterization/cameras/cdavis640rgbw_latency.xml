@@ -6,386 +6,378 @@
                 <attr key="BusNumber" type="short">0</attr>
                 <attr key="DevAddress" type="short">0</attr>
                 <attr key="SerialNumber" type="string"></attr>
-                <node name="aps" path="/1/1-DAVISFX3/aps/">
-                    <attr key="ADCTestMode" type="bool">false</attr>
-                    <attr key="EndColumn0" type="short">639</attr>
-                    <attr key="EndColumn1" type="short">640</attr>
-                    <attr key="EndColumn2" type="short">640</attr>
-                    <attr key="EndColumn3" type="short">640</attr>
-                    <attr key="EndRow0" type="short">479</attr>
-                    <attr key="EndRow1" type="short">480</attr>
-                    <attr key="EndRow2" type="short">480</attr>
-                    <attr key="EndRow3" type="short">480</attr>
-                    <attr key="Exposure" type="int">4000</attr>
-                    <attr key="FrameDelay" type="int">1000</attr>
-                    <attr key="GSFDResetTime" type="short">1000</attr>
-                    <attr key="GSPDResetTime" type="short">1000</attr>
-                    <attr key="GSResetFallTime" type="short">1000</attr>
-                    <attr key="GSTXFallTime" type="short">1000</attr>
-                    <attr key="GlobalShutter" type="bool">false</attr>
-                    <attr key="RSFDSettleTime" type="short">1000</attr>
-                    <attr key="RampReset" type="short">20</attr>
-                    <attr key="RampShortReset" type="bool">false</attr>
-                    <attr key="ResetRead" type="bool">true</attr>
-                    <attr key="RowSettle" type="short">20</attr>
-                    <attr key="Run" type="bool">false</attr>
-                    <attr key="SampleEnable" type="bool">true</attr>
-                    <attr key="SampleSettle" type="short">60</attr>
-                    <attr key="StartColumn0" type="short">0</attr>
-                    <attr key="StartColumn1" type="short">640</attr>
-                    <attr key="StartColumn2" type="short">640</attr>
-                    <attr key="StartColumn3" type="short">640</attr>
-                    <attr key="StartRow0" type="short">0</attr>
-                    <attr key="StartRow1" type="short">480</attr>
-                    <attr key="StartRow2" type="short">480</attr>
-                    <attr key="StartRow3" type="short">480</attr>
-                    <attr key="TakeSnapShot" type="bool">false</attr>
-                    <attr key="TransferTime" type="short">1500</attr>
-                    <attr key="UseInternalADC" type="bool">true</attr>
-                    <attr key="WaitOnTransferStall" type="bool">true</attr>
-                </node>
-                <node name="bias" path="/1/1-DAVISFX3/bias/">
-                    <node name="AEPdBn" path="/1/1-DAVISFX3/bias/AEPdBn/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">91</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
+                <node name="DAVISHet640" path="/1/1-DAVISFX3/DAVISHet640/">
+                    <node name="aps" path="/1/1-DAVISFX3/DAVISHet640/aps/">
+                        <attr key="ADCTestMode" type="bool">false</attr>
+                        <attr key="EndColumn0" type="short">639</attr>
+                        <attr key="EndColumn1" type="short">640</attr>
+                        <attr key="EndColumn2" type="short">640</attr>
+                        <attr key="EndColumn3" type="short">640</attr>
+                        <attr key="EndRow0" type="short">479</attr>
+                        <attr key="EndRow1" type="short">480</attr>
+                        <attr key="EndRow2" type="short">480</attr>
+                        <attr key="EndRow3" type="short">480</attr>
+                        <attr key="Exposure" type="int">4000</attr>
+                        <attr key="FrameDelay" type="int">100</attr>
+                        <attr key="GSFDResetTime" type="short">1000</attr>
+                        <attr key="GSPDResetTime" type="short">1000</attr>
+                        <attr key="GSResetFallTime" type="short">1000</attr>
+                        <attr key="GSTXFallTime" type="short">1000</attr>
+                        <attr key="GlobalShutter" type="bool">true</attr>
+                        <attr key="RSFDSettleTime" type="short">1000</attr>
+                        <attr key="RampReset" type="short">20</attr>
+                        <attr key="RampShortReset" type="bool">false</attr>
+                        <attr key="ResetRead" type="bool">true</attr>
+                        <attr key="RowSettle" type="short">20</attr>
+                        <attr key="Run" type="bool">false</attr>
+                        <attr key="SampleEnable" type="bool">true</attr>
+                        <attr key="SampleSettle" type="short">60</attr>
+                        <attr key="StartColumn0" type="short">0</attr>
+                        <attr key="StartColumn1" type="short">640</attr>
+                        <attr key="StartColumn2" type="short">640</attr>
+                        <attr key="StartColumn3" type="short">640</attr>
+                        <attr key="StartRow0" type="short">0</attr>
+                        <attr key="StartRow1" type="short">480</attr>
+                        <attr key="StartRow2" type="short">480</attr>
+                        <attr key="StartRow3" type="short">480</attr>
+                        <attr key="TakeSnapShot" type="bool">false</attr>
+                        <attr key="TransferTime" type="short">1500</attr>
+                        <attr key="UseInternalADC" type="bool">true</attr>
+                        <attr key="WaitOnTransferStall" type="bool">true</attr>
                     </node>
-                    <node name="AEPuXBp" path="/1/1-DAVISFX3/bias/AEPuXBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">80</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
+                    <node name="bias" path="/1/1-DAVISFX3/DAVISHet640/bias/">
+                        <node name="AEPdBn" path="/1/1-DAVISFX3/DAVISHet640/bias/AEPdBn/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">91</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="AEPuXBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AEPuXBp/">
+                            <attr key="coarseValue" type="byte">4</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">80</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="AEPuYBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AEPuYBp/">
+                            <attr key="coarseValue" type="byte">7</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">152</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="AdcCompBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcCompBp/">
+                            <attr key="coarseValue" type="byte">4</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">159</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="AdcRefHigh" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcRefHigh/">
+                            <attr key="currentValue" type="byte">0</attr>
+                            <attr key="voltageValue" type="byte">50</attr>
+                        </node>
+                        <node name="AdcRefLow" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcRefLow/">
+                            <attr key="currentValue" type="byte">0</attr>
+                            <attr key="voltageValue" type="byte">6</attr>
+                        </node>
+                        <node name="AdcTestVoltage" path="/1/1-DAVISFX3/DAVISHet640/bias/AdcTestVoltage/">
+                            <attr key="currentValue" type="byte">0</attr>
+                            <attr key="voltageValue" type="byte">21</attr>
+                        </node>
+                        <node name="ApsCas" path="/1/1-DAVISFX3/DAVISHet640/bias/ApsCas/">
+                            <attr key="currentValue" type="byte">4</attr>
+                            <attr key="voltageValue" type="byte">21</attr>
+                        </node>
+                        <node name="ApsROSFBn" path="/1/1-DAVISFX3/DAVISHet640/bias/ApsROSFBn/">
+                            <attr key="coarseValue" type="byte">7</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">145</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="ArrayBiasBufferBn" path="/1/1-DAVISFX3/DAVISHet640/bias/ArrayBiasBufferBn/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">128</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="ArrayLogicBufferBn" path="/1/1-DAVISFX3/DAVISHet640/bias/ArrayLogicBufferBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">255</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="BiasBuffer" path="/1/1-DAVISFX3/DAVISHet640/bias/BiasBuffer/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">251</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="DACBufBp" path="/1/1-DAVISFX3/DAVISHet640/bias/DACBufBp/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">194</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="DiffBn" path="/1/1-DAVISFX3/DAVISHet640/bias/DiffBn/">
+                            <attr key="coarseValue" type="byte">3</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">135</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="FalltimeBn" path="/1/1-DAVISFX3/DAVISHet640/bias/FalltimeBn/">
+                            <attr key="coarseValue" type="byte">7</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">41</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="Gnd07" path="/1/1-DAVISFX3/DAVISHet640/bias/Gnd07/">
+                            <attr key="currentValue" type="byte">4</attr>
+                            <attr key="voltageValue" type="byte">13</attr>
+                        </node>
+                        <node name="IFRefrBn" path="/1/1-DAVISFX3/DAVISHet640/bias/IFRefrBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">255</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="IFThrBn" path="/1/1-DAVISFX3/DAVISHet640/bias/IFThrBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">255</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="LcolTimeoutBn" path="/1/1-DAVISFX3/DAVISHet640/bias/LcolTimeoutBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">49</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="LocalBufBn" path="/1/1-DAVISFX3/DAVISHet640/bias/LocalBufBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">164</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="OVG1Lo" path="/1/1-DAVISFX3/DAVISHet640/bias/OVG1Lo/">
+                            <attr key="currentValue" type="byte">4</attr>
+                            <attr key="voltageValue" type="byte">63</attr>
+                        </node>
+                        <node name="OVG2Lo" path="/1/1-DAVISFX3/DAVISHet640/bias/OVG2Lo/">
+                            <attr key="currentValue" type="byte">0</attr>
+                            <attr key="voltageValue" type="byte">0</attr>
+                        </node>
+                        <node name="OffBn" path="/1/1-DAVISFX3/DAVISHet640/bias/OffBn/">
+                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">180</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="OnBn" path="/1/1-DAVISFX3/DAVISHet640/bias/OnBn/">
+                            <attr key="coarseValue" type="byte">5</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">80</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="PadFollBn" path="/1/1-DAVISFX3/DAVISHet640/bias/PadFollBn/">
+                            <attr key="coarseValue" type="byte">7</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">209</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="PixInvBn" path="/1/1-DAVISFX3/DAVISHet640/bias/PixInvBn/">
+                            <attr key="coarseValue" type="byte">4</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">164</attr>
+                            <attr key="sex" type="string">N</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="PrBp" path="/1/1-DAVISFX3/DAVISHet640/bias/PrBp/">
+                            <attr key="coarseValue" type="byte">3</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">88</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="PrSFBp" path="/1/1-DAVISFX3/DAVISHet640/bias/PrSFBp/">
+                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">45</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="ReadoutBufBp" path="/1/1-DAVISFX3/DAVISHet640/bias/ReadoutBufBp/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">false</attr>
+                            <attr key="fineValue" type="short">20</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="RefrBp" path="/1/1-DAVISFX3/DAVISHet640/bias/RefrBp/">
+                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">160</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="RisetimeBp" path="/1/1-DAVISFX3/DAVISHet640/bias/RisetimeBp/">
+                            <attr key="coarseValue" type="byte">6</attr>
+                            <attr key="currentLevel" type="string">Normal</attr>
+                            <attr key="enabled" type="bool">true</attr>
+                            <attr key="fineValue" type="short">162</attr>
+                            <attr key="sex" type="string">P</attr>
+                            <attr key="type" type="string">Normal</attr>
+                        </node>
+                        <node name="SSN" path="/1/1-DAVISFX3/DAVISHet640/bias/SSN/">
+                            <attr key="operatingMode" type="string">ShiftedSource</attr>
+                            <attr key="refValue" type="byte">2</attr>
+                            <attr key="regValue" type="byte">33</attr>
+                            <attr key="voltageLevel" type="string">SplitGate</attr>
+                        </node>
+                        <node name="SSP" path="/1/1-DAVISFX3/DAVISHet640/bias/SSP/">
+                            <attr key="operatingMode" type="string">TiedToRail</attr>
+                            <attr key="refValue" type="byte">1</attr>
+                            <attr key="regValue" type="byte">33</attr>
+                            <attr key="voltageLevel" type="string">SplitGate</attr>
+                        </node>
+                        <node name="TX2OVG2Hi" path="/1/1-DAVISFX3/DAVISHet640/bias/TX2OVG2Hi/">
+                            <attr key="currentValue" type="byte">0</attr>
+                            <attr key="voltageValue" type="byte">63</attr>
+                        </node>
                     </node>
-                    <node name="AEPuYBp" path="/1/1-DAVISFX3/bias/AEPuYBp/">
-                        <attr key="coarseValue" type="byte">7</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">152</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
+                    <node name="chip" path="/1/1-DAVISFX3/DAVISHet640/chip/">
+                        <attr key="AERnArow" type="bool">false</attr>
+                        <attr key="AdjustOVG1Lo" type="bool">true</attr>
+                        <attr key="AdjustOVG2Lo" type="bool">false</attr>
+                        <attr key="AdjustTX2OVG2Hi" type="bool">false</attr>
+                        <attr key="AnalogMux0" type="byte">0</attr>
+                        <attr key="AnalogMux1" type="byte">0</attr>
+                        <attr key="AnalogMux2" type="byte">0</attr>
+                        <attr key="BiasMux0" type="byte">0</attr>
+                        <attr key="DigitalMux0" type="byte">0</attr>
+                        <attr key="DigitalMux1" type="byte">0</attr>
+                        <attr key="DigitalMux2" type="byte">0</attr>
+                        <attr key="DigitalMux3" type="byte">0</attr>
+                        <attr key="ResetCalibNeuron" type="bool">true</attr>
+                        <attr key="ResetTestPixel" type="bool">true</attr>
+                        <attr key="SelectGrayCounter" type="bool">true</attr>
+                        <attr key="TestADC" type="bool">false</attr>
+                        <attr key="TypeNCalibNeuron" type="bool">false</attr>
+                        <attr key="UseAOut" type="bool">false</attr>
                     </node>
-                    <node name="AdcCompBp" path="/1/1-DAVISFX3/bias/AdcCompBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">159</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
+                    <node name="dvs" path="/1/1-DAVISFX3/DAVISHet640/dvs/">
+                        <attr key="AckDelayColumn" type="byte">0</attr>
+                        <attr key="AckDelayRow" type="byte">4</attr>
+                        <attr key="AckExtensionColumn" type="byte">0</attr>
+                        <attr key="AckExtensionRow" type="byte">1</attr>
+                        <attr key="ExternalAERControl" type="bool">false</attr>
+                        <attr key="FilterBackgroundActivity" type="bool">true</attr>
+                        <attr key="FilterBackgroundActivityDeltaTime" type="int">20000</attr>
+                        <attr key="FilterPixel0Column" type="short">320</attr>
+                        <attr key="FilterPixel0Row" type="short">240</attr>
+                        <attr key="FilterPixel1Column" type="short">320</attr>
+                        <attr key="FilterPixel1Row" type="short">240</attr>
+                        <attr key="FilterPixel2Column" type="short">320</attr>
+                        <attr key="FilterPixel2Row" type="short">240</attr>
+                        <attr key="FilterPixel3Column" type="short">320</attr>
+                        <attr key="FilterPixel3Row" type="short">240</attr>
+                        <attr key="FilterPixel4Column" type="short">320</attr>
+                        <attr key="FilterPixel4Row" type="short">240</attr>
+                        <attr key="FilterPixel5Column" type="short">320</attr>
+                        <attr key="FilterPixel5Row" type="short">240</attr>
+                        <attr key="FilterPixel6Column" type="short">320</attr>
+                        <attr key="FilterPixel6Row" type="short">240</attr>
+                        <attr key="FilterPixel7Column" type="short">320</attr>
+                        <attr key="FilterPixel7Row" type="short">240</attr>
+                        <attr key="FilterRowOnlyEvents" type="bool">true</attr>
+                        <attr key="Run" type="bool">true</attr>
+                        <attr key="WaitOnTransferStall" type="bool">false</attr>
                     </node>
-                    <node name="AdcRefHigh" path="/1/1-DAVISFX3/bias/AdcRefHigh/">
-                        <attr key="currentValue" type="byte">7</attr>
-                        <attr key="voltageValue" type="byte">46</attr>
+                    <node name="externalInput" path="/1/1-DAVISFX3/DAVISHet640/externalInput/">
+                        <attr key="DetectFallingEdges" type="bool">true</attr>
+                        <attr key="DetectPulseLength" type="int">120</attr>
+                        <attr key="DetectPulsePolarity" type="bool">false</attr>
+                        <attr key="DetectPulses" type="bool">false</attr>
+                        <attr key="DetectRisingEdges" type="bool">true</attr>
+                        <attr key="GenerateInjectOnFallingEdge" type="bool">false</attr>
+                        <attr key="GenerateInjectOnRisingEdge" type="bool">false</attr>
+                        <attr key="GeneratePulseInterval" type="int">120</attr>
+                        <attr key="GeneratePulseLength" type="int">60</attr>
+                        <attr key="GeneratePulsePolarity" type="bool">false</attr>
+                        <attr key="GenerateUseCustomSignal" type="bool">false</attr>
+                        <attr key="RunDetector" type="bool">true</attr>
+                        <attr key="RunGenerator" type="bool">false</attr>
                     </node>
-                    <node name="AdcRefLow" path="/1/1-DAVISFX3/bias/AdcRefLow/">
-                        <attr key="currentValue" type="byte">7</attr>
-                        <attr key="voltageValue" type="byte">3</attr>
+                    <node name="imu" path="/1/1-DAVISFX3/DAVISHet640/imu/">
+                        <attr key="AccelFullScale" type="byte">1</attr>
+                        <attr key="AccelXStandby" type="bool">false</attr>
+                        <attr key="AccelYStandby" type="bool">false</attr>
+                        <attr key="AccelZStandby" type="bool">false</attr>
+                        <attr key="DigitalLowPassFilter" type="byte">1</attr>
+                        <attr key="GyroFullScale" type="byte">1</attr>
+                        <attr key="GyroXStandby" type="bool">false</attr>
+                        <attr key="GyroYStandby" type="bool">false</attr>
+                        <attr key="GyroZStandby" type="bool">false</attr>
+                        <attr key="LowPowerCycle" type="bool">false</attr>
+                        <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
+                        <attr key="Run" type="bool">false</attr>
+                        <attr key="SampleRateDivider" type="short">0</attr>
+                        <attr key="TempStandby" type="bool">false</attr>
                     </node>
-                    <node name="AdcTestVoltage" path="/1/1-DAVISFX3/bias/AdcTestVoltage/">
-                        <attr key="currentValue" type="byte">0</attr>
-                        <attr key="voltageValue" type="byte">21</attr>
+                    <node name="multiplexer" path="/1/1-DAVISFX3/DAVISHet640/multiplexer/">
+                        <attr key="DropAPSOnTransferStall" type="bool">false</attr>
+                        <attr key="DropDVSOnTransferStall" type="bool">true</attr>
+                        <attr key="DropExtInputOnTransferStall" type="bool">true</attr>
+                        <attr key="DropIMUOnTransferStall" type="bool">false</attr>
+                        <attr key="ForceChipBiasEnable" type="bool">false</attr>
+                        <attr key="Run" type="bool">true</attr>
+                        <attr key="TimestampReset" type="bool">false</attr>
+                        <attr key="TimestampRun" type="bool">true</attr>
                     </node>
-                    <node name="ApsCas" path="/1/1-DAVISFX3/bias/ApsCas/">
-                        <attr key="currentValue" type="byte">4</attr>
-                        <attr key="voltageValue" type="byte">21</attr>
+                    <node name="usb" path="/1/1-DAVISFX3/DAVISHet640/usb/">
+                        <attr key="BufferNumber" type="int">8</attr>
+                        <attr key="BufferSize" type="int">8192</attr>
+                        <attr key="EarlyPacketDelay" type="short">8</attr>
+                        <attr key="Run" type="bool">true</attr>
                     </node>
-                    <node name="ApsROSFBn" path="/1/1-DAVISFX3/bias/ApsROSFBn/">
-                        <attr key="coarseValue" type="byte">7</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">82</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="ArrayBiasBufferBn" path="/1/1-DAVISFX3/bias/ArrayBiasBufferBn/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">128</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="ArrayLogicBufferBn" path="/1/1-DAVISFX3/bias/ArrayLogicBufferBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">255</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="BiasBuffer" path="/1/1-DAVISFX3/bias/BiasBuffer/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">251</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="DACBufBp" path="/1/1-DAVISFX3/bias/DACBufBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">194</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="DiffBn" path="/1/1-DAVISFX3/bias/DiffBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">120</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="FalltimeBn" path="/1/1-DAVISFX3/bias/FalltimeBn/">
-                        <attr key="coarseValue" type="byte">7</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">41</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="Gnd07" path="/1/1-DAVISFX3/bias/Gnd07/">
-                        <attr key="currentValue" type="byte">4</attr>
-                        <attr key="voltageValue" type="byte">13</attr>
-                    </node>
-                    <node name="IFRefrBn" path="/1/1-DAVISFX3/bias/IFRefrBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="short">255</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="IFThrBn" path="/1/1-DAVISFX3/bias/IFThrBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="short">255</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="LcolTimeoutBn" path="/1/1-DAVISFX3/bias/LcolTimeoutBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">49</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="LocalBufBn" path="/1/1-DAVISFX3/bias/LocalBufBn/">
-                        <attr key="coarseValue" type="byte">5</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="short">164</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="OVG1Lo" path="/1/1-DAVISFX3/bias/OVG1Lo/">
-                        <attr key="currentValue" type="byte">4</attr>
-                        <attr key="voltageValue" type="byte">63</attr>
-                    </node>
-                    <node name="OVG2Lo" path="/1/1-DAVISFX3/bias/OVG2Lo/">
-                        <attr key="currentValue" type="byte">0</attr>
-                        <attr key="voltageValue" type="byte">0</attr>
-                    </node>
-                    <node name="OffBn" path="/1/1-DAVISFX3/bias/OffBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">6</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="OnBn" path="/1/1-DAVISFX3/bias/OnBn/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">255</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="PadFollBn" path="/1/1-DAVISFX3/bias/PadFollBn/">
-                        <attr key="coarseValue" type="byte">7</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="short">209</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="PixInvBn" path="/1/1-DAVISFX3/bias/PixInvBn/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">164</attr>
-                        <attr key="sex" type="string">N</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="PrBp" path="/1/1-DAVISFX3/bias/PrBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">59</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="PrSFBp" path="/1/1-DAVISFX3/bias/PrSFBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">17</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="ReadoutBufBp" path="/1/1-DAVISFX3/bias/ReadoutBufBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">false</attr>
-                        <attr key="fineValue" type="short">20</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="RefrBp" path="/1/1-DAVISFX3/bias/RefrBp/">
-                        <attr key="coarseValue" type="byte">4</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">250</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="RisetimeBp" path="/1/1-DAVISFX3/bias/RisetimeBp/">
-                        <attr key="coarseValue" type="byte">6</attr>
-                        <attr key="currentLevel" type="string">Normal</attr>
-                        <attr key="enabled" type="bool">true</attr>
-                        <attr key="fineValue" type="short">162</attr>
-                        <attr key="sex" type="string">P</attr>
-                        <attr key="type" type="string">Normal</attr>
-                    </node>
-                    <node name="SSN" path="/1/1-DAVISFX3/bias/SSN/">
-                        <attr key="operatingMode" type="string">ShiftedSource</attr>
-                        <attr key="refValue" type="byte">2</attr>
-                        <attr key="regValue" type="byte">33</attr>
-                        <attr key="voltageLevel" type="string">SplitGate</attr>
-                    </node>
-                    <node name="SSP" path="/1/1-DAVISFX3/bias/SSP/">
-                        <attr key="operatingMode" type="string">TiedToRail</attr>
-                        <attr key="refValue" type="byte">1</attr>
-                        <attr key="regValue" type="byte">33</attr>
-                        <attr key="voltageLevel" type="string">SplitGate</attr>
-                    </node>
-                    <node name="TX2OVG2Hi" path="/1/1-DAVISFX3/bias/TX2OVG2Hi/">
-                        <attr key="currentValue" type="byte">0</attr>
-                        <attr key="voltageValue" type="byte">63</attr>
-                    </node>
-                </node>
-                <node name="chip" path="/1/1-DAVISFX3/chip/">
-                    <attr key="AERnArow" type="bool">false</attr>
-                    <attr key="AdjustOVG1Lo" type="bool">true</attr>
-                    <attr key="AdjustOVG2Lo" type="bool">false</attr>
-                    <attr key="AdjustTX2OVG2Hi" type="bool">false</attr>
-                    <attr key="AnalogMux0" type="byte">0</attr>
-                    <attr key="AnalogMux1" type="byte">0</attr>
-                    <attr key="AnalogMux2" type="byte">0</attr>
-                    <attr key="BiasMux0" type="byte">0</attr>
-                    <attr key="DigitalMux0" type="byte">0</attr>
-                    <attr key="DigitalMux1" type="byte">0</attr>
-                    <attr key="DigitalMux2" type="byte">0</attr>
-                    <attr key="DigitalMux3" type="byte">0</attr>
-                    <attr key="ResetCalibNeuron" type="bool">true</attr>
-                    <attr key="ResetTestPixel" type="bool">true</attr>
-                    <attr key="SelectGrayCounter" type="bool">true</attr>
-                    <attr key="TestADC" type="bool">false</attr>
-                    <attr key="TypeNCalibNeuron" type="bool">false</attr>
-                    <attr key="UseAOut" type="bool">false</attr>
-                </node>
-                <node name="dvs" path="/1/1-DAVISFX3/dvs/">
-                    <attr key="AckDelayColumn" type="byte">0</attr>
-                    <attr key="AckDelayRow" type="byte">4</attr>
-                    <attr key="AckExtensionColumn" type="byte">0</attr>
-                    <attr key="AckExtensionRow" type="byte">1</attr>
-                    <attr key="ExternalAERControl" type="bool">false</attr>
-                    <attr key="FilterBackgroundActivity" type="bool">true</attr>
-                    <attr key="FilterBackgroundActivityDeltaTime" type="int">20000</attr>
-                    <attr key="FilterPixel0Column" type="short">320</attr>
-                    <attr key="FilterPixel0Row" type="short">240</attr>
-                    <attr key="FilterPixel1Column" type="short">320</attr>
-                    <attr key="FilterPixel1Row" type="short">240</attr>
-                    <attr key="FilterPixel2Column" type="short">320</attr>
-                    <attr key="FilterPixel2Row" type="short">240</attr>
-                    <attr key="FilterPixel3Column" type="short">320</attr>
-                    <attr key="FilterPixel3Row" type="short">240</attr>
-                    <attr key="FilterPixel4Column" type="short">320</attr>
-                    <attr key="FilterPixel4Row" type="short">240</attr>
-                    <attr key="FilterPixel5Column" type="short">320</attr>
-                    <attr key="FilterPixel5Row" type="short">240</attr>
-                    <attr key="FilterPixel6Column" type="short">320</attr>
-                    <attr key="FilterPixel6Row" type="short">240</attr>
-                    <attr key="FilterPixel7Column" type="short">320</attr>
-                    <attr key="FilterPixel7Row" type="short">240</attr>
-                    <attr key="FilterRowOnlyEvents" type="bool">true</attr>
-                    <attr key="Run" type="bool">true</attr>
-                    <attr key="WaitOnTransferStall" type="bool">false</attr>
-                </node>
-                <node name="externalInput" path="/1/1-DAVISFX3/externalInput/">
-                    <attr key="DetectFallingEdges" type="bool">true</attr>
-                    <attr key="DetectPulseLength" type="int">120</attr>
-                    <attr key="DetectPulsePolarity" type="bool">true</attr>
-                    <attr key="DetectPulses" type="bool">false</attr>
-                    <attr key="DetectRisingEdges" type="bool">true</attr>
-                    <attr key="GeneratePulseInterval" type="int">120</attr>
-                    <attr key="GeneratePulseLength" type="int">60</attr>
-                    <attr key="GeneratePulsePolarity" type="bool">true</attr>
-                    <attr key="GenerateUseCustomSignal" type="bool">false</attr>
-                    <attr key="RunDetector" type="bool">true</attr>
-                    <attr key="RunGenerator" type="bool">false</attr>
-                </node>
-                <node name="imu" path="/1/1-DAVISFX3/imu/">
-                    <attr key="AccelFullScale" type="byte">1</attr>
-                    <attr key="AccelXStandby" type="bool">false</attr>
-                    <attr key="AccelYStandby" type="bool">false</attr>
-                    <attr key="AccelZStandby" type="bool">false</attr>
-                    <attr key="DigitalLowPassFilter" type="byte">1</attr>
-                    <attr key="GyroFullScale" type="byte">1</attr>
-                    <attr key="GyroXStandby" type="bool">false</attr>
-                    <attr key="GyroYStandby" type="bool">false</attr>
-                    <attr key="GyroZStandby" type="bool">false</attr>
-                    <attr key="LowPowerCycle" type="bool">false</attr>
-                    <attr key="LowPowerWakeupFrequency" type="byte">1</attr>
-                    <attr key="Run" type="bool">true</attr>
-                    <attr key="SampleRateDivider" type="short">0</attr>
-                    <attr key="TempStandby" type="bool">false</attr>
-                </node>
-                <node name="multiplexer" path="/1/1-DAVISFX3/multiplexer/">
-                    <attr key="DropAPSOnTransferStall" type="bool">false</attr>
-                    <attr key="DropDVSOnTransferStall" type="bool">true</attr>
-                    <attr key="DropExtInputOnTransferStall" type="bool">true</attr>
-                    <attr key="DropIMUOnTransferStall" type="bool">false</attr>
-                    <attr key="ForceChipBiasEnable" type="bool">false</attr>
-                    <attr key="Run" type="bool">true</attr>
-                    <attr key="TimestampReset" type="bool">false</attr>
-                    <attr key="TimestampRun" type="bool">true</attr>
-                </node>
-                <node name="sourceInfo" path="/1/1-DAVISFX3/sourceInfo/">
-                    <attr key="apsColorFilter" type="byte">0</attr>
-                    <attr key="apsHasExternalADC" type="bool">false</attr>
-                    <attr key="apsHasGlobalShutter" type="bool">true</attr>
-                    <attr key="apsHasInternalADC" type="bool">true</attr>
-                    <attr key="apsHasQuadROI" type="bool">true</attr>
-                    <attr key="apsSizeX" type="short">640</attr>
-                    <attr key="apsSizeY" type="short">480</attr>
-                    <attr key="chipID" type="short">7</attr>
-                    <attr key="deviceIsMaster" type="bool">true</attr>
-                    <attr key="dvsHasBackgroundActivityFilter" type="bool">true</attr>
-                    <attr key="dvsHasPixelFilter" type="bool">true</attr>
-                    <attr key="dvsHasTestEventGenerator" type="bool">false</attr>
-                    <attr key="dvsSizeX" type="short">320</attr>
-                    <attr key="dvsSizeY" type="short">240</attr>
-                    <attr key="extInputHasGenerator" type="bool">true</attr>
-                    <attr key="logicVersion" type="short">7449</attr>
                 </node>
                 <node name="system" path="/1/1-DAVISFX3/system/">
                     <attr key="DataExchangeBufferSize" type="int">64</attr>
@@ -400,23 +392,18 @@
                     <attr key="SpecialPacketMaxInterval" type="int">1000</attr>
                     <attr key="SpecialPacketMaxSize" type="int">128</attr>
                 </node>
-                <node name="usb" path="/1/1-DAVISFX3/usb/">
-                    <attr key="BufferNumber" type="int">8</attr>
-                    <attr key="BufferSize" type="int">8192</attr>
-                    <attr key="EarlyPacketDelay" type="short">8</attr>
-                    <attr key="Run" type="bool">true</attr>
-                </node>
             </node>
-            <node name="2-BAFilter" path="/1/2-BAFilter/">
-                <attr key="deltaT" type="int">30000</attr>
-                <attr key="subSampleBy" type="byte">0</attr>
+            <node name="60-VisualizerPolarity" path="/1/60-VisualizerPolarity/">
+                <attr key="showStatistics" type="bool">true</attr>
+                <attr key="subsampleRendering" type="int">1</attr>
+                <attr key="zoomFactor" type="float">2</attr>
             </node>
-            <node name="4-Visualizer" path="/1/4-Visualizer/">
-                <attr key="showEvents" type="bool">true</attr>
-                <attr key="showFrames" type="bool">true</attr>
-                <attr key="subsampleRendering" type="short">1</attr>
+            <node name="61-VisualizerFrame" path="/1/61-VisualizerFrame/">
+                <attr key="showStatistics" type="bool">true</attr>
+                <attr key="subsampleRendering" type="int">1</attr>
+                <attr key="zoomFactor" type="float">1</attr>
             </node>
-            <node name="6-NetTCPServerOutput" path="/1/6-NetTCPServerOutput/">
+            <node name="8-NetTCPServerOutput" path="/1/8-NetTCPServerOutput/">
                 <attr key="backlogSize" type="short">5</attr>
                 <attr key="concurrentConnections" type="short">5</attr>
                 <attr key="excludeHeader" type="bool">false</attr>
@@ -425,7 +412,7 @@
                 <attr key="portNumber" type="short">7777</attr>
                 <attr key="validEventsOnly" type="bool">false</attr>
             </node>
-            <node name="7-NetUDPOutput" path="/1/7-NetUDPOutput/">
+            <node name="9-NetUDPOutput" path="/1/9-NetUDPOutput/">
                 <attr key="excludeHeader" type="bool">false</attr>
                 <attr key="ipAddress" type="string">127.0.0.1</attr>
                 <attr key="maxBytesPerPacket" type="int">0</attr>
@@ -434,7 +421,7 @@
             </node>
         </node>
         <node name="logger" path="/logger/">
-            <attr key="logFile" type="string">/home/inilabs/inilabs/cAER/caer.log</attr>
+            <attr key="logFile" type="string">/home/inilabs/code/JAER_SVN/cAER/trunk/caer.log</attr>
             <attr key="logLevel" type="byte">5</attr>
         </node>
         <node name="server" path="/server/">

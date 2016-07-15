@@ -7,7 +7,7 @@ DAVIS208
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
-cameras/davis208_ptc.xml
+cameras/davis208_contrast_sensitivity.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
@@ -34,13 +34,13 @@ False
 # Contrast sensitivity parameters (for biases it takes ON, DIFF and OFF in triplets (the first value of each, then the second and so on))
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
-[40,100,200,255,200,200,200,200,200,200,200,200]
+[200]
 # 13 # DIFF bias finevalue (coarse is 4)
-[39,39,39,39,39,39,39,39,39,39,39,39]
-# 14 # OFF bias finevalue (coarse is 3)
-[1,1,1,1,1,2,6,8,1,1,1,1]
-# 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
-[40,40,40,40,40,40,40,40,10,50,100,150]
+[39]
+# 14 # OFF bias finevalue (coarse is 4)
+[1]
+# 15 # REFSS bias finevalue (coarse is 5upt to 1nd then 6)(if not present leave '0')
+[20]
 
 # #########################################################
 # Photon transfer curve parameters

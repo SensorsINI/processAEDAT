@@ -6,7 +6,7 @@ DAVIS240C
 # 1 # Sensor type
 DAVISFX2
 # 2 # Bias file
-cameras/davis240c_PTC.xml
+cameras/davis240c_dynamic_range.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
@@ -29,12 +29,12 @@ False
 # #########################################################
 # Contrast sensitivity parameters
 # #########################################################
-# 12 # ON bias finevalue (coarse is 5)
-[80]
-# 13 # DIFF bias finevalue (coarse is 3)
-[135]
-# 14 # OFF bias finevalue (coarse is 2)
-[180]
+# 12 # ON bias finevalue (coarse is 5 or 6)
+[120]#,50]
+# 13 # DIFF bias finevalue (coarse is 4 or 5)
+[80]#,60]
+# 14 # OFF bias finevalue (coarse is 4 or 3)
+[120]#,26]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
 [0]
 
@@ -42,7 +42,7 @@ False
 # Photon transfer curve parameters
 # #########################################################
 # 16 # start, end and number of points for exposures, dark = [1,1000000,10], 2klux=[1,150,50]
-[1,300,50]
+[1,1000000,10]
 # 17 # Use internal ADC?
 False
 # 18 # Global shutter enabled?
