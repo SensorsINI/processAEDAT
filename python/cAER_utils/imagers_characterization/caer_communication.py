@@ -473,6 +473,7 @@ class caer_communication:
             self.start_logging(filename)    
             time.sleep(recording_time)
         else:
+            recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
             print("Recording noise for " + str(recording_time))
             time.sleep(recording_time)
             self.stop_logging()
