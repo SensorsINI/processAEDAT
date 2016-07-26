@@ -7,97 +7,88 @@ import os
 import sys
 from pylab import *
 sys.path.append('utils/')
-import load_files
 import operator
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 ####################################################
 # select data files to import and output directory #
 ####################################################
-#chip_folder = ["Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/Measurements_14.07.2016/DAVIS208_contrast_sensitivity_14_07_16-15_39_34_0/",
-#               "Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/Measurements_14.07.2016/DAVIS208_contrast_sensitivity_14_07_16-16_42_35_1nd/",
-#               "Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/Measurements_14.07.2016/DAVIS208_contrast_sensitivity_14_07_16-16_58_17_2nd/",
-#               "Z:/Characterizations/Measurements_final/DAVIS208/contrast_sensitivity/Measurements_14.07.2016/DAVIS208_contrast_sensitivity_14_07_16-17_05_43_3rd/"]
-#base_level_real= [1000,100,10,1]
+# ---------------------------------
+#directory_meas = ["Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_42_57_lux_100_no_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_53_17_lux_100_no_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_58_38_lux_100_no_ir_B3/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_44_50_lux_100_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_51_21_lux_100_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-16_01_27_lux_100_ir_B3/",                                    
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_40_34_lux_1000_no_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_54_43_lux_1000_no_ir_B2/",                
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_56_53_lux_1000_no_ir_B3/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_46_38_lux_1000_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_50_22_lux_1000_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-16_02_48_lux_1000_ir_B3/"]
+#base_level_real = [100,100,100,100,100,1000, 1000,1000,1000,1000,1000,1000]
+#overwrite_base_level = True
 
-#chip_folder = ["Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_10_53/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_12_17/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_12_46/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_13_23/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_13_54/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_14_48/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_15_14/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_15_41/",
-#                  "Z:/Characterizations/Measurements/DAVIS208_contrast_sensitivity_15_07_16-10_16_21/"]
-#base_level_real= [1000,1000,1000,1000,1000,1000,1000,1000,1000]
 
-#chip_folder = ["C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-15_08_38/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-15_05_08/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-15_03_42/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-15_00_11/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_56_53/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_54_55/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_54_09/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_44_33/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_39_17/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_38_11/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_37_41/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_36_18/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_15_07_2016/DAVIS208_contrast_sensitivity_15_07_16-14_35_08/"]
-#base_level_real= [1000,100,1500,1500,2000,2500,3000,3500,0.001,0.001, 0.01,0.01, 0.1,0.1, 1, 10, 100,100, 1000,1000]
+# CS
+#####USED
+# BOTH to get ON and OFF best
+#ir_no_ir = False
+#dr = True
+#directory_meas = ["C:/Users/Diederik Paul Moeys/Desktop/Measurements_20_07_2016_both/DAVIS208_contrast_sensitivity_20_07_16-12_37_37_lux_1/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_20_07_2016_both/DAVIS208_contrast_sensitivity_20_07_16-12_43_47_lux_10/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_20_07_2016_both/DAVIS208_contrast_sensitivity_20_07_16-12_45_46_lux_100/", #
+##                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_20_07_2016_both/DAVIS208_contrast_sensitivity_20_07_16-12_48_20_lux_1000/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_20_07_2016_both/all/",
+#                  
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_09_22_lux_0.01/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_17_21_lux_0.1/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_20_55_lux_1/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_23_17_lux_10/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_25_26_lux_100/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_29_42_lux_1000/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_31_36_lux_2000/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_33_24_lux_3000/"] #
+# ALL to push contrast with ir and no ir comparison
+directory_meas = ["C:/Users/Diederik Paul Moeys/Desktop/DAVIS208_contrast_sensitivity_22_07_16-09_48_08_lux_1000_ir/",
+                  "C:/Users/Diederik Paul Moeys/Desktop/DAVIS208_contrast_sensitivity_22_07_16-10_08_39_lux_1000_no_ir/"]
+ir_no_ir = True
+dr = False 
 
-#chip_folder = ["C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_17_52/",    
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_18_33/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_24_10/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_24_40/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_29_10/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_29_40/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_30_08/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_30_37/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_38_14/",
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_38_45/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_41_44/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_42_25/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_42_52/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_44_54/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_45_24/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_46_14/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_46_45/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_47_17/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_47_55/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_48_37/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_49_11/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_49_36/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_50_09/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-12_50_36/", 
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-13_50_22/",
-#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-13_51_16/"] 
-chip_folder = ["C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-14_53_52/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-14_54_23/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-14_54_50/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-14_55_17/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_00_11/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_00_38/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_01_05/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_01_31/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_05_43/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_06_13/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_11_48/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_29_59/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_30_26/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_31_21/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_34_54/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_35_53/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_36_31/",
-               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_ON_nd2_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-15_37_15/"]
+##### UNUSED BUT GOOD
+## All biases switch old biases NEVER USED; NOT ENOUGH POINTS
+#directory_meas = ["C:/Users/Diederik Paul Moeys/Desktop/SWAP1000_ir_no_ir/DAVIS208_contrast_sensitivity_20_07_16-15_16_51/",
+#                  "C:/Users/Diederik Paul Moeys/Desktop/SWAP1000_ir_no_ir/DAVIS208_contrast_sensitivity_20_07_16-15_22_19/",
+#                  "C:/Users/Diederik Paul Moeys/Desktop/SWAP1000_ir_no_ir/DAVIS208_contrast_sensitivity_20_07_16-15_28_18/",
+#                  "C:/Users/Diederik Paul Moeys/Desktop/SWAP1000_ir_no_ir/DAVIS208_contrast_sensitivity_20_07_16-15_33_21/"]
+# Only OFF NEVER USED ALONE
+#directory_meas = [#"C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_07_00_lux_0.001/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_09_22_lux_0.01/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_17_21_lux_0.1/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_20_55_lux_1/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_23_17_lux_10/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_25_26_lux_100/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_29_42_lux_1000/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_31_36_lux_2000/", #
+#                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_33_24_lux_3000/"] #
+## Incrs sens 100/1000 3 biases NEVER USED, WRONG SINCE IR CUT WAS MISSING, only 1000 is usable
+#directory_meas = ["Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_42_57_lux_100_no_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_53_17_lux_100_no_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_58_38_lux_100_no_ir_B3/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_44_50_lux_100_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_51_21_lux_100_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-16_01_27_lux_100_ir_B3/",                                    
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_40_34_lux_1000_no_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_54_43_lux_1000_no_ir_B2/",                
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_56_53_lux_1000_no_ir_B3/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_46_38_lux_1000_ir_B1/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-15_50_22_lux_1000_ir_B2/",
+#                  "Z:/Characterizations/Measurements/208/DAVIS208_contrast_sensitivity_20_07_16-16_02_48_lux_1000_ir_B3/"]
 
-#chip_folder = ["C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_40_52/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_41_59/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_42_37/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_43_51/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_44_38/",
-#               "C:/Users/Diederik Paul Moeys/Desktop/Measurements_incrSens_18_07_2016/DAVIS208_contrast_sensitivity_18_07_16-16_45_04/"]
-                  
-plot_all = False
+overwrite_base_level = False
+plot_hist = False
+plot_all = True
+hold_on = False
 
 sensor = 'DAVIS208'
 
@@ -108,12 +99,20 @@ count_off_overall = []
 snr_on_overall = []
 snr_off_overall = []
 base_level_overall = []
+noise_off_overall = []
+noise_on_overall = []
+hot_off_overall = []
+hot_on_overall = []
+fpn_on_overall = []
+fpn_off_overall = []
+
 this_div_x = 0
 this_div_y = 0
+counter= 0
 
-for index_chip in range(len(chip_folder)):
-    CS_data_file = chip_folder[index_chip] + 'saved_variables/' + 'variables_'+sensor+'.npz'
-    figure_dir = chip_folder[index_chip] + 'figures/'
+for index_chip in range(len(directory_meas)):
+    CS_data_file = directory_meas[index_chip] + 'saved_variables/' + 'variables_'+sensor+'.npz'
+    figure_dir = directory_meas[index_chip] + 'figures/'
     if(not os.path.exists(figure_dir)):
         os.makedirs(figure_dir)       
     fpn_dir = figure_dir + 'fpn/'
@@ -167,12 +166,13 @@ for index_chip in range(len(chip_folder)):
         diff_level = CS_data[CS_data.files[29]]
         on_event_count_median_per_pixel = CS_data[CS_data.files[30]]
         matrix_count_on_noise = CS_data[CS_data.files[31]]
-    print "Loaded data from: " + chip_folder[index_chip]
+    print "Loaded data from: " + directory_meas[index_chip]
     
     ############
     # plotting #
     ############
     for this_file in range(len(contrast_sensitivity_on_median_array)):
+        counter = counter+1
         num_files,x,y = np.shape(matrix_count_on) 
         base_level_overall.append(base_level[this_file])
         contrast_on_overall.append(contrast_sensitivity_on_median_array[this_file])
@@ -181,9 +181,32 @@ for index_chip in range(len(chip_folder)):
         count_off_overall.append(off_event_count_median_per_pixel[this_file])
         snr_on_overall.append(SNR_on[this_file])
         snr_off_overall.append(SNR_off[this_file])
+        noise_off_overall.append(off_noise_event_count_median_per_pixel[this_file])
+        noise_on_overall.append(on_noise_event_count_median_per_pixel[this_file])
+        hot_on_overall.append(len(matrix_count_on[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1], frame_y_divisions[0][0]:frame_y_divisions[-1][1]][matrix_count_on[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1],frame_y_divisions[0][0]:frame_y_divisions[-1][1]]/(num_oscillations-1.0)>200])/100.0) # Divide by 100x100 and multiply by 100 for %
+        hot_off_overall.append(len(matrix_count_off[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1],frame_y_divisions[0][0]:frame_y_divisions[-1][1]][matrix_count_off[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1],frame_y_divisions[0][0]:frame_y_divisions[-1][1]]/(num_oscillations-1.0)>200])/100.0)
         
-        if(plot_all):
-            for this_file in range(num_files): 
+        size_array=(-frame_x_divisions[this_div_x][0]+frame_x_divisions[this_div_x][1]+1)* (-frame_y_divisions[this_div_y][0]+frame_y_divisions[this_div_y][1]+1)
+        a_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]/(num_oscillations-1),size_array)
+        a_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1]/(num_oscillations-1),size_array)
+        err_on = (np.percentile(a_on,84.0)-np.percentile(a_on,15.8))/2.0
+        err_off = (np.percentile(a_off,84.0)-np.percentile(a_off,15.8))/2.0
+        if(off_event_count_average_per_pixel[this_file,this_div_x,this_div_y] != 0.0):
+            fpn_off_overall.append(err_off/np.median(a_off))
+        else:
+            fpn_off_overall.append(np.nan)
+        if(on_event_count_average_per_pixel[this_file,this_div_x,this_div_y] != 0.0):                        
+            fpn_on_overall.append(err_on/np.median(a_on))
+        else:
+            fpn_on_overall.append(np.nan)        
+#        print "OFF " + str(err_off)
+#        print "OFF med " + str(np.median(a_off))
+#        print "ratio OFF " +str(err_off/np.median(a_off))+"\n"
+#        print "ON " + str(err_on)
+#        print "ON med " + str(np.median(a_on))  
+#        print "ratio ON " +str(err_on/np.median(a_on))+"\n"
+        if(plot_all): 
+            if(plot_hist): 
                 for this_div_x in range(len(frame_x_divisions)) :
                     for this_div_y in range(len(frame_y_divisions)):
                         colors = cm.rainbow(np.linspace(0, 1, 2))
@@ -191,24 +214,29 @@ for index_chip in range(len(chip_folder)):
                         [dim1, dim2] = np.shape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1])
                         fig= plt.figure()
                         ax = fig.add_subplot(121)
-                        ax.set_title('ON events/pix/cycle histogram')
+                        ax.set_title('ON events/pix/cycle')
                         plt.xlabel ("ON events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
+                        plt.xlim([0,80])
+                        bins = np.linspace(0, 80, 20)
                         line_on = np.reshape(matrix_count_on[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_on[line_on <30], 30, color=colors[color_tmp])
+                        im = plt.hist(line_on[line_on <80], bins, color=colors[color_tmp], label='ON')
                         color_tmp = color_tmp+1
                         line_on_noise = np.reshape(matrix_count_on_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_on_noise[line_on_noise < 30], 30, color=colors[color_tmp])
+                        im = plt.hist(line_on_noise[line_on_noise < 80], bins, color=colors[color_tmp], label='ON noise')
+                        lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
                         ax = fig.add_subplot(122)
                         color_tmp = 0
-                        ax.set_title('OFF events/pix/cycle histogram')
+                        ax.set_title('OFF events/pix/cycle')
                         plt.xlabel ("OFF events per pixel per cycle")
                         plt.ylabel ("Number of pixels")
+                        plt.xlim([0,80])
                         line_off = np.reshape(matrix_count_off[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_off[line_off < 30], 30, color=colors[color_tmp])
+                        im = plt.hist(line_off[line_off < 80], bins, color=colors[color_tmp], label='OFF')
                         color_tmp = color_tmp+1
                         line_off_noise = np.reshape(matrix_count_off_noise[this_file,frame_x_divisions[this_div_x][0]:frame_x_divisions[this_div_x][1]+1,frame_y_divisions[this_div_y][0]:frame_y_divisions[this_div_y][1]+1], dim1*dim2)/(num_oscillations-1.0)
-                        im = plt.hist(line_off_noise[line_off_noise < 30], 30, color=colors[color_tmp])
+                        im = plt.hist(line_off_noise[line_off_noise < 80], bins, color=colors[color_tmp], label='OFF noise')
+                        lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
                         fig.tight_layout()     
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".png",  format='png', dpi=1000)
                         plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+"_Area_X_"+str(frame_x_divisions[this_div_x])+"_Y_"+str(frame_y_divisions[this_div_y])+".pdf",  format='pdf')
@@ -241,38 +269,57 @@ for index_chip in range(len(chip_folder)):
                         plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
                         plt.close("all")
                 print "histograms done"
-                # Deltas = Contrast sensitivities
-                contrast_matrix_on_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_on[this_file,:,:])))
-                contrast_matrix_off_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_off[this_file,:,:])))
-                fig = plt.figure()
-                plt.subplot(3,2,1)
-                plt.title("ON thresholds")
-                plt.imshow(contrast_matrix_on_plot)
-                plt.colorbar()
-                plt.subplot(3,2,2)
-                plt.title("OFF thresholds")          
-                plt.imshow(contrast_matrix_off_plot)
-                plt.colorbar()
-                plt.subplot(3,2,3)
-                plt.title("ON integrated on X axis")
-                plt.plot(np.sum(contrast_matrix_on_plot,axis=0)) 
-                plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
-                plt.subplot(3,2,4)
-                plt.title("OFF integrated on X axis")
-                plt.plot(np.sum(contrast_matrix_off_plot,axis=0))
-                plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])   
-                plt.subplot(3,2,5)
-                plt.title("ON integrated on Y axis")
-                plt.plot(np.sum(contrast_matrix_on_plot,axis=1))  
-                plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])
-                plt.subplot(3,2,6)
-                plt.title("OFF integrated on Y axis")
-                plt.plot(np.sum(contrast_matrix_off_plot,axis=1))
-                plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])  
-                fig.tight_layout()  
-                plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
-                plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
-                plt.close("all")      
+            # Deltas = Contrast sensitivities
+            contrast_matrix_off_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_off[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1],frame_y_divisions[0][0]:frame_y_divisions[-1][1]])))
+            contrast_matrix_on_plot = np.flipud(np.fliplr(np.transpose(contrast_matrix_on[this_file,frame_x_divisions[0][0]:frame_x_divisions[-1][1],frame_y_divisions[0][0]:frame_y_divisions[-1][1]])))
+            contrast_matrix_on_plot[contrast_matrix_on_plot<0]=0.0        
+            contrast_matrix_off_plot[contrast_matrix_off_plot<0]=0.0   
+            contrast_matrix_on_plot[contrast_matrix_on_plot>0.2]=0.20        
+            contrast_matrix_off_plot[contrast_matrix_off_plot>0.2]=0.20
+            fig = plt.figure()
+            hi = plt.subplot(1,2,1)
+            plt.title("ON thresholds [%]")
+            divider = make_axes_locatable(hi)
+            im = plt.imshow(100.0*contrast_matrix_on_plot)
+            plt.xlim([0,frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            plt.ylim([0,frame_y_divisions[-1][1]-frame_y_divisions[0][0]])
+            cax = divider.append_axes("right", "5%", pad=0.05)
+            plt.colorbar(im, cax=cax)
+            plt.clim(0,10)
+            hi = plt.subplot(1,2,2)
+            plt.title("OFF thresholds [%]")
+            divider = make_axes_locatable(hi)
+            im = plt.imshow(100.0*contrast_matrix_off_plot)
+            plt.xlim([0,frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            plt.ylim([0,frame_y_divisions[-1][1]-frame_y_divisions[0][0]])
+            cax = divider.append_axes("right", "5%", pad=0.05)
+            plt.colorbar(im, cax=cax)
+            plt.clim(0,5)
+            fig.tight_layout()  
+            plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
+            plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000) 
+
+            fig = plt.figure()
+            plt.subplot(2,2,1)
+            plt.title("ON median X-axis [%]")
+            plt.plot(np.median(100.0*contrast_matrix_on_plot,axis=0)) 
+            plt.xlim([frame_x_divisions[0][0]-frame_x_divisions[0][0],frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            plt.subplot(2,2,2)
+            plt.title("OFF median X-axis [%]")
+            plt.plot(np.median(100.0*contrast_matrix_off_plot,axis=0))
+            plt.xlim([frame_x_divisions[0][0]-frame_x_divisions[0][0],frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            plt.subplot(2,2,3)
+            plt.title("ON median Y-axis [%]")
+            plt.plot(np.median(100.0*contrast_matrix_on_plot,axis=1))  
+            plt.xlim([frame_x_divisions[0][0]-frame_x_divisions[0][0],frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            plt.subplot(2,2,4)
+            plt.title("OFF median Y-axis [%]")
+            plt.plot(np.median(100.0*contrast_matrix_off_plot,axis=1))
+            plt.xlim([frame_x_divisions[0][0]-frame_x_divisions[0][0],frame_x_divisions[-1][1]-frame_x_divisions[0][0]])
+            fig.tight_layout()  
+            plt.savefig(fpn_dir+"threshold_mismatch_int_"+str(this_file)+".pdf",  format='PDF')
+            plt.savefig(fpn_dir+"threshold_mismatch_int_"+str(this_file)+".png",  format='PNG', dpi=1000)            
+            plt.close("all")      
             print "plotting contrast sensitivities"
             fig=plt.figure()
             ax = fig.add_subplot(111)
@@ -297,141 +344,307 @@ for index_chip in range(len(chip_folder)):
             plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_off_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_off_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
             plt.close("all")        
-            print "FPN"
-            fig=plt.figure()
-            ax = fig.add_subplot(111)
-            colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
-            color_tmp = 0
-            for this_div_x in range(len(frame_x_divisions)) :
-                for this_div_y in range(len(frame_y_divisions)):
-                   plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], err_off_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                   color_tmp = color_tmp+1
-                   plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], err_on_percent_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                   color_tmp = color_tmp+1
-            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            #            plt.ylim([0,20])
-            ax.set_title('ON and OFF FPN vs contrast sensitivity')
-            plt.xlabel("Contrast sensitivity")
-            #            plt.xlim((0,100))
-            plt.ylabel("95% conf interval in percentage from median")
-            plt.savefig(contrast_sensitivities_dir+"FPN_vs_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-            plt.savefig(contrast_sensitivities_dir+"FPN_vs_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-            plt.close("all")
-            print "SNR"
-            #SNR ON
-            fig=plt.figure()
-            ax = fig.add_subplot(111)
-            colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
-            color_tmp = 0
-            for this_div_x in range(len(frame_x_divisions)) :
-                for this_div_y in range(len(frame_y_divisions)):
-                   plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], SNR_off[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                   color_tmp = color_tmp+1
-                   plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], SNR_on[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                   color_tmp = color_tmp+1
-            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            plt.xlabel("ON Contrast sensitivity [%]")
-            ax.set_title('ON and OFF SNR vs contrast sensitivity')
-            #            plt.xlim((0,100))
-            plt.ylabel("Median SNR [dB]")
-            plt.savefig(contrast_sensitivities_dir+"snr_vs_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-            plt.savefig(contrast_sensitivities_dir+"snr_vs_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-            plt.close("all")
-            print "Reffs"
-            if(sensor == 'DAVIS208'):
-                fig=plt.figure()
-                ax = fig.add_subplot(111)
-                colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
-                color_tmp = 0
-                for this_div_x in range(len(frame_x_divisions)) :
-                    for this_div_y in range(len(frame_y_divisions)):
-                #                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                #                   color_tmp = color_tmp+1                   
-                #                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                #                   color_tmp = color_tmp+1
-                       plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                       color_tmp = color_tmp+1
-                       plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-                       color_tmp = color_tmp+1
-                lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-                ax.set_title('ON and OFF contrast sensitivities vs refss bias level')
-                plt.xlabel("Refss level [FineValue]")
-                #            plt.ylim([0,20])
-                plt.ylabel("Contrast sensitivity")
-                #            plt.ylim((0,100))
-                plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-                plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-                print "here"
-                plt.close("all")
-                print "done for file"
+#            print "SNR"
+#            #SNR ON
+#            fig=plt.figure()
+#            ax = fig.add_subplot(111)
+#            colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+#            color_tmp = 0
+#            for this_div_x in range(len(frame_x_divisions)) :
+#                for this_div_y in range(len(frame_y_divisions)):
+#                   plt.plot(100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], SNR_off[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                   color_tmp = color_tmp+1
+#                   plt.plot(100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], SNR_on[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                   color_tmp = color_tmp+1
+#            lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+#            plt.xlabel("ON Contrast sensitivity [%]")
+#            ax.set_title('ON and OFF SNR vs contrast sensitivity')
+#            #            plt.xlim((0,100))
+#            plt.ylabel("Median SNR [dB]")
+#            plt.savefig(contrast_sensitivities_dir+"snr_vs_contrast_sensitivity.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+#            plt.savefig(contrast_sensitivities_dir+"snr_vs_contrast_sensitivity.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+#            plt.close("all")
+#            print "Reffs"
+#            if(sensor == 'DAVIS208'):
+#                fig=plt.figure()
+#                ax = fig.add_subplot(111)
+#                colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+#                color_tmp = 0
+#                for this_div_x in range(len(frame_x_divisions)) :
+#                    for this_div_y in range(len(frame_y_divisions)):
+#                #                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='OFF average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                #                   color_tmp = color_tmp+1                   
+#                #                   plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_average_array[:,this_div_x, this_div_y], 'o', color=colors[color_tmp], label='ON average - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                #                   color_tmp = color_tmp+1
+#                       plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_off_median_array[:,this_div_x, this_div_y], 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                       color_tmp = color_tmp+1
+#                       plt.plot(refss_level[:,this_div_x, this_div_y], 100*contrast_sensitivity_on_median_array[:,this_div_x, this_div_y], 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+#                       color_tmp = color_tmp+1
+#                lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+#                ax.set_title('ON and OFF contrast sensitivities vs refss bias level')
+#                plt.xlabel("Refss level [FineValue]")
+#                #            plt.ylim([0,20])
+#                plt.ylabel("Contrast sensitivity")
+#                #            plt.ylim((0,100))
+#                plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+#                plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_refss_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+#                print "here"
+#                plt.close("all")
+            print "done for file"
 print "overall plots"
-count_off_overall= np.reshape(count_off_overall,len(chip_folder))
-count_on_overall= np.reshape(count_on_overall,len(chip_folder))
-contrast_off_overall= np.reshape(contrast_off_overall,len(chip_folder))
-contrast_on_overall= np.reshape(contrast_on_overall,len(chip_folder))
-snr_off_overall = np.reshape(snr_off_overall,len(chip_folder))
-snr_on_overall = np.reshape(snr_on_overall,len(chip_folder))
-base_level_overall = np.reshape(base_level_overall,len(chip_folder))
+count_off_overall= np.reshape(count_off_overall,counter)
+count_on_overall= np.reshape(count_on_overall,counter)
+contrast_off_overall= np.reshape(contrast_off_overall,counter)
+contrast_on_overall= np.reshape(contrast_on_overall,counter)
+snr_off_overall = np.reshape(snr_off_overall,counter)
+snr_on_overall = np.reshape(snr_on_overall,counter)
+base_level_overall = np.reshape(base_level_overall,counter)
+noise_off_overall =  np.reshape(noise_off_overall,counter)
+noise_on_overall =  np.reshape(noise_on_overall,counter)
+fpn_on_overall =  np.reshape(fpn_on_overall,counter)
+fpn_off_overall =  np.reshape(fpn_off_overall,counter)
 
-# Sort
-base_level_overall, count_off_overall = zip(*sorted(zip(base_level_overall, count_off_overall)))
-base_level_overall, count_on_overall = zip(*sorted(zip(base_level_overall, count_on_overall)))
-base_level_overall, contrast_off_overall = zip(*sorted(zip(base_level_overall, contrast_off_overall)))
-base_level_overall, contrast_on_overall = zip(*sorted(zip(base_level_overall, contrast_on_overall)))
-base_level_overall, snr_on_overall = zip(*sorted(zip(base_level_overall, snr_on_overall)))
-base_level_overall, snr_off_overall = zip(*sorted(zip(base_level_overall, snr_off_overall)))
 
-base_level_overall, count_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, count_off_overall))))
-base_level_overall, count_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, count_on_overall))))
-base_level_overall, contrast_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, contrast_off_overall))))
-base_level_overall, contrast_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, contrast_on_overall))))
-base_level_overall, snr_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, snr_on_overall))))
-base_level_overall, snr_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, snr_off_overall))))
+## Sort
+#base_level_overall, count_off_overall = zip(*sorted(zip(base_level_overall, count_off_overall)))
+#base_level_overall, count_on_overall = zip(*sorted(zip(base_level_overall, count_on_overall)))
+#base_level_overall, contrast_off_overall = zip(*sorted(zip(base_level_overall, contrast_off_overall)))
+#base_level_overall, contrast_on_overall = zip(*sorted(zip(base_level_overall, contrast_on_overall)))
+#base_level_overall, snr_on_overall = zip(*sorted(zip(base_level_overall, snr_on_overall)))
+#base_level_overall, snr_off_overall = zip(*sorted(zip(base_level_overall, snr_off_overall)))
+#
+#base_level_overall, count_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, count_off_overall))))
+#base_level_overall, count_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, count_on_overall))))
+#base_level_overall, contrast_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, contrast_off_overall))))
+#base_level_overall, contrast_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, contrast_on_overall))))
+#base_level_overall, snr_on_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, snr_on_overall))))
+#base_level_overall, snr_off_overall = (list(t) for t in zip(*sorted(zip(base_level_overall, snr_off_overall))))
+#
+## Reconvert from list to array for plotting
+#count_off_overall= np.array(count_off_overall)
+#count_on_overall= np.array(count_on_overall)
+#contrast_off_overall= np.array(contrast_off_overall)
+#contrast_on_overall= np.array(contrast_on_overall)
+#snr_off_overall = np.array(snr_off_overall)
+#snr_on_overall = np.array(snr_on_overall)
+#base_level_overall = np.array(base_level_overall)
+#count_off_overall= np.reshape(count_off_overall,len(directory_meas))
+#count_on_overall= np.reshape(count_on_overall,len(directory_meas))
+#contrast_off_overall= np.reshape(contrast_off_overall,len(directory_meas))
+#contrast_on_overall= np.reshape(contrast_on_overall,len(directory_meas))
+#snr_off_overall = np.reshape(snr_off_overall,len(directory_meas))
+#snr_on_overall = np.reshape(snr_on_overall,len(directory_meas))
+#base_level_overall = np.reshape(base_level_overall,len(directory_meas))
 
-fig=plt.figure()
+if(overwrite_base_level):
+    base_level_overall = base_level_real
+
+overall = figure_dir + 'overall/'
+if(not os.path.exists(overall)):
+    os.makedirs(overall)
+
+fig=plt.figure(1)
 ax = fig.add_subplot(111)
-colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
-color_tmp = 0
-plt.semilogx(base_level_overall, 100*contrast_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-color_tmp = color_tmp+1
-plt.semilogx(base_level_overall, 100*contrast_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-ax.set_title('Median contrast sensitivity vs base level')
-plt.xlabel("Base level [Lux]")
+if(not dr):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx(base_level_overall, 100*contrast_off_overall, 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall, 100*contrast_on_overall, 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx([1, 1],[0,25], color= "green", label ='Vref change')    
+    plt.semilogx([0.1, 0.1],[0,25], color= "green")   
+    plt.semilogx([0.01, 0.01],[0,25], color= "green")   
+    plt.semilogx(base_level_overall[9:-1], 100.0*contrast_off_overall[9:-1], 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall[0:8], 100.0*contrast_on_overall[0:8], 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(loc=2)
+ax.set_title('Median contrast sensitivity vs illuminance')
+plt.xlabel("Illuminance [Lux]")
 plt.ylabel("Contrast sensitivity")
-#        plt.ylim((0,100))
-plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-plt.savefig(contrast_sensitivities_dir+"contrast_sensitivity_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-plt.close("all")
+#plt.ylim((0,100))
+plt.savefig(overall+"contrast_sensitivity_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"contrast_sensitivity_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
 
-fig=plt.figure()# Dynamic range from this
+fig=plt.figure(2)# Dynamic range from this
 ax = fig.add_subplot(111)
-colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
-color_tmp = 0
-plt.semilogx(base_level_overall, count_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-color_tmp = color_tmp+1
-plt.semilogx(base_level_overall, count_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-ax.set_title('ON and OFF median event counts vs base level')
-plt.xlabel("Base level [Lux]")
+if(not dr):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx(base_level_overall, count_off_overall, 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall, count_on_overall, 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx([1, 1],[0,25], color= "green", label ='Vref change')    
+    plt.semilogx([0.1, 0.1],[0,25], color= "green")   
+    plt.semilogx([0.01, 0.01],[0,25], color= "green")   
+    plt.semilogx(base_level_overall[9:-1], count_off_overall[9:-1], 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall[0:8], count_on_overall[0:8], 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(loc=2)  
+ax.set_title('ON and OFF median event counts vs illuminance')
+plt.xlabel("Illuminance [Lux]")
 plt.ylabel("ON and OFF event counts")
-#        plt.ylim((0,100))
-plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-plt.savefig(contrast_sensitivities_dir+"event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-plt.close("all")
+plt.ylim((0,30))
+plt.savefig(overall+"event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
 
-fig=plt.figure()# SNR
+fig=plt.figure(3)# SNR
 ax = fig.add_subplot(111)
-colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))#4))
-color_tmp = 0
-plt.semilogx(base_level_overall, snr_off_overall, 'o--', color=colors[color_tmp], label='OFF - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-color_tmp = color_tmp+1
-plt.semilogx(base_level_overall, snr_on_overall, 'o--', color=colors[color_tmp], label='ON - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
-lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-ax.set_title('ON and OFF median event counts vs base level')
-plt.xlabel("Base level [Lux]")
+if(not dr):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx(base_level_overall, snr_off_overall, 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall, snr_on_overall, 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx([1, 1],[0,50], color= "green", label ='Vref change')    
+    plt.semilogx([0.1, 0.1],[0,50], color= "green")   
+    plt.semilogx([0.01, 0.01],[0,50], color= "green")   
+    plt.semilogx(base_level_overall[9:-1], snr_off_overall[9:-1], 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall[0:8], snr_on_overall[0:8], 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(loc=2)  
+ax.set_title('ON and OFF SNR vs illuminance')
+plt.xlabel("Illuminance [Lux]")
 plt.ylabel("ON and OFF SNR [dB]")
-#        plt.ylim((0,100))
-plt.savefig(contrast_sensitivities_dir+"snr_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-plt.savefig(contrast_sensitivities_dir+"snr_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-plt.close("all")
+#plt.ylim((0,100))
+plt.savefig(overall+"snr_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"snr_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
+    
+fig=plt.figure(4)# OFF noise
+ax = fig.add_subplot(111)
+if(not dr):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx(base_level_overall, noise_off_overall, 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall, noise_on_overall, 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.semilogx([1, 1],[0,5], color= "green", label ='Vref change')    
+    plt.semilogx([0.1, 0.1],[0,5], color= "green")   
+    plt.semilogx([0.01, 0.01],[0,5], color= "green")   
+    plt.semilogx(base_level_overall[9:-1], noise_off_overall[9:-1], 'o--', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.semilogx(base_level_overall[1:8], noise_on_overall[1:8], 'o--', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(loc=2) 
+ax.set_title('ON and OFF median noise event counts vs illuminance')
+plt.xlabel("Illuminance [Lux]")
+plt.ylabel("ON and OFF noise event counts")
+plt.ylim((0,3))
+plt.savefig(overall+"noise_event_count_vs_base_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"noise_event_count_vs_base_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
+    
+fig=plt.figure(5)# HOT
+ax = fig.add_subplot(111)
+if(not ir_no_ir):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall, hot_off_overall, 'o', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall, hot_on_overall, 'o', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall[0:47], hot_off_overall[0:47], 'o', color=colors[color_tmp], label='OFF w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[0:47], hot_on_overall[0:47], 'o', color=colors[color_tmp], label='ON w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_off_overall[48:-1], hot_off_overall[48:-1], 'o', color=colors[color_tmp], label='OFF w/o IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[48:-1], hot_on_overall[48:-1], 'o', color=colors[color_tmp], label='ON w/o IR cut')
+    lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
+ax.set_title('ON and OFF percentage of hot pixels vs contrast sensitivity')
+plt.xlabel("Contrast sensitivity [%]")
+plt.ylabel("ON and OFF percentage of hot pixels [%]")
+plt.xlim((0,65))
+plt.ylim(0,2.5)
+plt.savefig(overall+"hot_pixel_count_vs_contrast.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"hot_pixel_count_vs_contrast.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
+    
+fig=plt.figure(6)# SNR
+ax = fig.add_subplot(111)
+if(not ir_no_ir):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall, snr_off_overall, 'o', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall, snr_on_overall, 'o', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall[0:47], snr_off_overall[0:47], 'o', color=colors[color_tmp], label='OFF w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[0:47], snr_on_overall[0:47], 'o', color=colors[color_tmp], label='ON w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_off_overall[48:-1], snr_off_overall[48:-1], 'o', color=colors[color_tmp], label='OFF w/o IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[48:-1], snr_on_overall[48:-1], 'o', color=colors[color_tmp], label='ON w/o IR cut')
+    lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
+ax.set_title('ON and OFF SNR vs contrast sensitivity')
+plt.xlabel("Contrast sensitivity [%]")
+plt.ylabel("ON and OFF SNR [dB]")
+plt.xlim((0,65))
+plt.savefig(overall+"snr_vs_contrast.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"snr_vs_contrast.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
+    
+fig=plt.figure(7)# FPN
+ax = fig.add_subplot(111)
+if(not ir_no_ir):
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*2))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall, 100.0*fpn_off_overall, 'o', color=colors[color_tmp], label='OFF')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall, 100.0*fpn_on_overall, 'o', color=colors[color_tmp], label='ON')# - X: ' + str(frame_x_divisions[this_div_x]) + ', Y: ' + str(frame_y_divisions[this_div_y]) )
+    lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
+else:
+    colors = cm.rainbow(np.linspace(0, 1, len(frame_x_divisions)*len(frame_y_divisions)*4))
+    color_tmp = 0
+    plt.plot(100.0*contrast_off_overall[0:47], 100*fpn_off_overall[0:47], 'o', color=colors[color_tmp], label='OFF w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[0:47], 100*fpn_on_overall[0:47], 'o', color=colors[color_tmp], label='ON w IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_off_overall[48:-1], 100*fpn_off_overall[48:-1], 'o', color=colors[color_tmp], label='OFF w/o IR cut')
+    color_tmp = color_tmp+1
+    plt.plot(100.0*contrast_on_overall[48:-1], 100*fpn_on_overall[48:-1], 'o', color=colors[color_tmp], label='ON w/o IR cut')
+    lgd = plt.legend( loc=4, borderaxespad=1)
+ax.set_title('ON and OFF FPN vs contrast sensitivity')
+plt.xlabel("Contrast sensitivity [%]")
+plt.ylabel("ON and OFF FPN [%]")
+plt.xlim((0,65))
+plt.ylim((0,120))
+plt.savefig(overall+"FPN_vs_contrast.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig(overall+"FPN_vs_contrast.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+if(not hold_on):
+    plt.close("all")
+if(ir_no_ir):
+    print "min ON with IR: "+str(np.min(contrast_on_overall[0:47][contrast_on_overall[0:47]>0])) + " with SNR:" + str(snr_on_overall[0:47][contrast_on_overall[0:47]==np.min(contrast_on_overall[0:47][contrast_on_overall[0:47]>0])])
+    print "min ON without IR: "+str(np.min(contrast_on_overall[48:-1][contrast_on_overall[48:-1]>0])) + " with SNR:" + str(snr_on_overall[48:-1][contrast_on_overall[48:-1]==np.min(contrast_on_overall[48:-1][contrast_on_overall[48:-1]>0])])
+    print "min OFF with IR: "+str(np.min(contrast_off_overall[0:47][contrast_off_overall[0:47]>0])) + " with SNR:" + str(snr_off_overall[0:47][contrast_off_overall[0:47]==np.min(contrast_off_overall[0:47][contrast_off_overall[0:47]>0])])
+    print "min OFF without IR: "+str(np.min(contrast_off_overall[48:-1][contrast_off_overall[48:-1]>0])) + " with SNR:" + str(snr_off_overall[48:-1][contrast_off_overall[48:-1]==np.min(contrast_off_overall[48:-1][contrast_off_overall[48:-1]>0])])
