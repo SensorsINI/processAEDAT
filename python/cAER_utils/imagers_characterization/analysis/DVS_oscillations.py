@@ -319,9 +319,9 @@ class DVS_oscillations:
                 plt.subplot(4, 1, 2)
                 plt.plot(ts[final_index], pol[final_index] * 0.5, "o", color='blue')
 
-                plt.plot(ts, original * 2, "x--", color='red')
+                # plt.plot(ts, original * 2, "x--", color='red') # commented out because it gives memory error
                 plt.subplot(4, 1, 3)
-                plt.plot((ts - np.min(ts)), original, linewidth=3)
+                # plt.plot((ts - np.min(ts)), original, linewidth=3) # commented out because it gives memory error
                 plt.xlim([0, np.max(ts) - np.min(ts)])
                 if (not latency_only):
                     for i in range(len(signal_rec)):
@@ -358,6 +358,10 @@ class DVS_oscillations:
                 all_latencies_mean_dn = np.array(all_latencies_mean_dn)
                 all_latencies_std_up = np.array(all_latencies_std_up)
                 all_latencies_std_dn = np.array(all_latencies_std_dn)
+
+                all_ts_folded = []
+                all_pol_folded = []
+                all_spike_order_folded = []
 
                 if (len(all_latencies_mean_up) > 0):
                     fig = plt.figure()
@@ -397,13 +401,17 @@ class DVS_oscillations:
                     nl_values += 1
                     nb_values += 1
                 f, axarr = plt.subplots(nl_values, nb_values)
+
+                report_file = figure_dir + "latency_results.txt"
+                out_file = open(report_file, "w")
+
                 for this_file in range(len(all_ts)):
                     current_ts = all_ts[this_file][all_final_index[this_file]]
                     current_pol = all_pol[this_file][all_final_index[this_file]]
                     current_xaddr = all_xaddr[this_file][all_final_index[this_file]]
                     current_yaddr = all_yaddr[this_file][all_final_index[this_file]]
-                    #current_ts_original = all_ts[this_file]
-                    #current_original = all_originals[this_file]
+                    # current_ts_original = all_ts[this_file]
+                    # current_original = all_originals[this_file]
 
                     # now fold signal
                     ts_folds = sp_t[index_dn_jump]  # one every two edges
@@ -445,6 +453,14 @@ class DVS_oscillations:
                                                               current_xaddr[this_ts] - x_to_get[0], current_yaddr[
                                                                   this_ts] - y_to_get[0]])
 
+                    ts_folded = np.array(ts_folded)
+                    pol_folded = np.array(pol_folded)
+                    spike_order_folded = np.array(spike_order_folded)
+
+                    all_ts_folded.append(ts_folded)
+                    all_pol_folded.append(pol_folded)
+                    all_spike_order_folded.append(spike_order_folded)
+
                     # for this_ts in range(len(current_ts)):
                     #    if(counter_fold < len(ts_folds)):
                     #        if(current_ts[this_ts] >= ts_folds[counter_fold]):
@@ -454,15 +470,13 @@ class DVS_oscillations:
                     #    if(start_saving):
                     #        ts_folded.append(current_ts[this_ts] - ts_subtract)
                     #        pol_folded.append(current_pol[this_ts])
-                    ts_folded = np.array(ts_folded)
-                    pol_folded = np.array(pol_folded)
-                    spike_order_folded = np.array(spike_order_folded)
+
                     # raise Exception
                     meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:])  # / 2.0
                     binss = np.linspace(0, meanPeriod, 1000)
                     # starting = len(current_ts)-len(ts_folded)
-                    dn_index = np.logical_and(pol_folded == 0, spike_order_folded == 1)
-                    up_index = np.logical_and(pol_folded == 1, spike_order_folded == 1)
+                    dn_index = np.logical_and(pol_folded == 0, spike_order_folded > 0)
+                    up_index = np.logical_and(pol_folded == 1, spike_order_folded > 0)
                     valuesPos = np.histogram(ts_folded[up_index], bins=binss)
                     valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
                     # raise Exception
@@ -475,6 +489,12 @@ class DVS_oscillations:
                     latency_on_folded_mean = np.mean(ts_folded[up_index]) - rising_edge
                     print ("On latency from folded mean: " + str(latency_on_folded_mean) + " us")
                     print ("Off latency from folded mean: " + str(latency_off_folded_mean) + " us")
+
+                    out_file.write("File #" + str(this_file) + "\n")
+                    out_file.write("On latency from histogram peak: " + str(latency_on_hist_peak) + " us" + "\n")
+                    out_file.write("Off latency from histogram peak: " + str(latency_off_hist_peak) + " us" + "\n")
+
+
 
                     # plot in the 2d grid space of biases vs lux
                     n_lux = []
@@ -495,6 +515,23 @@ class DVS_oscillations:
                                                all_prvalues[this_file]) + '\n', fontsize=11, color='b')
                     plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".pdf", format='PDF')
                     plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".png", format='PNG')
+
+                out_file.close()
+
+                all_ts_folded = np.array(all_ts_folded)
+                all_pol_folded = np.array(all_pol_folded)
+                all_spike_order_folded = np.array(all_spike_order_folded)
+
+                var_dir = latency_pixel_dir + 'saved_variables/'
+                if (not os.path.exists(var_dir)):
+                    os.makedirs(var_dir)
+
+                np.savez(var_dir + "variables.npz",
+                         x_to_get=x_to_get,
+                         y_to_get=y_to_get,
+                         all_ts_folded=all_ts_folded,
+                         all_pol_folded=all_pol_folded,
+                         all_spike_order_folded=all_spike_order_folded)
 
         return all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index
 
