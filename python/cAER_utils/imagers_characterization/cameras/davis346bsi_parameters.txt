@@ -6,7 +6,7 @@ DAVIS346C
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
-cameras/davis346bsi_PTC.xml
+cameras/davis346bsi_CSDR.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
@@ -24,17 +24,17 @@ False
 # 10 # X divisions (no spaces, comma separated)
 [[123,223]]
 # 11 #  Y divisions (no spaces, comma separated)
-[120,140]]
+[[120,140]]
 
 # #########################################################
 # Contrast sensitivity parameters
 # #########################################################
 # 12 # ON bias finevalue (coarse is 5)
-[80]
-# 13 # DIFF bias finevalue (coarse is 3)
-[135]
-# 14 # OFF bias finevalue (coarse is 2)
-[180]
+[160]
+# 13 # DIFF bias finevalue (coarse is 4)
+[120]
+# 14 # OFF bias finevalue (coarse is 4)
+[4]
 # 15 # REFSS bias finevalue (coarse is 5)(if not present leave '0')
 [0]
 
