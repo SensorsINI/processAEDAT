@@ -24,14 +24,14 @@ if(dark_room):
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/davis240_parameters.txt'
+camera_file = 'cameras/cdavis_parameters.txt'
 
 do_set_bias = False
 
 do_contrast_sensitivity = False # And DVS-FPN too
-do_ptc = True
+do_ptc = False
 do_frequency_response = False
-do_latency_pixel_multiple_led_board = False
+do_latency = True
 do_latency_pixel_with_fiber = False
 do_oscillations = False
 
@@ -48,7 +48,7 @@ elif(info[3] == 'True'):
     dvs128xml == True
 host_ip = info[4]
 current_date = time.strftime("%d_%m_%y-%H_%M_%S")
-datadir = 'measurements'
+datadir = 'measurements/Measurements'
 
 if(do_set_bias):
     dvs_use = True; # If false use APS
@@ -56,9 +56,9 @@ if(do_set_bias):
 if(do_contrast_sensitivity):
     sine_freq = 1 # contrast sensitivity/threshold
     oscillations = 10.0   # number of complete oscillations for contrast sensitivity/latency/oscillations    
-    contrast_base_levels = [100.0,1000.0,2000.0] #contrast sensitivity base level sweeps
+    #contrast_base_levels = [200.0,2000.0] #contrast sensitivity base level sweeps
     contrast_base_levels = [1000.0]
-    contrast_level = [0.4]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
+    contrast_level = [0.5]#[0.1, 0.3, 0.5, 0.8] # contrast sensitivity
     # These thresholds are indexed together: they must be the same length and coherent (no off-on inversion!)
     onthr=[0 for x in range(len(info[12].split(',')))]
     for x in range(len(info[12].split(','))):
@@ -101,10 +101,10 @@ if(do_frequency_response):
     oscillations_fr = 10.0
     ndfilter_fr = info[20]
     
-if(do_latency_pixel_multiple_led_board or do_latency_pixel_with_fiber):
+if(do_latency or do_latency_pixel_with_fiber):
     oscillations = 100.0
-    freq_square = 10.0
-    base_level_latency_with_fiber = [3000]
+    freq_square = 50.0
+    base_level_latency_with_fiber = [1000]
     contrast_level = 0.5
 
 if(do_oscillations):
@@ -173,9 +173,10 @@ if(do_set_bias):
         gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
         gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
     sine_freq = 1.0;
+    freq_square = 50.0
     base_level = 1000;
-    contrast_level = 0.5;
-    oscillations = 1000; # 2 minutes
+    contrast_level = 0.5
+    oscillations = 600; # 10 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
     v_hi = (perc_hi - inter) / slope
@@ -184,10 +185,12 @@ if(do_set_bias):
     amplitude = (v_hi - np.mean([v_hi,v_low]) )/0.01 #voltage divider AC
     print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
     if(dark_room):
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
+        #gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")        
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+    control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
     control.simple_test(sensor, dvs_use = dvs_use, oscillations = oscillations, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level, base_level = base_level)
     # Zero the Function Generator
     if(dark_room):
@@ -238,6 +241,7 @@ if do_contrast_sensitivity:
         os.makedirs(setting_dir)
     copyFile(bias_file, setting_dir+str("biases_contrast_sensitivity.xml") )
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+    control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
     print "we are doing contrast sentivity measurements, please put homogeneous light source (integrating sphere)."
     if(dark_room):
         gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
@@ -426,7 +430,8 @@ if do_latency_pixel_with_fiber:
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude[0])+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
+        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+        control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
         control.get_data_latency(sensor, folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
@@ -435,7 +440,7 @@ if do_latency_pixel_with_fiber:
  
 # 6 - Latency fiber pointing at the sensor - data
 # setup is in conditions -> flashing LED
-if do_latency_pixel_multiple_led_board:
+if do_latency:
     print "\n"
     print "we are doing latency measurements. Connect the synch cable from the output of the function generator to the synch input on the DVS board."
     raw_input("Press Enter to continue...")
@@ -473,7 +478,8 @@ if do_latency_pixel_multiple_led_board:
             gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")
             gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
             gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
-        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)  
+        control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
+        control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
         copyFile(bias_file, setting_dir+str("biases_meas_num_"+str(i)+".xml") )
         time.sleep(3)
         control.get_data_latency(sensor, folder = folder, recording_time = recording_time, num_measurement = i, lux=lux[i], filter_type=filter_type, sensor_type = sensor_type)
