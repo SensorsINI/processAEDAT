@@ -368,6 +368,15 @@ class caer_communication:
         #loop over exposures and save data
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
         print("APS array is OFF")
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool true') 
+        print("DVS array is ON")
+        # For PixelParade Only
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
+            print("All DVS arrays of PixelParade are ON")
 #        self.send_command('put /1/2-BAFilter/'+str(sensor)+'/ shutdown bool true')
 #        print("BackGroundActivity Filter is OFF")
         print("Recording for " + str(recording_time))                
@@ -378,6 +387,11 @@ class caer_communication:
         time.sleep(recording_time)
         self.stop_logging()
         self.close_communication_data()
+        if (sensor == 'DAVIS208'):
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
+            print("All DVS arrays of PixelParade are OFF")
         return        
 
     def get_data_oscillations(self, sensor, folder = 'oscillations', recording_time = 1, num_measurement = 1, lux = 1, filter_type = 1, sensor_type="DAVISFX2", prbias = 0, dvs128xml = False):
