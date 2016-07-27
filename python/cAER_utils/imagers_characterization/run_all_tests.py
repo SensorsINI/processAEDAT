@@ -24,7 +24,7 @@ if(dark_room):
 ###############################################################################
 # CAMERA AND TEST SELECTION
 ###############################################################################
-camera_file = 'cameras/cdavis_parameters.txt'
+camera_file = 'cameras/davis208_parameters.txt'
 
 do_set_bias = False
 
