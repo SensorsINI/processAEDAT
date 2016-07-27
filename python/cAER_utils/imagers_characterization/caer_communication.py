@@ -365,6 +365,8 @@ class caer_communication:
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ RunDetector bool true')
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectFallingEdges bool true')
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectRisingEdges bool true')
+        # turn off background activity filter
+        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
         #loop over exposures and save data
         self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
         print("APS array is OFF")
