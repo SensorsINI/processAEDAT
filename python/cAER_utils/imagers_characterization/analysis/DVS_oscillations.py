@@ -38,7 +38,7 @@ class DVS_oscillations:
         self.timestamp = []
         self.time_res = 1e-6
 
-    def oscillations_latency_analysis(self, latency_pixel_dir, figure_dir, camera_dim=[190, 180], size_led=2,
+    def oscillations_latency_analysis(self, sensor, latency_pixel_dir, figure_dir, camera_dim=[190, 180], size_led=2,
                                       confidence_level=0.75, do_plot=True, file_type="cAER", edges=2, dvs128xml=False,
                                       pixel_sel=False, latency_only=False):
         '''
@@ -91,8 +91,12 @@ class DVS_oscillations:
 
             if not os.path.isdir(directory + files_in_dir[this_file]):
                 if (file_type == "cAER"):
-                    [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = self.loader.load_file(
-                        directory + files_in_dir[this_file])
+                    [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = self.loader.load_file(directory + files_in_dir[this_file])
+                    if(sensor == 'DAVIS208'):                        
+                        yaddr = yaddr[xaddr<188]
+                        pol = pol[xaddr<188]
+                        ts = ts[xaddr<188]
+                        xaddr = xaddr[xaddr<188]
                     current_lux = stra.split(files_in_dir[this_file], "_")[8]
                     filter_type = stra.split(files_in_dir[this_file], "_")[10]
                     all_lux.append(current_lux)
@@ -481,7 +485,7 @@ class DVS_oscillations:
                     valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
                     # raise Exception
                     latency_off_hist_peak = binss[np.argmax(valuesNeg[0])]
-                    rising_edge = np.mean(sp_t[index_up_jump] - sp_t[index_dn_jump])
+                    rising_edge = np.mean(np.abs(sp_t[index_up_jump] - sp_t[index_dn_jump]))
                     latency_on_hist_peak = binss[np.argmax(valuesPos[0])] - rising_edge
                     print ("On latency from histogram peak: " + str(latency_on_hist_peak) + " us")
                     print ("Off latency from histogram peak: " + str(latency_off_hist_peak) + " us")
