@@ -6,7 +6,7 @@ DAVIS240C
 # 1 # Sensor type
 DAVISFX2
 # 2 # Bias file
-cameras/davis240c_dynamic_range.xml
+cameras/davis240c_low_latency.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)

@@ -50,23 +50,23 @@
                             <attr key="coarseValue" type="byte">6</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">91</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="AEPuXBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AEPuXBp/">
-                            <attr key="coarseValue" type="byte">4</attr>
+                            <attr key="coarseValue" type="byte">6</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">80</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="AEPuYBp" path="/1/1-DAVISFX3/DAVISHet640/bias/AEPuYBp/">
-                            <attr key="coarseValue" type="byte">7</attr>
+                            <attr key="coarseValue" type="byte">6</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">152</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -135,10 +135,10 @@
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="DiffBn" path="/1/1-DAVISFX3/DAVISHet640/bias/DiffBn/">
-                            <attr key="coarseValue" type="byte">3</attr>
+                            <attr key="coarseValue" type="byte">4</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">135</attr>
+                            <attr key="fineValue" type="short">60</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -174,7 +174,7 @@
                             <attr key="coarseValue" type="byte">5</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">49</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -195,10 +195,10 @@
                             <attr key="voltageValue" type="byte">0</attr>
                         </node>
                         <node name="OffBn" path="/1/1-DAVISFX3/DAVISHet640/bias/OffBn/">
-                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="coarseValue" type="byte">3</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">180</attr>
+                            <attr key="fineValue" type="short">100</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -206,7 +206,7 @@
                             <attr key="coarseValue" type="byte">5</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">80</attr>
+                            <attr key="fineValue" type="short">160</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -219,26 +219,26 @@
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="PixInvBn" path="/1/1-DAVISFX3/DAVISHet640/bias/PixInvBn/">
-                            <attr key="coarseValue" type="byte">4</attr>
+                            <attr key="coarseValue" type="byte">6</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">164</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">N</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="PrBp" path="/1/1-DAVISFX3/DAVISHet640/bias/PrBp/">
-                            <attr key="coarseValue" type="byte">3</attr>
+                            <attr key="coarseValue" type="byte">5</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">88</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="PrSFBp" path="/1/1-DAVISFX3/DAVISHet640/bias/PrSFBp/">
-                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="coarseValue" type="byte">7</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">45</attr>
+                            <attr key="fineValue" type="short">160</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -251,10 +251,10 @@
                             <attr key="type" type="string">Normal</attr>
                         </node>
                         <node name="RefrBp" path="/1/1-DAVISFX3/DAVISHet640/bias/RefrBp/">
-                            <attr key="coarseValue" type="byte">2</attr>
+                            <attr key="coarseValue" type="byte">4</attr>
                             <attr key="currentLevel" type="string">Normal</attr>
                             <attr key="enabled" type="bool">true</attr>
-                            <attr key="fineValue" type="short">160</attr>
+                            <attr key="fineValue" type="short">120</attr>
                             <attr key="sex" type="string">P</attr>
                             <attr key="type" type="string">Normal</attr>
                         </node>
@@ -309,7 +309,7 @@
                         <attr key="AckExtensionColumn" type="byte">0</attr>
                         <attr key="AckExtensionRow" type="byte">1</attr>
                         <attr key="ExternalAERControl" type="bool">false</attr>
-                        <attr key="FilterBackgroundActivity" type="bool">true</attr>
+                        <attr key="FilterBackgroundActivity" type="bool">false</attr>
                         <attr key="FilterBackgroundActivityDeltaTime" type="int">20000</attr>
                         <attr key="FilterPixel0Column" type="short">320</attr>
                         <attr key="FilterPixel0Row" type="short">240</attr>

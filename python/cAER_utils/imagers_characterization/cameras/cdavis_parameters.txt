@@ -6,7 +6,7 @@ DAVISHet640
 # 1 # Sensor type
 DAVISFX3
 # 2 # Bias file
-cameras/cdavis640rgbw_DVS_Sensitivity.xml
+cameras/cdavis640rgbw_latency.xml
 # 3 # Is it DVS128?
 False
 # 4 # Host IP, don't change (127.0.0.1 or 172.19.11.139)
