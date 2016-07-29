@@ -485,7 +485,7 @@ class DVS_oscillations:
                     valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
                     # raise Exception
                     latency_off_hist_peak = binss[np.argmax(valuesNeg[0])]
-                    rising_edge = np.mean(np.abs(sp_t[index_up_jump] - sp_t[index_dn_jump]))
+                    rising_edge = np.mean(np.diff(sp_t))
                     latency_on_hist_peak = binss[np.argmax(valuesPos[0])] - rising_edge
                     print ("On latency from histogram peak: " + str(latency_on_hist_peak) + " us")
                     print ("Off latency from histogram peak: " + str(latency_off_hist_peak) + " us")
