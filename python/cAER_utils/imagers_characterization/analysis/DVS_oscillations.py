@@ -18,6 +18,7 @@ import string
 from pylab import *
 import scipy.stats as st
 import math
+import matplotlib.ticker as ticker
 
 sys.path.append('utils/')
 import load_files
@@ -55,6 +56,7 @@ class DVS_oscillations:
         #################################################################
         # get all files in dir
         directory = latency_pixel_dir
+        plot_hist_only = False
         # files_in_dir = os.listdir(directory)
         # files_in_dir.sort()
         files_in_dir = [f for f in os.listdir(directory) if not f.startswith('.')]  # no hidden file
@@ -97,6 +99,11 @@ class DVS_oscillations:
                         pol = pol[xaddr<188]
                         ts = ts[xaddr<188]
                         xaddr = xaddr[xaddr<188]
+                        
+                        yaddr = yaddr[xaddr>50]
+                        pol = pol[xaddr>50]
+                        ts = ts[xaddr>50]
+                        xaddr = xaddr[xaddr>50]
                     current_lux = stra.split(files_in_dir[this_file], "_")[8]
                     filter_type = stra.split(files_in_dir[this_file], "_")[10]
                     all_lux.append(current_lux)
@@ -114,6 +121,7 @@ class DVS_oscillations:
                 plt.subplot(4, 1, 1)
                 dx = plt.hist(xaddr, camera_dim[0])
                 dy = plt.hist(yaddr, camera_dim[1])
+            
             if (pixel_sel == False):
                 ind_x_max = int(st.mode(xaddr)[
                                     0])  # int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194
@@ -317,6 +325,43 @@ class DVS_oscillations:
             all_yaddr.append(yaddr)
             all_final_index.append(final_index)
             all_ts.append(ts)
+            
+            if plot_hist_only:      
+                fig = plt.figure()
+                ax = plt.subplot(1, 2, 1)
+                ax.set_title('X and Y event counts')
+                bins = np.linspace(0, 188, 21)
+                dx = plt.hist(xaddr, bins, label='X')
+                dy = plt.hist(yaddr, bins, label='Y')
+                plt.xlabel("X or Y address")
+                plt.ylabel("Event count")
+                lgd = plt.legend(loc=1)
+                ax = fig.add_subplot(1, 2, 2, projection='3d')
+                x = xaddr
+                y = yaddr
+                histo, xedges, yedges = np.histogram2d(x, y, bins=(20, 20))
+                xpos, ypos = np.meshgrid(xedges[:-1] + xedges[1:], yedges[:-1] + yedges[1:])
+                xpos = xpos.flatten() / 2.
+                ypos = ypos.flatten() / 2.
+                zpos = np.zeros_like(xpos)
+                dx = xedges[1] - xedges[0]
+                dy = yedges[1] - yedges[0]
+                dz = histo.flatten()
+                ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
+                start, end = ax.get_xlim()
+                step = 40
+                ax.xaxis.set_ticks(np.arange(start, end+step, step))
+                start, end = ax.get_ylim()
+                step = 40
+                ax.yaxis.set_ticks(np.arange(start, end+step, step))
+                start, end = ax.get_zlim()
+                step = 2000000
+                ax.zaxis.set_ticks(np.arange(start, end+step, step))
+                plt.xlabel("X")
+                plt.ylabel("Y")
+                ax.set_title('3D event count')
+                fig.tight_layout() 
+                plt.savefig(figure_dir + "hist_only_" + str(this_file) + ".png", format='png', dpi=1000)
 
             if do_plot:
 
@@ -352,7 +397,7 @@ class DVS_oscillations:
                 plt.xlabel("X")
                 plt.ylabel("Y")
                 # Find maximum point
-                plt.savefig(figure_dir + "combined_latency_" + str(this_file) + ".png", format='png', dpi=300)
+                plt.savefig(figure_dir + "combined_latency_" + str(this_file) + ".png", format='png', dpi=1000)
 
         if (dvs128xml == False):
             if do_plot:
@@ -384,7 +429,7 @@ class DVS_oscillations:
                     plt.ylabel('latency [us]')
                     plt.legend(loc='best')
                     plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".pdf", format='PDF')
-                    plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".png", format='PNG')
+                    plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".png", format='PNG', dpi=1000)
 
                 all_lux = np.array(all_lux)
                 all_prvalues = np.array(all_prvalues)
@@ -435,7 +480,8 @@ class DVS_oscillations:
                             this_fold = this_fold + 1
                             on_spike_count = np.zeros([len(x_to_get), len(y_to_get)])
                             off_spike_count = np.zeros([len(x_to_get), len(y_to_get)])
-                            print "Moving to fold # " + str(this_fold)
+                            if(this_fold%50==0):
+                                print "Moving to fold # " + str(this_fold)
                         if (current_ts[this_ts] >= ts_folds[this_fold] and current_ts[this_ts] < ts_folds[
                                 this_fold + 1]):
                             ts_folded.append(current_ts[this_ts] - ts_folds[this_fold])
@@ -479,20 +525,27 @@ class DVS_oscillations:
                     meanPeriod = np.mean(ts_folds[1::] - ts_folds[0:-1:])  # / 2.0
                     binss = np.linspace(0, meanPeriod, 1000)
                     # starting = len(current_ts)-len(ts_folded)
-                    dn_index = np.logical_and(pol_folded == 0, spike_order_folded > 0)
-                    up_index = np.logical_and(pol_folded == 1, spike_order_folded > 0)
+                    rising_edge = np.mean(np.diff(sp_t))
+#                    ts_folded_on = ts_folded > rising_edge
+#                    ts_folded_off = ts_folded < rising_edge
+                    dn_index = np.logical_and(pol_folded == 0, spike_order_folded == 1)
+                    up_index = np.logical_and(pol_folded == 1, spike_order_folded == 1)
+                    dn_index = np.logical_and(dn_index, ts_folded < rising_edge)
+                    up_index = np.logical_and(up_index, ts_folded > rising_edge)
                     valuesPos = np.histogram(ts_folded[up_index], bins=binss)
                     valuesNeg = np.histogram(ts_folded[dn_index], bins=binss)
                     # raise Exception
                     latency_off_hist_peak = binss[np.argmax(valuesNeg[0])]
-                    rising_edge = np.mean(np.diff(sp_t))
+                    
                     latency_on_hist_peak = binss[np.argmax(valuesPos[0])] - rising_edge
-                    print ("On latency from histogram peak: " + str(latency_on_hist_peak) + " us")
-                    print ("Off latency from histogram peak: " + str(latency_off_hist_peak) + " us")
+                    
                     latency_off_folded_mean = np.mean(ts_folded[dn_index])
                     latency_on_folded_mean = np.mean(ts_folded[up_index]) - rising_edge
-                    print ("On latency from folded mean: " + str(latency_on_folded_mean) + " us")
-                    print ("Off latency from folded mean: " + str(latency_off_folded_mean) + " us")
+                    print ("ON latency from folded mean: " + str(latency_on_folded_mean) + " us")
+                    print ("ON latency from histogram peak: " + str(latency_on_hist_peak) + " us\n")
+                    print ("OFF latency from folded mean: " + str(latency_off_folded_mean) + " us")
+                    print ("OFF latency from histogram peak: " + str(latency_off_hist_peak) + " us")
+                    
 
                     out_file.write("File #" + str(this_file) + "\n")
                     out_file.write("On latency from histogram peak: " + str(latency_on_hist_peak) + " us" + "\n")
@@ -514,11 +567,26 @@ class DVS_oscillations:
                     axarr[rows, cols].bar(binss[1::], valuesPos[0], width=10, color="g")
                     axarr[rows, cols].bar(binss[1::], 0 - valuesNeg[0], width=10, color="r")
                     axarr[rows, cols].plot([rising_edge, rising_edge], [-np.max(valuesNeg[0]), np.max(valuesPos[0])])
-                    axarr[rows, cols].text(np.max(binss[1::]) / 4.0, -25,
-                                           'lux = ' + str(all_lux[this_file]) + '\n' + 'PrBias = ' + str(
-                                               all_prvalues[this_file]) + '\n', fontsize=11, color='b')
+                    if(not latency_only):
+                        axarr[rows, cols].text(np.max(binss[1::]) / 4.0, -25,'lux = ' + str(all_lux[this_file]) + '\n' + 'PrBias = ' + str(all_prvalues[this_file]) + '\n', fontsize=11, color='b')
                     plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".pdf", format='PDF')
-                    plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".png", format='PNG')
+                    plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".png", format='PNG', dpi=1000)
+                    
+                    fig=plt.figure()
+                    colors = cm.rainbow(np.linspace(0, 1, 2))
+                    color_tmp = 0
+                    ax = fig.add_subplot(111)
+                    ax.set_title('ON and OFF first spikes distributions')
+                    plt.xlabel ("Folded timestamps [us]")
+                    plt.ylabel ("First spikes")
+                    plt.bar(binss[1::], 0 - valuesNeg[0]/100, width=100, color=colors[color_tmp], label='OFF')
+                    color_tmp = color_tmp+1
+                    plt.bar(binss[1::], valuesPos[0], width=100, color=colors[color_tmp], label='ON')
+                    plt.plot([rising_edge, rising_edge], [-np.max(valuesNeg[0]/100), np.max(valuesPos[0])])
+                    lgd = plt.legend(loc=1)
+                    fig.tight_layout() 
+                    plt.savefig(figure_dir + "all_latencies_histnew" + str(this_file) + ".pdf", format='PDF')
+                    plt.savefig(figure_dir + "all_latencies_histnew" + str(this_file) + ".png", format='PNG', dpi=1000)
 
                 out_file.close()
 
