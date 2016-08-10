@@ -22,7 +22,7 @@ import load_files
 import string as stra
 
 class DVS_frequency_response:
-    def fr_analysis(self, fr_dir, figure_dir, frame_y_divisions, frame_x_divisions, num_oscillations = 10.0, camera_dim = [190,180], size_led = 2):
+    def fr_analysis(self, sensor, fr_dir, figure_dir, num_oscillations = 10.0, camera_dim = [190,180], size_led = 2):
         
         '''
             Frequency response analisys. Input signal is a sine wave from the led flashing
@@ -40,7 +40,7 @@ class DVS_frequency_response:
         file_n = 0
         files_in_dir_raw = os.listdir(directory)
         for this_file in range(len(files_in_dir_raw)):
-            newpath = os.path.join(cs_dir,files_in_dir_raw[this_file])
+            newpath = os.path.join(fr_dir,files_in_dir_raw[this_file])
             if(not os.path.isdir(newpath)): # Remove folders
                 files_in_dir.append(files_in_dir_raw[this_file])
                 file_n = file_n + 1
@@ -52,16 +52,10 @@ class DVS_frequency_response:
         rec_time = np.zeros([len(files_in_dir)])
         frequency = np.zeros([len(files_in_dir)])
         ndfilter = np.zeros([len(files_in_dir)])
-        off_event_count_average_per_pixel = np.zeros([len(files_in_dir)])  
-        on_event_count_average_per_pixel = np.zeros([len(files_in_dir)])  
         off_event_count_median_per_pixel = np.zeros([len(files_in_dir)])  
-        on_event_count_median_per_pixel = np.zeros([len(files_in_dir)])  
-        contrast_sensitivity_off_average_array = np.zeros([len(files_in_dir)])
-        contrast_sensitivity_on_average_array = np.zeros([len(files_in_dir)])
-        contrast_sensitivity_off_median_array = np.zeros([len(files_in_dir)])
-        contrast_sensitivity_on_median_array = np.zeros([len(files_in_dir)])
-        err_off_percent_array = np.zeros([len(files_in_dir)])
-        err_on_percent_array = np.zeros([len(files_in_dir)])
+        on_event_count_median_per_pixel = np.zeros([len(files_in_dir)]) 
+        matrix_count_off = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_on = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
         
         for this_file in range(len(files_in_dir)):            
             print ""
@@ -92,7 +86,17 @@ class DVS_frequency_response:
                 frequency[this_file] = this_frequency
 
                 loader = load_files.load_files()
-                [frame, xaddr, yaddr, pol, ts, sp_t, sp_type] = loader.load_file(directory+files_in_dir[this_file])
+                [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = loader.load_file(directory+files_in_dir[this_file])
+                if(sensor == 'DAVIS208'):                        
+                    yaddr = yaddr[xaddr<188]
+                    pol = pol[xaddr<188]
+                    ts = ts[xaddr<188]
+                    xaddr = xaddr[xaddr<188]
+#                        
+#                    yaddr = yaddr[xaddr>50]
+#                    pol = pol[xaddr>50]
+#                    ts = ts[xaddr>50]
+#                    xaddr = xaddr[xaddr>50]
                 print("Addresses extracted")
             else:
                 print("Skipping path "+ str(directory+files_in_dir[this_file])+ " as it is a directory")
@@ -100,35 +104,59 @@ class DVS_frequency_response:
 
             ind_x_max = int(st.mode(xaddr)[0]) #int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194       
             ind_y_max = int(st.mode(yaddr)[0]) #int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
-            for this_div_x in range(len(frame_x_divisions)) :
-                for this_div_y in range(len(frame_y_divisions)):
-                    if(not(not frame_x_divisions[(ind_x_max>=frame_x_divisions[0]) and (ind_x_max<=frame_x_divisions[-1])])):
-                        print "Selected pixel [" + str(ind_x_max) + "," + str(ind_y_max) + "] belonging to area X: " + str(frame_x_divisions[this_div_x]) + ", Y: " + str(frame_y_divisions[this_div_y])
-                          
+            print "Selected pixel [" + str(ind_x_max) + "," + str(ind_y_max) + "]"
+                            
+            ts = np.array(ts)
+            pol = np.array(pol)
+            xaddr = np.array(xaddr)
+            yaddr = np.array(yaddr)
+            sp_t = np.array(sp_t)
+            sp_type = np.array(sp_type)
+            pixel_box = size_led * 2 + 1
+            pixel_num = pixel_box ** 2
+            
             x_to_get = np.linspace(ind_x_max-size_led,ind_x_max+size_led,pixel_box)
             y_to_get = np.linspace(ind_y_max-size_led,ind_y_max+size_led,pixel_box)
-            matrix_count_off = np.zeros([len(x_to_get),len(y_to_get)])
-            matrix_count_on = np.zeros([len(x_to_get),len(y_to_get)])
+            
+            print "Extracted spikes in LED"
+            
+            ### Count in the right part of the cycle
+            
+            sync_ts = []
+            counter_edge = 0
+            #raise Exception
+
+            # get all the sync events            
+            for this_sp in range(len(sp_t)):
+                if(sp_type[this_sp]==2): # rising edge of sync
+                    sync_ts.append(sp_t[this_sp])
+                    counter_edge = counter_edge +1 
+            sync_ts = np.array(sync_ts)
+            print("Sync timestamps: " + str(sync_ts))
+
+            sine_phase = (1.0/(4.0*this_frequency))*(10.0**6)
+                                  
+            this_sync_ts = 0
             for this_ev in range(len(ts)):
-                if (xaddr[this_ev] >= ind_x_max-size_led and \
-                    xaddr[this_ev] <= ind_x_max+size_led and \
-                    yaddr[this_ev] >= ind_y_max-size_led and \
-                    yaddr[this_ev] <= ind_y_max+size_led):
-                    if(pol[this_ev] == 1):
-                      matrix_count_on[xaddr[this_ev]-x_to_get[0],yaddr[this_ev]-y_to_get[0]] = matrix_count_on[xaddr[this_ev]-x_to_get[0],yaddr[this_ev]-y_to_get[0]]+1        
-                    if(pol[this_ev] == 0):
-                      matrix_count_off[xaddr[this_ev]-x_to_get[0],yaddr[this_ev]-y_to_get[0]] = matrix_count_off[xaddr[this_ev]-x_to_get[0],yaddr[this_ev]-y_to_get[0]]+1  
-            # FPN and separate contrast sensitivities
-            matrix_count_on = matrix_count_on/num_oscillations
-            matrix_count_off = matrix_count_off/num_oscillations
-            # FPN and separate contrast sensitivities
-            contrast_matrix_off = this_contrast/(matrix_count_off)
-            contrast_matrix_on = this_contrast/(matrix_count_on)
-            [dim1,dim2] = np.shape(matrix_count_on)
-            on_event_count_median_per_pixel = np.median(matrix_count_on)
-            off_event_count_median_per_pixel = np.median(matrix_count_off)
-            on_event_count_average_per_pixel = float(sum(matrix_count_on))/(dim1*dim2)
-            off_event_count_average_per_pixel = float(sum(matrix_count_off))/(dim1*dim2)
+                if(ts[this_ev]<=sync_ts[-1]):
+                    if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase)) and (this_sync_ts<=len(sync_ts)-1)):                           
+                        this_sync_ts = this_sync_ts + 1           
+                        print "Moving to sync # " + str(this_sync_ts)
+                    if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
+                        if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
+                            if(pol[this_ev] == 1):
+                                matrix_count_on[this_file,xaddr[this_ev],yaddr[this_ev]] = matrix_count_on[this_file,xaddr[this_ev],yaddr[this_ev]]+1        
+                        elif (ts[this_ev] >= (sync_ts[this_sync_ts] + sine_phase) and ts[this_ev] < (sync_ts[this_sync_ts] + 3.0*sine_phase)): # falling half of the sine wave      
+                            if(pol[this_ev] == 0):
+                                matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]]+1                   
+            matrix_count_on[this_file,:,:] = matrix_count_on[this_file,:,:]/(num_oscillations-1.0)
+            matrix_count_off[this_file,:,:] = matrix_count_off[this_file,:,:]/(num_oscillations-1.0)
+            
+            matrix_count_off_selected = matrix_count_off[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]
+            matrix_count_on_selected = matrix_count_on[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]
+            dim1,dim2 = np.shape(matrix_count_off_selected)
+            on_event_count_median_per_pixel[this_file] = np.median(matrix_count_on_selected)
+            off_event_count_median_per_pixel[this_file] = np.median(matrix_count_off_selected)
     
             print "This contrast: " + str(this_contrast)
             print "This oscillations: " + str(num_oscillations)
@@ -138,149 +166,68 @@ class DVS_frequency_response:
             print "This ND filter: " +str(this_ndfilter)
             print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel)
             print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel) 
-            print "Off average per pixel per cycle: " + str(off_event_count_average_per_pixel)
-            print "On average per pixel per cycle: " + str(on_event_count_average_per_pixel)
-                    
+            
+            fig = plt.figure()
+            ax = plt.subplot(1, 2, 1)
+            ax.set_title('X and Y event counts')
+            bins = np.linspace(0, 188, 21)
+            dx = plt.hist(xaddr, bins, label='X')
+            dy = plt.hist(yaddr, bins, label='Y')
+            plt.xlabel("X or Y address")
+            plt.ylabel("Event count")
+            lgd = plt.legend(loc=1)
+            ax = fig.add_subplot(1, 2, 2, projection='3d')
+            x = xaddr
+            y = yaddr
+            histo, xedges, yedges = np.histogram2d(x, y, bins=(20, 20))
+            xpos, ypos = np.meshgrid(xedges[:-1] + xedges[1:], yedges[:-1] + yedges[1:])
+            xpos = xpos.flatten() / 2.
+            ypos = ypos.flatten() / 2.
+            zpos = np.zeros_like(xpos)
+            dx = xedges[1] - xedges[0]
+            dy = yedges[1] - yedges[0]
+            dz = histo.flatten()
+            ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='r', zsort='average')
+            start, end = ax.get_xlim()
+            step = 40
+            ax.xaxis.set_ticks(np.arange(start, end+step, step))
+            start, end = ax.get_ylim()
+            step = 40
+            ax.yaxis.set_ticks(np.arange(start, end+step, step))
+            start, end = ax.get_zlim()
+            step = 2000000
+            ax.zaxis.set_ticks(np.arange(start, end+step, step))
+            plt.xlabel("X")
+            plt.ylabel("Y")
+            ax.set_title('3D event count')
+            fig.tight_layout() 
+            plt.savefig(hist_dir + "hist_only_" + str(this_file) + ".png", format='png', dpi=1000)            
+            
              # Plot histograms if Off and On counts
             fig= plt.figure()
             ax = fig.add_subplot(121)
             ax.set_title('ON/pix/cycle')
             plt.xlabel ("ON per pixel per cycle")
             plt.ylabel ("Count")
-            line_on = np.reshape(matrix_count_on, dim1*dim2)
+            line_on = np.reshape(matrix_count_on_selected, dim1*dim2)
             im = plt.hist(line_on[line_on < 20], 20)
             ax = fig.add_subplot(122)
             ax.set_title('OFF/pix/cycle')
             plt.xlabel ("OFF per pixel per cycle")
             plt.ylabel ("Count")
-            line_off = np.reshape(matrix_count_off, dim1*dim2)
+            line_off = np.reshape(matrix_count_off_selected, dim1*dim2)
             im = plt.hist(line_off[line_off < 20], 20)
             fig.tight_layout()     
             plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+".png",  format='png', dpi=1000)
             plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+".pdf",  format='pdf')
             plt.close("all")
-            
-            # Confidence interval = error metric                    
-            err_off = self.confIntMean(np.reshape(matrix_count_off, dim1*dim2))
-            err_on = self.confIntMean(np.reshape(matrix_count_on, dim1*dim2))                    
-#                        print "Off confidence interval of 95%: " + str(err_off)
-#                        print "On confidence interval of 95%: " + str(err_on)
-            if(off_event_count_average_per_pixel != 0.0):
-                err_off_percent = 100*np.abs(err_off[0]-off_event_count_average_per_pixel)/off_event_count_average_per_pixel
-            else:
-                err_off_percent = np.nan
-            if(on_event_count_average_per_pixel != 0.0):                        
-                err_on_percent = 100*np.abs(err_on[0]-on_event_count_average_per_pixel)/on_event_count_average_per_pixel
-            else:
-                err_on_percent = np.nan
-            print "Off confidence interval of 95% within " + str('{0:.3f}'.format(err_off_percent))+ "% of mean"
-            print "On confidence interval of 95% within " + str('{0:.3f}'.format(err_on_percent))+ "% of mean"
-            err_off_percent_array [this_file] = err_off_percent
-            err_on_percent_array [this_file] = err_on_percent   
-
-            if(on_event_count_average_per_pixel == 0.0 and off_event_count_average_per_pixel == 0.0): # Not even ON or OFF!!
-                print "Not even a single spike.. skipping."
-                contrast_sensitivity_off_median_array[this_file] = -1
-                contrast_sensitivity_on_median_array[this_file] = -1
-                contrast_sensitivity_off_average_array[this_file] = np.nan
-                contrast_sensitivity_on_average_array[this_file] = -1
-            else:
-                # Get contrast sensitivity
-                # For 0.20 contrast / ((5 events on average per pixel) / 5 oscillations) = CS = 0.2
-                contrast_sensitivity_on_median = (this_contrast)/(on_event_count_median_per_pixel)
-                contrast_sensitivity_off_median = (this_contrast)/(off_event_count_median_per_pixel)
-                contrast_sensitivity_off_median_array[this_file] = contrast_sensitivity_off_median
-                contrast_sensitivity_on_median_array[this_file] = contrast_sensitivity_on_median   
-#                       ttt = "CS off: "+str('%.3g'%(contrast_sensitivity_off_median))+" CS on: "+str('%.3g'%(contrast_sensitivity_on_median))
-                
-                if(not (on_event_count_average_per_pixel == 0.0)):
-                    contrast_sensitivity_on_average = (this_contrast)/(float(on_event_count_average_per_pixel))
-                else: 
-                    contrast_sensitivity_on_average = -1
-                if(not (off_event_count_average_per_pixel == 0.0)):    
-                    contrast_sensitivity_off_average = (this_contrast)/(float(off_event_count_average_per_pixel))       
-                else: 
-                    contrast_sensitivity_off_average = -1
-
-                contrast_sensitivity_on_average_array[this_file] = contrast_sensitivity_on_average
-                contrast_sensitivity_off_average_array[this_file] = contrast_sensitivity_off_average
-                
-                print "Contrast sensitivity off average: " + str('{0:.3f}'.format(contrast_sensitivity_off_average*100))+ "%"
-                print "Contrast sensitivity on average: " + str('{0:.3f}'.format(contrast_sensitivity_on_average*100))+ "%"
-                print "Contrast sensitivity off median: " + str('{0:.3f}'.format(contrast_sensitivity_off_median*100))+ "%"
-                print "Contrast sensitivity on median: " + str('{0:.3f}'.format(contrast_sensitivity_on_median*100))+ "%"
-                
-                # FPN plots
-                # Plot spike counts
-                fig= plt.figure()
-                ax = fig.add_subplot(121)
-                matrix_count_on = np.fliplr(np.transpose(matrix_count_on))
-                matrix_count_off = np.fliplr(np.transpose(matrix_count_off))
-                ax.set_title('Count ON/pix/cycle')
-                plt.xlabel ("X")
-                plt.ylabel ("Y")
-                im = plt.imshow(matrix_count_on, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
-                ax = fig.add_subplot(122)
-                ax.set_title('Count OFF/pix/cycle')
-                plt.xlabel ("X")
-                plt.ylabel ("Y")
-                im = plt.imshow(matrix_count_off, interpolation='nearest', origin='low', extent=[frame_x_divisions[0][0], frame_x_divisions[-1][1], frame_y_divisions[0][0], frame_y_divisions[-1][1]])
-                plt.xlim([frame_x_divisions[0][0],frame_x_divisions[-1][1]])                        
-                fig.tight_layout()                    
-                fig.subplots_adjust(right=0.8)
-                cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-                fig.colorbar(im, cax=cbar_ax)     
-                plt.draw()
-                plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".png",  format='png', dpi=1000)
-                plt.savefig(fpn_dir+"matrix_count_on_and_off_"+str(this_file)+".pdf",  format='pdf')
-                plt.close("all")
-                    
-                # Deltas = Contrast sensitivities
-                contrast_matrix_on = np.flipud(np.fliplr(np.transpose(contrast_matrix_on)))
-                contrast_matrix_off = np.flipud(np.fliplr(np.transpose(contrast_matrix_off)))
-                fig = plt.figure()
-                plt.subplot(1,2,1)
-                plt.title("ON thresholds")
-                plt.imshow(contrast_matrix_on)
-                plt.colorbar()
-                plt.subplot(1,2,2)
-                plt.title("OFF thresholds")          
-                plt.imshow(contrast_matrix_off)
-                plt.colorbar()
-                fig.tight_layout()  
-                plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".pdf",  format='PDF')
-                plt.savefig(fpn_dir+"threshold_mismatch_map_"+str(this_file)+".png",  format='PNG', dpi=1000)            
-                plt.close("all")      
 
         plt.figure() # Dynamic range from this
-        colors = cm.rainbow(np.linspace(0, 1, 4))
+        colors = cm.rainbow(np.linspace(0, 1, 2))
         color_tmp = 0
-        plt.plot(frequency, contrast_sensitivity_off_average_array, 'o', color=colors[color_tmp], label='OFF average')
-        color_tmp = color_tmp+1               
-        plt.plot(frequency, contrast_sensitivity_on_average_array, 'o', color=colors[color_tmp], label='ON average')
+        plt.plot(frequency, off_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='OFF')
         color_tmp = color_tmp+1
-        plt.plot(frequency, contrast_sensitivity_off_median_array, 'x', color=colors[color_tmp], label='OFF median')
-        color_tmp = color_tmp+1
-        plt.plot(frequency, contrast_sensitivity_on_median_array, 'x', color=colors[color_tmp], label='ON median')
-        color_tmp = color_tmp+1
-        lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.xlabel("Stimulus frequency [Hz]")
-        plt.ylabel("ON and OFF contrast sensitivities")
-#        plt.ylim((0,100))
-        plt.savefig(frequency_responses_dir+"contrast_sensitivities_vs_frequency.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
-        plt.savefig(frequency_responses_dir+"contrast_sensitivities_vs_frequency.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
-        plt.close("all")
-
-        plt.figure() # Dynamic range from this
-        colors = cm.rainbow(np.linspace(0, 1, 4))
-        color_tmp = 0
-        plt.plot(frequency, off_event_count_average_per_pixel, 'o', color=colors[color_tmp], label='OFF average')
-        color_tmp = color_tmp+1               
-        plt.plot(frequency, on_event_count_average_per_pixel, 'o', color=colors[color_tmp], label='ON average')
-        color_tmp = color_tmp+1
-        plt.plot(frequency, off_event_count_median_per_pixel, 'x', color=colors[color_tmp], label='OFF median')
-        color_tmp = color_tmp+1
-        plt.plot(frequency, on_event_count_median_per_pixel, 'x', color=colors[color_tmp], label='ON median')
+        plt.plot(frequency, on_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='ON')
         color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("Stimulus frequency [Hz]")
@@ -290,11 +237,7 @@ class DVS_frequency_response:
         plt.savefig(frequency_responses_dir+"event_count_vs_frequency.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         plt.close("all")
             
-        return contrast_level, base_level, frequency, contrast_sensitivity_off_average_array, \
-        off_event_count_median_per_pixel, on_event_count_median_per_pixel, \
-        off_event_count_average_per_pixel, on_event_count_average_per_pixel, \
-        contrast_sensitivity_on_average_array, contrast_sensitivity_off_median_array, \
-        contrast_sensitivity_on_median_array, err_on_percent_array, err_off_percent_array
+        return contrast_level, base_level, frequency, off_event_count_median_per_pixel, on_event_count_median_per_pixel
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
