@@ -22,6 +22,9 @@ import load_files
 import string as stra
 
 class DVS_frequency_response:
+    def __init__(self):
+        self.time_res = 1e-6
+        
     def fr_analysis(self, sensor, fr_dir, figure_dir, num_oscillations = 10.0, camera_dim = [190,180], size_led = 2):
         
         '''
@@ -56,6 +59,11 @@ class DVS_frequency_response:
         on_event_count_median_per_pixel = np.zeros([len(files_in_dir)]) 
         matrix_count_off = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
         matrix_count_on = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_off_noise = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        matrix_count_on_noise = np.zeros([len(files_in_dir),camera_dim[0], camera_dim[1]])
+        SNR_on = np.zeros([len(files_in_dir)])
+        SNR_off = np.zeros([len(files_in_dir)])
+        num_oscillations = np.zeros([len(files_in_dir)])
         
         for this_file in range(len(files_in_dir)):            
             print ""
@@ -78,15 +86,21 @@ class DVS_frequency_response:
                 this_base_level = float(files_in_dir[this_file].strip(".aedat").strip("frequency_response_recording_time_").split("_")[6])
                 this_frequency = float(files_in_dir[this_file].strip(".aedat").strip("frequency_response_recording_time_").split("_")[8])
                 this_ndfilter = float(files_in_dir[this_file].strip(".aedat").strip("frequency_response_recording_time_").split("_")[10])
-                
+                print "File: "+files_in_dir[this_file]
                 ndfilter[this_file] = this_ndfilter
                 rec_time[this_file] = this_rec_time
                 contrast_level[this_file] = this_contrast
-                base_level[this_file] = this_base_level*10**(this_ndfilter) # attenuate
-                frequency[this_file] = this_frequency
+                base_level[this_file] = this_base_level*10**(-this_ndfilter) # attenuate
 
                 loader = load_files.load_files()
                 [frame, xaddr, yaddr, pol, ts, sp_type, sp_t] = loader.load_file(directory+files_in_dir[this_file])
+                
+                stim_freq = np.mean(1.0 / (np.diff(sp_t[0:5]) * self.time_res * 2))
+                print("stimulus frequency was :" + str(stim_freq))                
+                this_frequency = stim_freq
+                frequency[this_file] = this_frequency
+                num_oscillations[this_file] = len(sp_t)/2.0
+                
                 if(sensor == 'DAVIS208'):                        
                     yaddr = yaddr[xaddr<188]
                     pol = pol[xaddr<188]
@@ -138,10 +152,16 @@ class DVS_frequency_response:
                                   
             this_sync_ts = 0
             for this_ev in range(len(ts)):
+                if (ts[this_ev] >= (sync_ts[-1] + 1000000) and ts[this_ev] < (sync_ts[-1] + 3000000)): # noise events in the nxt 1 out of 3 sec
+                        if (pol[this_ev] == 1):
+                            matrix_count_on_noise[this_file,xaddr[this_ev],yaddr[this_ev]] = matrix_count_on_noise[this_file,xaddr[this_ev],yaddr[this_ev]]+1
+                        if (pol[this_ev] == 0):
+                            matrix_count_off_noise[this_file,xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off_noise[this_file,xaddr[this_ev],yaddr[this_ev]]+1
                 if(ts[this_ev]<=sync_ts[-1]):
                     if((ts[this_ev] >= (sync_ts[this_sync_ts] + 4.0*sine_phase)) and (this_sync_ts<=len(sync_ts)-1)):                           
                         this_sync_ts = this_sync_ts + 1           
-                        print "Moving to sync # " + str(this_sync_ts)
+                        if(this_sync_ts%500==0 or this_sync_ts<=10):
+                            print "Moving to fold # " + str(this_sync_ts)
                     if (sync_ts[this_sync_ts] <= ts[this_ev] and ts[this_ev] < (sync_ts[this_sync_ts] + 4.0*sine_phase)): # if this event is within the cycle of this sync
                         if (ts[this_ev] < (sync_ts[this_sync_ts] + sine_phase) or ts[this_ev] >= (sync_ts[this_sync_ts] + 3.0*sine_phase)): # rising half of the sine wave
                             if(pol[this_ev] == 1):
@@ -149,23 +169,30 @@ class DVS_frequency_response:
                         elif (ts[this_ev] >= (sync_ts[this_sync_ts] + sine_phase) and ts[this_ev] < (sync_ts[this_sync_ts] + 3.0*sine_phase)): # falling half of the sine wave      
                             if(pol[this_ev] == 0):
                                 matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]] =  matrix_count_off[this_file,xaddr[this_ev],yaddr[this_ev]]+1                   
-            matrix_count_on[this_file,:,:] = matrix_count_on[this_file,:,:]/(num_oscillations-1.0)
-            matrix_count_off[this_file,:,:] = matrix_count_off[this_file,:,:]/(num_oscillations-1.0)
-            
-            matrix_count_off_selected = matrix_count_off[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]
-            matrix_count_on_selected = matrix_count_on[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]
+            matrix_count_on[this_file,:,:] = matrix_count_on[this_file,:,:]/(num_oscillations[this_file]-1.0)
+            matrix_count_off[this_file,:,:] = matrix_count_off[this_file,:,:]/(num_oscillations[this_file]-1.0)
+            matrix_count_off_noise_selected = (1.0/(2*this_frequency))*matrix_count_off_noise[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]
+            matrix_count_on_noise_selected = (1.0/(2*this_frequency))*matrix_count_on_noise[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]            
+            matrix_count_off_selected = matrix_count_off[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]-matrix_count_off_noise_selected
+            matrix_count_on_selected = matrix_count_on[this_file,np.min(x_to_get):np.max(x_to_get),np.min(y_to_get):np.max(y_to_get)]-matrix_count_on_noise_selected
+            SNR_on[this_file] = 20.0*np.log10(np.median(matrix_count_on_selected)/np.median(matrix_count_on_noise_selected))
+            SNR_off[this_file] = 20.0*np.log10(np.median(matrix_count_off_selected)/np.median(matrix_count_off_noise_selected))     
             dim1,dim2 = np.shape(matrix_count_off_selected)
             on_event_count_median_per_pixel[this_file] = np.median(matrix_count_on_selected)
             off_event_count_median_per_pixel[this_file] = np.median(matrix_count_off_selected)
     
             print "This contrast: " + str(this_contrast)
-            print "This oscillations: " + str(num_oscillations)
+            print "This oscillations: " + str(num_oscillations[this_file])
             print "This recording time: " + str(this_rec_time)
             print "This base level: " + str(this_base_level)
             print "This frequency: " + str(this_frequency)
             print "This ND filter: " +str(this_ndfilter)
-            print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel)
-            print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel) 
+            print "Off median per pixel per cycle: " + str(off_event_count_median_per_pixel[this_file])
+            print "On median per pixel per cycle: " + str(on_event_count_median_per_pixel[this_file])
+            print "Off median noise per pixel per cycle: " + str(np.median(matrix_count_off_noise_selected))
+            print "On median noise per pixel per cycle: " + str(np.median(matrix_count_on_noise_selected))
+            print "Off SNR: " + str(SNR_off[this_file])
+            print "On SNR: " + str(SNR_on[this_file])
             
             fig = plt.figure()
             ax = plt.subplot(1, 2, 1)
@@ -221,23 +248,111 @@ class DVS_frequency_response:
             plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+".png",  format='png', dpi=1000)
             plt.savefig(hist_dir+"histogram_on_off_"+str(this_file)+".pdf",  format='pdf')
             plt.close("all")
+        
+  
+        # Order by frequency
+        frequency = np.array(frequency)
+        SNR_on = np.array(SNR_on)
+        SNR_off = np.array(SNR_off)
+        on_event_count_median_per_pixel = np.array(on_event_count_median_per_pixel)
+        off_event_count_median_per_pixel = np.array(off_event_count_median_per_pixel)
+        ndfilter = np.array(ndfilter)
+        rec_time = np.array(rec_time)
+        contrast_level = np.array(contrast_level)
+        base_level = np.array(base_level)
+        num_oscillations = np.array(num_oscillations)
 
-        plt.figure() # Dynamic range from this
+        
+        inds = frequency.argsort()
+        frequency = frequency[inds]
+        SNR_on = SNR_on[inds]
+        SNR_off = SNR_off[inds]
+        on_event_count_median_per_pixel = on_event_count_median_per_pixel[inds]
+        off_event_count_median_per_pixel = off_event_count_median_per_pixel[inds]
+        ndfilter = ndfilter[inds]
+        rec_time = rec_time[inds]
+        contrast_level = contrast_level[inds]
+        base_level = base_level[inds]
+        num_oscillations = num_oscillations[inds]
+        
+        # Save variables
+        var_dir = fr_dir+'saved_variables/'
+        if(not os.path.exists(var_dir)):
+            os.makedirs(var_dir)
+        np.savez(var_dir+"variables_"+sensor+".npz", sensor=sensor, num_oscillations=num_oscillations,
+                 frequency=frequency, off_event_count_median_per_pixel=off_event_count_median_per_pixel,
+                 on_event_count_median_per_pixel=on_event_count_median_per_pixel,rec_time=rec_time,
+                 contrast_level=contrast_level, SNR_on=SNR_on,SNR_off=SNR_off,
+                 ndfilter=ndfilter, base_level=base_level)            
+        
+        plt.figure()
         colors = cm.rainbow(np.linspace(0, 1, 2))
         color_tmp = 0
-        plt.plot(frequency, off_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='OFF')
+        plt.semilogx(frequency, off_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='OFF')
         color_tmp = color_tmp+1
-        plt.plot(frequency, on_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='ON')
+        plt.semilogx(frequency, on_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='ON')
         color_tmp = color_tmp+1
         lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.xlabel("Stimulus frequency [Hz]")
         plt.ylabel("ON and OFF event counts")
-#        plt.ylim((0,100))
+        plt.title("ON and OFF event counts vs frequency")
+        plt.legend(loc=1)
+        plt.ylim((0,15))
         plt.savefig(frequency_responses_dir+"event_count_vs_frequency.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.savefig(frequency_responses_dir+"event_count_vs_frequency.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
         plt.close("all")
+        
+        plt.figure()
+        colors = cm.rainbow(np.linspace(0, 1, 2))
+        color_tmp = 0
+        plt.semilogx(frequency, SNR_off, 'o--', color=colors[color_tmp], label='OFF')
+        color_tmp = color_tmp+1
+        plt.semilogx(frequency, SNR_on, 'o--', color=colors[color_tmp], label='ON')
+        color_tmp = color_tmp+1
+        plt.semilogx([frequency[0], frequency[-1]],[0,0], color= "green")   
+        plt.xlabel("Stimulus frequency [Hz]")
+        plt.ylabel("ON and OFF SNR [dB]")
+        plt.title("ON and OFF SNR vs frequency")
+        plt.legend(loc=2)
+#        plt.ylim((0,100))
+        plt.savefig(frequency_responses_dir+"SNR_vs_frequency.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.savefig(frequency_responses_dir+"SNR_vs_frequency.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        plt.close("all")
+        
+        plt.figure()
+        colors = cm.rainbow(np.linspace(0, 1, 2))
+        color_tmp = 0
+        plt.semilogx(frequency/contrast_level, off_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='OFF')
+        color_tmp = color_tmp+1
+        plt.semilogx(frequency/contrast_level, on_event_count_median_per_pixel, 'o--', color=colors[color_tmp], label='ON')
+        color_tmp = color_tmp+1
+        plt.xlabel("Stimulus frequency/contrast [Hz]")
+        plt.ylabel("ON and OFF event counts")
+        plt.title("ON and OFF event counts vs frequency")
+        plt.legend(loc=1)
+        plt.ylim((0,15))
+        plt.savefig(frequency_responses_dir+"event_count_vs_frequency_contrast_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.savefig(frequency_responses_dir+"event_count_vs_frequency_contrast_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        plt.close("all")
+        
+        plt.figure()
+        colors = cm.rainbow(np.linspace(0, 1, 2))
+        color_tmp = 0
+        plt.semilogx(frequency/contrast_level, SNR_off, 'o--', color=colors[color_tmp], label='OFF')
+        color_tmp = color_tmp+1
+        plt.semilogx(frequency/contrast_level, SNR_on, 'o--', color=colors[color_tmp], label='ON')
+        color_tmp = color_tmp+1
+        plt.semilogx([frequency[0], frequency[-1]],[0,0], color= "green") 
+        plt.xlabel("Stimulus frequency/contrast [Hz]")
+        plt.ylabel("ON and OFF SNR [dB]")
+        plt.title("ON and OFF SNR vs frequency/contrast")
+        plt.legend(loc=2)
+#        plt.ylim((0,100))
+        plt.savefig(frequency_responses_dir+"SNR_vs_frequency_contrast_level.pdf",  format='PDF', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.savefig(frequency_responses_dir+"SNR_vs_frequency_contrast_level.png",  format='PNG', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+        plt.close("all")
             
-        return contrast_level, base_level, frequency, off_event_count_median_per_pixel, on_event_count_median_per_pixel
+        return contrast_level, base_level, frequency, off_event_count_median_per_pixel, on_event_count_median_per_pixel, SNR_off, SNR_on
 
     def confIntMean(self, a, conf=0.95):
         mean, sem, m = np.mean(a), st.sem(a), st.t.ppf((1+conf)/2., len(a)-1)
