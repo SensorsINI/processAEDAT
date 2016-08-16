@@ -30,8 +30,10 @@ do_set_bias = False
 
 do_contrast_sensitivity = False # And DVS-FPN too
 do_ptc = False
-do_frequency_response = False
-do_latency = True
+do_frequency_response = True
+do_latency = False
+
+
 do_latency_pixel_with_fiber = False
 do_oscillations = False
 
@@ -95,16 +97,16 @@ if(do_frequency_response):
     start_freq = int(info[19].split(',')[0].strip('[').strip(']'))
     end_freq = int(info[19].split(',')[1].strip('[').strip(']'))
     num_points_freq = int(info[19].split(',')[2].strip('[').strip(']'))
-    freq_fr = np.linspace(start_freq, end_freq, num_points_freq)
-    base_level_fr = [500, 1000, 2000] # 3 points are fine
-    contrast_level_fr = [0.3]
+    freq_fr = np.logspace(start_freq, end_freq, num = num_points_freq)
+    base_level_fr = [1000.0] # 3 points are fine
+    contrast_level_fr = [0.5]
     oscillations_fr = 10.0
     ndfilter_fr = info[20]
     
 if(do_latency or do_latency_pixel_with_fiber):
-    oscillations = 100.0
-    freq_square = 50.0
-    base_level_latency_with_fiber = [1000]
+    oscillations = 1000.0
+    freq_square = 100.0
+    base_level_latency_with_fiber = [1000.0]
     contrast_level = 0.5
 
 if(do_oscillations):
@@ -172,11 +174,11 @@ if(do_set_bias):
     if(dark_room):
         gpio_cnt.set_inst(gpio_cnt.k230,"I0M1D0F1X") 
         gpio_cnt.set_inst(gpio_cnt.k230,"I2X") # set current limit to max
-    sine_freq = 1.0;
-    freq_square = 50.0
+    sine_freq = 10.0;
+    freq_square = 1.0
     base_level = 1000;
     contrast_level = 0.5
-    oscillations = 600; # 10 minutes
+    oscillations = 10000; # 10 minutes
     perc_low = base_level-(contrast_level/2.0)*base_level
     perc_hi = base_level+(contrast_level/2.0)*base_level
     v_hi = (perc_hi - inter) / slope
@@ -186,7 +188,7 @@ if(do_set_bias):
     print("offset is "+str(offset)+ " amplitude " +str(amplitude) + " . ")
     if(dark_room):
         #gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(sine_freq)+", "+str(amplitude)+",0")
-        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SQUARE "+str(freq_square)+", "+str(amplitude)+",0")        
+        gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_square)+", "+str(amplitude)+",0")        
         gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
         gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
     control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
@@ -319,8 +321,8 @@ if do_frequency_response:
         print("Base level: "+str(base_level_fr[this_base]))
         for this_contrast in range(len(contrast_level_fr)):
             print("Contrast level: "+str(contrast_level_fr[this_contrast]))            
-            perc_low = contrast_base_levels[this_base]-(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
-            perc_hi = contrast_base_levels[this_base]+(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
+            perc_low = base_level_fr[this_base]-(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
+            perc_hi = base_level_fr[this_base]+(contrast_level_fr[this_contrast]/2.0)*base_level_fr[this_base]
             v_hi = (perc_hi - inter) / slope
             v_low = (perc_low - inter) / slope 
             offset = np.mean([v_hi,v_low])
@@ -330,16 +332,24 @@ if do_frequency_response:
                 print("Frequency: "+str(freq_fr[this_freq]))+" Hz"
                 if(dark_room):
                     gpio_cnt.set_inst(gpio_cnt.fun_gen,"OUTPut:SYNC ON") # enable sync
-                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_fr[this_freq])+", "+str(amplitude)+",0")
+#                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_fr[this_freq])+", "+str(amplitude)+",0")
                     gpio_cnt.set_inst(gpio_cnt.k230,"V"+str(round(offset,3))) #voltage output
                     gpio_cnt.set_inst(gpio_cnt.k230,"F1X") #operate
                 control.load_biases(xml_file=bias_file, dvs128xml=dvs128xml)
                 sine_freq = freq_fr[this_freq]
-                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = sine_freq, sensor_type = sensor_type, contrast_level = contrast_level_fr, base_level = base_level_fr[this_base], ndfilter_fr = ndfilter_fr)
+                if (not sensor == "DAVIS240C"):
+                    control.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ FilterBackgroundActivity bool false')
+                if(dark_room):
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:SIN "+str(freq_fr[this_freq])+", "+str(amplitude)+",0") #enable sine wave
+                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = freq_fr[this_freq], sensor_type = sensor_type, contrast_level = contrast_level_fr[this_contrast], base_level = base_level_fr[this_base], ndfilter = ndfilter_fr, sinewave = True)
+                if(dark_room):                    
+                    gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0") # turn off sine wave
+                control.get_data_frequency_response(sensor, folder = folder, oscillations = oscillations_fr, frequency = freq_fr[this_freq], sensor_type = sensor_type, contrast_level = contrast_level_fr[this_contrast], base_level = base_level_fr[this_base], ndfilter = ndfilter_fr, sinewave = False)
     # Zero the Function Generator
     if(dark_room):
         gpio_cnt.set_inst(gpio_cnt.fun_gen,"APPL:DC DEF, DEF, 0")
     control.close_communication_command()
+    print "Data saved in " +  folder
         
 # 4 - Oscillations - data
 # setup is in conditions -> Homegeneous light source (integrating sphere, need to measure the luminosity)

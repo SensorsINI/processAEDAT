@@ -490,7 +490,7 @@ class caer_communication:
             time.sleep(recording_time)
         else:
             recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
-            print("Recording noise for " + str(recording_time))
+            print("Recording noise for " + str(recording_time)+ " s")
             time.sleep(recording_time)
             self.stop_logging()
             self.close_communication_data()
@@ -506,58 +506,63 @@ class caer_communication:
             #print("DVS array is OFF")
         return        
         
-    def get_data_frequency_response(self, sensor, folder = 'frequency response', oscillations = 10.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 0.5, base_level = 1000.0, ndfilter = 2.0):
+    def get_data_frequency_response(self, sensor, folder = 'frequency response', oscillations = 10.0, frequency = 1.0, sensor_type="DAVISFX3", contrast_level = 0.5, base_level = 1000.0, ndfilter = 2.0, sinewave = True):
         '''
            Frequency response
             - aps is off
         '''
-        #make frequency response directory
-        try:
-            os.stat(folder)
-        except:
-            os.mkdir(folder) 
-        #switch on edge detector for special event
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectPulses bool false')
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ RunDetector bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectFallingEdges bool true')
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectRisingEdges bool true')
-        #loop over exposures and save data
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
-        print("APS array is OFF")
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool true') 
-        print("DVS array is ON")
-        # For PixelParade Only
-        if (sensor == 'DAVIS208'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
-            print("All DVS arrays of PixelParade are ON")
-        recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
-        if (recording_time< 1.0): # Buffer not full!! must be at least 20 ms
-            recording_time = 1.0
-        print("Recording for " + str(recording_time)+ " s")                
-        time.sleep(2.0)
-        self.open_communication_data()
-        filename = folder + '/frequency_response_recording_time_'+format(int(recording_time), '07d')+\
-        '_contrast_level_'+format(int(contrast_level*100),'03d')+\
-        '_base_level_'+str(format(int(base_level),'03d'))+\
-        '_frequency_'+str(format(int(frequency),'03d'))+\
-        '_ndfilter_'+str(format(int(ndfilter),'03d'))+\
-        '.aedat'
-        self.start_logging(filename)    
-        time.sleep(recording_time)
-        self.stop_logging()
-        self.close_communication_data()
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
-        print("APS array is ON")
-        self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
-        if (sensor == 'DAVIS208'):
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
-            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
-            print("All DVS arrays of PixelParade are OFF")
-        print("DVS array is OFF")
+        if(sinewave == True):
+            #make frequency response directory
+            try:
+                os.stat(folder)
+            except:
+                os.mkdir(folder) 
+            #switch on edge detector for special event
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectPulses bool false')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ RunDetector bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectFallingEdges bool true')
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/externalInput/ DetectRisingEdges bool true')
+            #loop over exposures and save data
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool false')  #switch off APS
+            print("APS array is OFF")
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool true') 
+            print("DVS array is ON")
+            # For PixelParade Only
+            if (sensor == 'DAVIS208'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool true') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectBiasRefSS bool true') 
+                print("All DVS arrays of PixelParade are ON")
+            recording_time = (1.0/frequency)*(oscillations) #number of complete oscillations
+            if (recording_time< 1.0): # Buffer not full!! must be at least 20 ms
+                recording_time = 1.0
+            print("Recording for " + str(recording_time)+ " s")                
+            time.sleep(2.0)
+            self.open_communication_data()
+            filename = folder + '/frequency_response_recording_time_'+format(int(recording_time), '07d')+\
+            '_contrast_level_'+format(int(contrast_level*100),'03d')+\
+            '_base_level_'+str(format(int(base_level),'03d'))+\
+            '_frequency_'+str(format(int(frequency),'08d'))+\
+            '_ndfilter_'+str(format(int(ndfilter),'03d'))+\
+            '.aedat'
+            self.start_logging(filename)    
+            time.sleep(recording_time)
+        else:
+            recording_time = 3.0 # Always record for 3 seconds to be sure
+            print("Recording noise for " + str(recording_time)+ " s")
+            time.sleep(recording_time)
+            self.stop_logging()
+            self.close_communication_data()
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/aps/ Run bool true') 
+            print("APS array is ON")
+            self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/dvs/ Run bool false')
+            if (sensor == 'DAVIS208'):
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectHighPass bool false') 
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectPosFb bool false')
+                self.send_command('put /1/1-'+str(sensor_type)+'/'+str(sensor)+'/chip/ SelectSense bool false') 
+                print("All DVS arrays of PixelParade are OFF")
+            print("DVS array is OFF")
         return        
 
     def get_data_ptc(self, sensor, folder = 'ptc', frame_number = 100,  exposures = np.linspace(1,1000,5), global_shutter=True, sensor_type = "DAVISFX2", useinternaladc = True):
