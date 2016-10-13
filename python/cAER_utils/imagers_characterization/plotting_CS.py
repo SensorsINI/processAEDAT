@@ -8,7 +8,11 @@ import sys
 from pylab import *
 sys.path.append('utils/')
 import operator
+import scipy as sp
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.optimize import curve_fit
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 ####################################################
 # select data files to import and output directory #
@@ -50,8 +54,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 #                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_31_36_lux_2000/", #
 #                  "C:/Users/Diederik Paul Moeys/Desktop/Measurements_OFF_nd3_20_07_2016/DAVIS208_contrast_sensitivity_20_07_16-12_33_24_lux_3000/"] #
 # ALL to push contrast with ir and no ir comparison
-directory_meas = ["C:/Users/Diederik Paul Moeys/Desktop/DAVIS208_contrast_sensitivity_22_07_16-09_48_08_lux_1000_ir/",
-                  "C:/Users/Diederik Paul Moeys/Desktop/DAVIS208_contrast_sensitivity_22_07_16-10_08_39_lux_1000_no_ir/"]
+directory_meas = ["Z:/sDAVIS Characterization/Contrast sensitivity bias sweep/DAVIS208_contrast_sensitivity_22_07_16-09_48_08_lux_1000_ir/",
+                  "Z:/sDAVIS Characterization/Contrast sensitivity bias sweep/DAVIS208_contrast_sensitivity_22_07_16-10_08_39_lux_1000_no_ir/"]
 ir_no_ir = True
 dr = False 
 
@@ -87,7 +91,7 @@ dr = False
 
 overwrite_base_level = False
 plot_hist = False
-plot_all = True
+plot_all = False
 hold_on = False
 
 sensor = 'DAVIS208'
@@ -603,7 +607,15 @@ else:
     color_tmp = color_tmp+1
     plt.plot(100.0*contrast_off_overall[48:-1], snr_off_overall[48:-1], 'o', color=colors[color_tmp], label='OFF w/o IR cut')
     color_tmp = color_tmp+1
+    
     plt.plot(100.0*contrast_on_overall[48:-1], snr_on_overall[48:-1], 'o', color=colors[color_tmp], label='ON w/o IR cut')
+    # FIT
+    window_size, poly_order =31, 5
+    itp_ON = interp1d(100.0*contrast_on_overall[1:48],snr_on_overall[48:-1], kind='linear')              
+    yy_sg_ON = savgol_filter(itp_ON(100.0*contrast_on_overall[1:48]), window_size, poly_order)
+    plt.semilogx(100.0*contrast_on_overall[1:48], yy_sg_ON, '-', color=colors[color_tmp], label='Fit' )    
+    
+    plt.plot([0, np.max(100.0*contrast_on_overall)],[0,0], "g--") 
     lgd = plt.legend(bbox_to_anchor=(1, 1), loc=1, borderaxespad=1)
 ax.set_title('ON and OFF SNR vs contrast sensitivity')
 plt.xlabel("Contrast sensitivity [%]")
