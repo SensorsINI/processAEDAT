@@ -219,6 +219,9 @@ end
 % Declare function for finding specific event types in eventTypes cell array
 cellFind = @(string)(@(cellContents)(strcmp(string, cellContents)));
 
+% Create structure to put all the data in 
+output.data = struct;
+
 if strcmp(info.source, 'Das1')
 	% DAS1 
 	sampleMask = hex2dec('1000');
@@ -324,12 +327,11 @@ elseif strfind(info.source, 'Davis')
 	
 	% Frame events - NOTE This code currently only handles global shutter
 	% readout ...
-	%{
-	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))) && any(frameLogical)
-		output.data.frame.timeStamp = allTs(frameLogical);
 
-		frameLastEventMask = hex2dec ('FFFFFC00');
-		frameLastEvent = hex2dec ('80000000'); %starts with biggest address
+	if (~isfield(info, 'dataTypes') || any(cellfun(cellFind('frame'), info.dataTypes))) && any(frameLogical)
+		% These two are defined in the format, but not actually necessary to establish the frame boundaries
+		% frameLastEventMask = hex2dec ('FFFFFC00');
+		% frameLastEvent = hex2dec ('80000000'); %starts with biggest address
 		
 		frameSampleMask = bin2dec('1111111111');
 		
@@ -340,18 +342,64 @@ elseif strfind(info.source, 'Davis')
 		frameY = uint16(bitshift(bitand(frameData, yMask),-yShiftBits));
 		frameSignal = boolean(bitshift(bitand(frameData, signalOrSpecialMask),-4));
 		frameSample = uint16(bitand(frameData, frameSampleMask));
-		bitget(frameData, 32 - log2(signalOrSpecialMask)) == true;
 		
-		% To identify frame boundaries, search for a minor and a major monotonic 
-		% ramp in the x and y directions. In general the ramp could be in
-		% either direction and y could be either minor or major. 
-		frameXDiff = sum(frameX(2 : end) ~= frameX(1 : end - 1)) > ...
-						sum(frameY(2 : end) ~= frameY(1 : end - 1));
-		frameYDiff = ;
-		MajorIsX = 
-	end
-%}		
+		% In general the ramp of address values could be in either
+		% direction and either x or y could be the outer(inner) loop
+		% Search for a discontinuity in both x and y simultaneously
+		frameXDouble = double(frameX);
+		frameYDouble = double(frameY);
+		frameXDiscont = abs(frameXDouble(2 : end) - frameXDouble(1 : end - 1)) > 1;
+		frameYDiscont = abs(frameYDouble(2 : end) - frameYDouble(1 : end - 1)) > 1;
+		frameStarts = [1; find(frameXDiscont & frameXDiscont) + 1; length(frameData) + 1]; 
+		% Now we have the indices of the first sample in each frame, plus
+		% an additional index just beyond the end of the array
+		numFrames = length(frameStarts) - 1;
+		
+		output.data.frame.reset = false(numFrames, 1);
+		output.data.frame.timeStampStart = zeros(numFrames, 1);
+		output.data.frame.timeStampEnd = zeros(numFrames, 1);
+		output.data.frame.samples = cell(numFrames, 1);
+		output.data.frame.xLength = zeros(numFrames, 1);
+		output.data.frame.yLength = zeros(numFrames, 1);
+		output.data.frame.xPosition = zeros(numFrames, 1);
+		output.data.frame.yPosition = zeros(numFrames, 1);
+		
+		for frameIndex = 1 : numFrames
+			disp(['Processing frame ' num2str(frameIndex)])
+			% All within a frame should be either reset or signal. I could
+			% implement a check here to see that that's true, but I haven't
+			% done so; rather I just take the firswt value
+			output.data.frame.reset(frameIndex) = frameSignal(frameStarts(frameIndex)); 
+			
+			% in aedat 2 format we don't have the four timestamps of aedat 3 format
+			% We expect to find all the same timestamps; 
+			% nevertheless search for lowest and highest
+			output.data.frame.timeStampStart(frameIndex) = min(frameTs(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1)); 
+			output.data.frame.timeStampEnd(frameIndex) = max(frameTs(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1)); 
 
+			tempXPosition = min(frameX(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1));
+			output.data.frame.xPosition(frameIndex) = tempXPosition;
+			tempYPosition = min(frameY(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1));
+			output.data.frame.yPosition(frameIndex) = tempYPosition;
+			output.data.frame.xLength(frameIndex) = max(frameX(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1)) - output.data.frame.xPosition(frameIndex) + 1;
+			output.data.frame.yLength(frameIndex) = max(frameY(frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1)) - output.data.frame.yPosition(frameIndex) + 1;
+			% If we worked out which way the data is ramping in each
+			% direction, and if we could exclude data loss, then we could
+			% do some nice clean matrix transformations; but I'm just going
+			% to iterate through the samples, putting them in the right
+			% place in the array according to their address
+			
+			% first create a temporary array - there is no concept of
+			% colour channels in aedat2
+			tempSamples = zeros(output.data.frame.yLength(frameIndex), output.data.frame.xLength(frameIndex), 'uint16');
+			for sampleIndex = frameStarts(frameIndex) : frameStarts(frameIndex + 1) - 1
+				tempSamples(frameY(sampleIndex) - output.data.frame.yPosition(frameIndex) + 1, ...
+							frameX(sampleIndex) - output.data.frame.xPosition(frameIndex) + 1) ...
+							= frameSample(sampleIndex);
+			end
+			output.data.frame.samples{frameIndex} = tempSamples;
+		end		
+	end
 	% IMU events
 		% These come in blocks of 7, for the 7 different values produced in
 		% a single sample; the following code recomposes these
@@ -417,12 +465,12 @@ if isfield(output.data, 'polarity')
 	end
 end
 if isfield(output.data, 'frame')
-	output.data.frame.numEvents = length(output.data.frame.timeStamp);
-	if output.data.frame.timeStamp(1) < output.info.firstTimeStamp
-		output.info.firstTimeStamp = output.data.frame.timeStamp(1);
+	output.data.frame.numEvents = length(output.data.frame.timeStampStart);
+	if output.data.frame.timeStampStart(1) < output.info.firstTimeStamp
+		output.info.firstTimeStamp = output.data.frame.timeStampStart(1);
 	end
-	if output.data.frame.timeStamp(end) > output.info.lastTimeStamp
-		output.info.lastTimeStamp = output.data.frame.timeStamp(end);
+	if output.data.frame.timeStampEnd(end) > output.info.lastTimeStamp
+		output.info.lastTimeStamp = output.data.frame.timeStampEnd(end);
 	end
 end
 if isfield(output.data, 'imu6')
