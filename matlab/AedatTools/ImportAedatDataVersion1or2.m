@@ -44,6 +44,7 @@ fields:
 	- dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
 		special; polarity; frame; imu6; imu9; sample; ear; config.
+	- subtractResetRead - optional, only for aedat2 and DAVIS - 
 
 The output is a structure with 2 fields.
 	- info - the input structure, embelished with other data
@@ -369,7 +370,7 @@ elseif strfind(info.source, 'Davis')
 			% All within a frame should be either reset or signal. I could
 			% implement a check here to see that that's true, but I haven't
 			% done so; rather I just take the firswt value
-			output.data.frame.reset(frameIndex) = frameSignal(frameStarts(frameIndex)); 
+			output.data.frame.reset(frameIndex) = ~frameSignal(frameStarts(frameIndex)); 
 			
 			% in aedat 2 format we don't have the four timestamps of aedat 3 format
 			% We expect to find all the same timestamps; 
@@ -398,7 +399,60 @@ elseif strfind(info.source, 'Davis')
 							= frameSample(sampleIndex);
 			end
 			output.data.frame.samples{frameIndex} = tempSamples;
-		end		
+		end	
+		if isfield(info, 'subtractResetRead') && info.subtractResetRead && isfield(output.data.frame, 'reset')
+			% Make a second pass through the frames, subtracting reset
+			% reads from signal reads
+			frameCount = 0;
+			for frameIndex = 1 : numFrames
+				if output.data.frame.reset(frameIndex) 
+					resetFrame = output.data.frame.samples{frameIndex};
+					resetXPosition = output.data.frame.xPosition(frameIndex);
+					resetYPosition = output.data.frame.yPosition(frameIndex);
+					resetXLength = output.data.frame.xLength(frameIndex);
+					resetYLength = output.data.frame.yLength(frameIndex);					
+				else
+					frameCount = frameCount + 1;
+					% If a resetFrame has not yet been found, 
+					% push through the signal frame as is
+					if ~exist('frameCount', 'var')
+						output.data.frame.samples{frameCount} ...
+							= output.data.frame.samples{frameIndex};
+					else
+						% If the resetFrame and signalFrame are not the same size,	
+						% don't attempt subtraction 
+						% (there is probably a cleaner solution than this - could be improved)
+						if resetXPosition ~= output.data.frame.xPosition(frameIndex) ...
+							|| resetYPosition ~= output.data.frame.yPosition(frameIndex) ...
+							|| resetXLength ~= output.data.frame.xLength(frameIndex) ...
+							|| resetYLength ~= output.data.frame.yLength(frameIndex)
+							output.data.frame.samples{frameCount} ...
+								= output.data.frame.samples{frameIndex};
+						else
+							% Do the subtraction
+							output.data.frame.samples{frameCount} ...
+								= resetFrame - output.data.frame.samples{frameIndex};
+						end
+						% Copy over the reset of the info
+						output.data.frame.xPosition(frameCount) = output.data.frame.xPosition(frameIndex);
+						output.data.frame.yPosition(frameCount) = output.data.frame.yPosition(frameIndex);
+						output.data.frame.xLength(frameCount) = output.data.frame.xLength(frameIndex);
+						output.data.frame.yLength(frameCount) = output.data.frame.yLength(frameIndex);
+						output.data.frame.timeStampStart(frameCount) = output.data.frame.timeStampStart(frameIndex); 
+						output.data.frame.timeStampEnd(frameCount) = output.data.frame.timeStampEnd(frameIndex); 							
+					end
+				end
+			end
+			% Clip the arrays
+			output.data.frame.xPosition = output.data.frame.xPosition(1 : frameCount);
+			output.data.frame.yPosition = output.data.frame.yPosition(1 : frameCount);
+			output.data.frame.xLength = output.data.frame.xLength(1 : frameCount);
+			output.data.frame.yLength = output.data.frame.yLength(1 : frameCount);
+			output.data.frame.timeStampStart = output.data.frame.timeStampStart(1 : frameCount);
+			output.data.frame.timeStampEnd = output.data.frame.timeStampEnd(1 : frameCount);
+			output.data.frame.samples = output.data.frame.samples(1 : frameCount);
+			output.data.frame = rmfield(output.data.frame, 'reset'); % reset is no longer needed
+		end
 	end
 	% IMU events
 		% These come in blocks of 7, for the 7 different values produced in

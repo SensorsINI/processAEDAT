@@ -1,4 +1,4 @@
-function PlotFrame(input, numPlots, distributeBy)
+function PlotFrame(input, numPlots, distributeBy, flipVertical)
 
 %{
 Takes 'input' - a data structure containing an imported .aedat file, 
@@ -10,20 +10,38 @@ around which data is rendered are chosen.
 The frame events are then chosen as those nearest to the time points.
 %}
 
+if nargin < 3
+	distributeBy = 'time';
+end
+
+% we would rather work with exposure times, but aedat 2 doesn't encode that
+if isfield(input.data.frame, 'timeStampExposureStart')
+	timeStamps = input.data.frame.timeStampExposureStart;
+else
+	timeStamps = input.data.frame.timeStampStart;
+end
+numFrames = length(input.data.frame.samples); % ignore issue of valid / invalid for now ...
+if numFrames < numPlots
+	numPlots = numFrames;
+end
+
+if numFrames == numPlots
+	distributeBy = 'events';
+end
+
 % Distribute plots in a raster with a 3:4 ratio
 numPlotsX = round(sqrt(numPlots / 3 * 4));
 numPlotsY = ceil(numPlots / numPlotsX);
 
-numEvents = length(input.data.frame.valid); % ignore issue of valid / invalid for now ...
 if strcmp(distributeBy, 'time')
-	minTime = min(input.data.frame.timeStampExposureStart);
-	maxTime = max(input.data.frame.timeStampExposureStart);
+	minTime = min(timeStamps);
+	maxTime = max(timeStamps);
 	totalTime = maxTime - minTime;
 	timeStep = totalTime / numPlots;
 	timePoints = minTime + timeStep * 0.5 : timeStep : maxTime;
 else % distribute by event number
-	eventsPerStep = numEvents / numPlots;
-	timePoints = input.data.frame.timeStampExposureStart(ceil(eventsPerStep * 0.5 : eventsPerStep : numEvents));
+	framesPerStep = numFrames / numPlots;
+	timePoints = timeStamps(ceil(framesPerStep * 0.5 : framesPerStep : numFrames));
 end
 
 figure
@@ -31,12 +49,14 @@ for plotCount = 1 : numPlots
 	subplot(numPlotsY, numPlotsX, plotCount);
 	hold all
 	% Find eventIndex nearest to timePoint
-	eventIndex = find(input.data.frame.timeStampExposureStart >= timePoints(plotCount), 1, 'first');
+	frameIndex = find(timeStamps >= timePoints(plotCount), 1, 'first');
 	% Ignore colour for now ...
-	imagesc(input.data.frame.samples{eventIndex})
+	imagesc(input.data.frame.samples{frameIndex})
 	colormap('gray')
 	axis equal tight
-	set(gca, 'YDir', 'reverse')
-	title([num2str(double(input.data.frame.timeStampExposureStart(eventIndex)) / 1000000) ' s'])
+	if nargin >= 4 && flipVertical
+		set(gca, 'YDir', 'reverse')
+	end
+	title(['Time: ' num2str(round(double(timeStamps(frameIndex)) / 1000) /1000) ' s; frame number: ' num2str(frameIndex)])
 end
 
