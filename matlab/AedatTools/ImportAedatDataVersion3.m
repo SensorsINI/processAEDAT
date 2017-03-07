@@ -237,6 +237,8 @@ while true % implement the exit conditions inside the loop - allows to distingui
 	packetPointers(packetCount) = ftell(info.fileHandle) - 28;
 	if mod(packetCount, 100) == 0
 		disp(['packet: ' num2str(packetCount) '; file position: ' num2str(floor(ftell(info.fileHandle) / 1000000)) ' MB'])
+% This line for debugging timestamp order problems
+%        disp(['packet: ' num2str(packetCount) '; timestamp: ' num2str(mainTimeStamp)])
 	end
 	if info.startPacket > packetCount
 		% Ignore this packet as its count is too low
@@ -256,7 +258,15 @@ while true % implement the exit conditions inside the loop - allows to distingui
 		% Find the first timestamp and check the timing constraints
 		packetTimestampOffset = uint64(eventTsOverflow) * uint64(2^31);
 		mainTimeStamp = uint64(typecast(data(eventTsOffset + 1 : eventTsOffset + 4), 'int32')) + packetTimestampOffset;
-		if info.startTime <= mainTimeStamp && mainTimeStamp <= info.endTime
+
+            
+        if mainTimeStamp > info.endTime * 1e6 && ...
+                mainTimeStamp ~= hex2dec('7FFFFFFF') % This may be a timestamp reset - don't let it stop the import
+            % Naively assume that the packets are all ordered correctly and finish
+            packetCount = packetCount - 1;
+            break
+        end
+        if info.startTime * 1e6 <= mainTimeStamp
 			eventType = typecast(header(1:2), 'int16');
 			packetTypes(packetCount) = eventType;
 			
@@ -296,7 +306,7 @@ while true % implement the exit conditions inside the loop - allows to distingui
 				if ~isfield(info, 'dataTypes') || any(cellfun(cellFind('polarity'), info.dataTypes))
 					% First check if the array is big enough
 					currentLength = length(polarityValid);
-					if currentLength == 0
+					if currentLength == 0 
 						polarityValid		= false(eventNumber, 1);
 						polarityTimeStamp	= uint64(zeros(eventNumber, 1));
 						polarityX			= uint16(zeros(eventNumber, 1));

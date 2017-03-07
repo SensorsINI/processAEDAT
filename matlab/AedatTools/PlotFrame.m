@@ -1,4 +1,4 @@
-function PlotFrame(input, numPlots, distributeBy, flipVertical)
+function PlotFrame(input, numPlots, distributeBy, minTime, maxTime)
 
 %{
 Takes 'input' - a data structure containing an imported .aedat file, 
@@ -6,8 +6,11 @@ as created by ImportAedat, and creates a series of images from selected
 frames.
 The number of subplots is given by the numPlots parameter.
 'distributeBy' can either be 'time' or 'events', to decide how the points 
-around which data is rendered are chosen.
+around which data is rendered are chosen. 
 The frame events are then chosen as those nearest to the time points.
+If the 'distributeBy' is 'time' then if the further parameters 'minTime' 
+and 'maxTime' are used then the time window used is only between
+those limits.
 %}
 
 if nargin < 3
@@ -33,9 +36,14 @@ end
 numPlotsX = round(sqrt(numPlots / 3 * 4));
 numPlotsY = ceil(numPlots / numPlotsX);
 
-if strcmp(distributeBy, 'time')
-	minTime = min(timeStamps);
-	maxTime = max(timeStamps);
+if strcmp(lower(distributeBy), 'time')
+    if ~exist('minTime')
+        minTime = min(input.data.frame.timeStampExposureStart);
+    end
+    if ~exist('maxTime')
+        maxTime = max(input.data.frame.timeStampExposureStart);
+    end
+
 	totalTime = maxTime - minTime;
 	timeStep = totalTime / numPlots;
 	timePoints = minTime + timeStep * 0.5 : timeStep : maxTime;

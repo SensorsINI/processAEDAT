@@ -216,6 +216,10 @@ end
 
 info.fileHandle = fopen(info.filePath, 'r');
 
+if info.fileHandle == -1
+    error('file not found')
+end
+
 % Process the headers
 info = ImportAedatHeaders(info);
 
