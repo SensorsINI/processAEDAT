@@ -77,6 +77,8 @@ This function expects a single input, which is a structure with the following fi
 		provided, any packets with a lower count that this will not be returned.
 	- endPacket (optional) Only accepted for fileformat 3. If
 		provided, any packets with a higher count that this will not be returned.
+	- modPacket (optional) Only accepted for fileformat 3. For sparse sampling of a file, 
+        packets are imported if mod(packetNumber,modPacket) = 0 
 	- dataTypes (optional) cellarray. If present, only data types specified 
 		in this cell array are returned. Options are: 
 		special; polarity; frame; imu6; imu9; sample; ear; config (other types as they are implemented)

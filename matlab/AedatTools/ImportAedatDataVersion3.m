@@ -19,6 +19,8 @@ fields:
 		this time will not be returned.
 	- startPacket (optional) Any packets with a lower count that this will not be returned.
 	- endPacket (optional) Any packets with a higher count that this will not be returned.
+	- modPacket (optional) For sparse sampling of a file, 
+        packets are imported if mod(packetNumber,modPacket) = 0 
 	- source - a string containing the name of the chip class from
 		which the data came. Options are:
 		- dvs128 
@@ -142,7 +144,10 @@ dbstop if error
 if ~isfield(info, 'startPacket')
 	info.startPacket = 1;
 end
-if ~isfield(info, 'endPacket')	
+if ~isfield(info, 'modPacket')	
+	info.modPacket = 1;
+end
+if ~isfield(info, 'endPacket')
 	info.endPacket = inf;
 end
 if info.startPacket > info.endPacket 
@@ -237,10 +242,8 @@ while true % implement the exit conditions inside the loop - allows to distingui
 	packetPointers(packetCount) = ftell(info.fileHandle) - 28;
 	if mod(packetCount, 100) == 0
 		disp(['packet: ' num2str(packetCount) '; file position: ' num2str(floor(ftell(info.fileHandle) / 1000000)) ' MB'])
-% This line for debugging timestamp order problems
-%        disp(['packet: ' num2str(packetCount) '; timestamp: ' num2str(mainTimeStamp)])
 	end
-	if info.startPacket > packetCount
+	if info.startPacket > packetCount || mod(packetCount, info.modPacket) > 0 
 		% Ignore this packet as its count is too low
 		eventSize = typecast(header(5:8), 'int32');
 		eventNumber = typecast(header(21:24), 'int32');
@@ -744,7 +747,10 @@ end
 % simplicity
 packetSizes = [output.info.packetPointers(2 : end) - output.info.packetPointers(1 : end - 1) - 28; 0];
 output.info.dataVolumeByEventType = {};
-for eventType = 0 : max(output.info.packetTypes) % counting down means the array is only assigned once
+
+eventTypesTemp = output.info.packetTypes;
+eventTypesTemp(eventTypesTemp == 32768) = 0;
+for eventType = max(eventTypesTemp): -1 : 0 % counting down means the array is only assigned once
 	output.info.dataVolumeByEventType(eventType + 1, 1 : 2) = [{ImportAedatEventTypes(eventType)} sum(packetSizes(output.info.packetTypes == eventType))];
 end
 

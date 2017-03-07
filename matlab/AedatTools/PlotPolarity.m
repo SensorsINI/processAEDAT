@@ -1,4 +1,4 @@
-function PlotPolarity(input, numPlots, distributeBy, proportionOfPixels)
+function PlotPolarity(input, numPlots, distributeBy, proportionOfPixels, minTime, maxTime)
 
 %{
 Takes 'input' - a data structure containing an imported .aedat file, 
@@ -13,7 +13,6 @@ a certain ratio of an array full is reached.
 %}
 
 % The proportion of an array-full of events which is shown on a plot
-% (Hardcoded constant - could become a parameter)
 if ~exist('proportionOfPixels', 'var')
 	proportionOfPixels = 0.1;
 end
@@ -34,9 +33,13 @@ numPlotsX = round(sqrt(numPlots / 3 * 4));
 numPlotsY = ceil(numPlots / numPlotsX);
 
 numEvents = length(input.data.polarity.timeStamp); % ignore issue of valid / invalid for now ...
-if strcmp(distributeBy, 'time')
-	minTime = min(input.data.polarity.timeStamp);
-	maxTime = max(input.data.polarity.timeStamp);
+if strcmp(lower(distributeBy), 'time')
+  if ~exist('minTime')
+    minTime = min(input.data.polarity.timeStamp);
+  end
+  if ~exist('maxTime')
+    maxTime = max(input.data.polarity.timeStamp);
+  end
 	totalTime = maxTime - minTime;
 	timeStep = totalTime / numPlots;
 	timePoints = minTime + timeStep * 0.5 : timeStep : maxTime;
