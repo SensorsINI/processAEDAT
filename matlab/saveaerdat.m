@@ -22,7 +22,7 @@ function saveaerdat(train,filename)
 % this syntax: saveaerdat([int32(allTs),uint32(allAddr)])
 
 if nargin==1,
-    [filename,path,filterindex]=uiputfile('*.aedat','Save data file');
+    [filename,path,~]=uiputfile('*.aedat','Save data file');
 elseif nargin==2,
     path='';
 end
@@ -31,6 +31,11 @@ end
 if ~strcmp(ext,'aedat'),
     ext='.aedat';
 end
+
+if ~isempty(pathstr),
+    path=pathstr;
+end
+
 filename=fullfile(path,[name ext]);
 
 f=fopen(filename,'w','b'); % open the file for writing with big endian format
