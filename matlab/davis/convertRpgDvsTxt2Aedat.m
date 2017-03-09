@@ -12,7 +12,7 @@ function [allAddr,allTs]=convertRpgDvsTxt2Aedat(file)
 pathname=pwd;
 % check the input arguments
 if ~exist('file', 'var')
-    [filename,pathname,~]=uigetfile('events.txt','Select recorded retina text data file');
+    [filename,pathname,~]=uigetfile('*','Select Davis240 txt data file from RPG EB dataset');
     if filename==0, return; end
 elseif ischar(file)
     filename = file;
