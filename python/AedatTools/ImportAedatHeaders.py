@@ -43,8 +43,8 @@ def import_aedat_headers(info):
     info['formatVersion'] = 1
 
     # Read the first character
-    first_char = info['fileHandle'].read(1).decode('utf-8')
-    while first_char == '#':
+    is_comment = '#' in str(info['fileHandle'].read(1))
+    while is_comment:
 
         # Read the rest of the line
         line = info['fileHandle'].readline().decode('utf-8')
@@ -125,7 +125,7 @@ def import_aedat_headers(info):
         """
         # Read ahead the first character of the next line to complete the
         # while loop
-        first_char = info['fileHandle'].read(1).decode('utf-8')
+        is_comment = '#' in str(info['fileHandle'].read(1))
 
     # We have read ahead one byte looking for '#', and not found it.
     # Now wind back one to be in the right place to start reading
