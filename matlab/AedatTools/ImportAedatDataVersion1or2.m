@@ -351,7 +351,7 @@ elseif strfind(info.source, 'Davis')
 		frameYDouble = double(frameY);
 		frameXDiscont = abs(frameXDouble(2 : end) - frameXDouble(1 : end - 1)) > 1;
 		frameYDiscont = abs(frameYDouble(2 : end) - frameYDouble(1 : end - 1)) > 1;
-		frameStarts = [1; find(frameXDiscont & frameXDiscont) + 1; length(frameData) + 1]; 
+		frameStarts = [1; find(frameXDiscont & frameYDiscont) + 1; length(frameData) + 1]; 
 		% Now we have the indices of the first sample in each frame, plus
 		% an additional index just beyond the end of the array
 		numFrames = length(frameStarts) - 1;
