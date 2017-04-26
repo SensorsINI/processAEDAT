@@ -51,6 +51,7 @@ fprintf(f,'#!AER-DAT2.0\r\n');
 fprintf(f,'# This is a raw AE data file created by saveaerdat.m\r\n');
 fprintf(f,'# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\r\n');
 fprintf(f,'# Timestamps tick is 1 us\r\n');
+fprintf(f,'# End of ASCII Header\r\n');
 bof=ftell(f); % determine start of data records, which is end of header text
 
 % data format:
