@@ -150,8 +150,8 @@ ax1.set_ylabel('Contrast Sensitivity Threshold [%]', color='k')
     
 ax2 = ax1.twinx()
 ax2.set_ylim(-20,40)
-ax2.plot(lux[0:-1], on_snr[0:-1], '^', markersize=5, markerfacecolor='w', markeredgecolor='r', label='ON SNR')
-ax2.plot(lux[0:-1], off_snr[0:-1], 'v', markersize=5, markerfacecolor='w', markeredgecolor='r', label='OFF SNR')
+ax2.plot(lux[:], on_snr[:], '^', markersize=5, markerfacecolor='w', markeredgecolor='r', label='ON SNR')
+ax2.plot(lux[:], off_snr[:], 'v', markersize=5, markerfacecolor='w', markeredgecolor='r', label='OFF SNR')
 plt.legend(loc=4, frameon=True)
 
 ax2.set_ylabel('SNR [dB]', color='r')

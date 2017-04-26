@@ -32,10 +32,8 @@ ioff()
 # GET CHIP INFO
 ###################
 #QE folder
-directory_meas = ["Z:/Characterizations/Measurements_final/QE/QE_DAVIS208_MONO_30_06_16-13_57_03/",
-                  "Z:/Characterizations/Measurements_final/QE/QE_DAVIS240C_30_06_16-17_52_22/"]
-camera_file = ['cameras/davis208_parameters.txt',
-               'cameras/davis240c_parameters.txt']
+directory_meas = ["Z:/Characterizations/Measurements_final/QE/QE_DAVIS346B_29_06_16-10_54_44/"]
+camera_file = ['cameras/davis346_parameters.txt']
                
 QE = np.zeros([len(directory_meas),71,1,1])
 sensor_name_list = []
@@ -45,16 +43,16 @@ for index_chip in range(len(directory_meas)):
     sensor = info[0]
     # Replace this with measured conversion gain (with PTC measurements)
     if sensor == 'DAVISHet640':
-        conv_gain_uve = 70.0
+        conv_gain_uve = 60.0
     elif sensor == 'DAVIS240C':
         conv_gain_uve = 20.0
     elif sensor == 'DAVIS208':
-        conv_gain_uve = 20.0
+        conv_gain_uve = 23.0
         sensor = "sDAVIS"
     elif sensor == 'DAVIS346B':
-        conv_gain_uve = 20.0
+        conv_gain_uve = 23.0
     elif sensor == 'DAVIS346C':
-        conv_gain_uve = 20.0
+        conv_gain_uve = 23.0
 
     sensor_name_list.append(sensor)
     sensor_type =  info[1]

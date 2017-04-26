@@ -100,7 +100,7 @@ class APS_qe_slope:
             plt.xlabel('Exposure time [us]') 
             plt.ylabel('Mean[DN]') 
             plt.savefig(figure_dir+"sensitivity.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-            plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+#            plt.savefig(figure_dir+"sensitivity.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=600)
             plt.close("all")
             # Sensitivity fit
             print("Sensitivity fit...")
@@ -145,7 +145,7 @@ class APS_qe_slope:
                             plt.xlabel('Exposure time [us]') 
                             plt.ylabel('Mean[DN]') 
                             plt.savefig(figure_dir+"sensitivity_fit.pdf",  format='pdf', bbox_extra_artists=(lgd,), bbox_inches='tight') 
-                            plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=1000)
+#                            plt.savefig(figure_dir+"sensitivity_fit.png",  format='png', bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=600)
                             plt.close("all")
                                 
                         except ValueError:

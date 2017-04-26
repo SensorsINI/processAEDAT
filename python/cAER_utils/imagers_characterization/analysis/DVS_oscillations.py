@@ -123,10 +123,14 @@ class DVS_oscillations:
                 dy = plt.hist(yaddr, camera_dim[1])
             
             if (pixel_sel == False):
-                ind_x_max = int(st.mode(xaddr)[
-                                    0])  # int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194
-                ind_y_max = int(
-                    st.mode(yaddr)[0])  # int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+                # ind_x_max = int(st.mode(xaddr)[
+                #                    0])  # int(np.floor(np.median(xaddr)))#np.where(dx[0] == np.max(dx[0]))[0]#CB# 194
+                # ind_y_max = int(
+                #    st.mode(yaddr)[0])  # int(np.floor(np.median(yaddr)))#np.where(dy[0] == np.max(dy[0]))[0]#CB#45
+
+                # if the most frequent address is a hot pixel, manual selection here
+                ind_x_max = 163
+                ind_y_max = 163
                 print("selected pixel x: " + str(ind_x_max))
                 print("selected pixel y: " + str(ind_y_max))
             else:
@@ -361,7 +365,7 @@ class DVS_oscillations:
                 plt.ylabel("Y")
                 ax.set_title('3D event count')
                 fig.tight_layout() 
-                plt.savefig(figure_dir + "hist_only_" + str(this_file) + ".png", format='png', dpi=1000)
+#                plt.savefig(figure_dir + "hist_only_" + str(this_file) + ".png", format='png', dpi=1000)
 
             if do_plot:
 
@@ -397,7 +401,7 @@ class DVS_oscillations:
                 plt.xlabel("X")
                 plt.ylabel("Y")
                 # Find maximum point
-                plt.savefig(figure_dir + "combined_latency_" + str(this_file) + ".png", format='png', dpi=1000)
+#                plt.savefig(figure_dir + "combined_latency_" + str(this_file) + ".png", format='png', dpi=1000)
 
         if (dvs128xml == False):
             if do_plot:
@@ -429,7 +433,7 @@ class DVS_oscillations:
                     plt.ylabel('latency [us]')
                     plt.legend(loc='best')
                     plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".pdf", format='PDF')
-                    plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".png", format='PNG', dpi=1000)
+#                    plt.savefig(figure_dir + "all_latencies_" + str(this_file) + ".png", format='PNG', dpi=1000)
 
                 all_lux = np.array(all_lux)
                 all_prvalues = np.array(all_prvalues)
@@ -570,7 +574,7 @@ class DVS_oscillations:
                     if(not latency_only):
                         axarr[rows, cols].text(np.max(binss[1::]) / 4.0, -25,'lux = ' + str(all_lux[this_file]) + '\n' + 'PrBias = ' + str(all_prvalues[this_file]) + '\n', fontsize=11, color='b')
                     plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".pdf", format='PDF')
-                    plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".png", format='PNG', dpi=1000)
+#                    plt.savefig(figure_dir + "all_latencies_hist" + str(this_file) + ".png", format='PNG', dpi=1000)
                     
                     fig=plt.figure()
                     colors = cm.rainbow(np.linspace(0, 1, 2))
@@ -586,7 +590,7 @@ class DVS_oscillations:
                     lgd = plt.legend(loc=1)
                     fig.tight_layout() 
                     plt.savefig(figure_dir + "all_latencies_histnew" + str(this_file) + ".pdf", format='PDF')
-                    plt.savefig(figure_dir + "all_latencies_histnew" + str(this_file) + ".png", format='PNG', dpi=1000)
+#                    plt.savefig(figure_dir + "all_latencies_histnew" + str(this_file) + ".png", format='PNG', dpi=1000)
 
                 out_file.close()
 
@@ -603,7 +607,8 @@ class DVS_oscillations:
                          y_to_get=y_to_get,
                          all_ts_folded=all_ts_folded,
                          all_pol_folded=all_pol_folded,
-                         all_spike_order_folded=all_spike_order_folded)
+                         all_spike_order_folded=all_spike_order_folded,
+                         rising_edge=rising_edge)
 
         return all_lux, all_prvalues, all_originals, all_folded, all_pol, all_ts, all_final_index
 
