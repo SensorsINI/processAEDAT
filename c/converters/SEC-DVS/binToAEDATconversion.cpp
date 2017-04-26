@@ -262,8 +262,89 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 	//std::cerr << curr_time << std::endl;
 }
 
+
+void generateArtificialStream(const char* outfilename)
+{
+	std::ofstream outfile(outfilename);
+
+	writeAEDATHeadr(outfile);
+	bool changeEndian = false;
+	int duration = 0.1*1000000;
+	double dx = 640.0 / duration;
+	
+	int row1 = 100;
+	int row2 = 200;
+	int polarity = 1;
+	for (double x = 0.0; x < 640.0; x += dx)
+	{
+		double time = duration*x / 640.0;
+		int col = (int)x;
+		for (int i = row1; i < row2; i++)
+		{
+			int row = i;
+
+			char tmpbuffer[4];
+			tmpbuffer[0] = 0;
+			tmpbuffer[1] = 0;
+			tmpbuffer[2] = 0;
+			tmpbuffer[3] = 0;
+			tmpbuffer[0] = polarity;
+			tmpbuffer[0] = tmpbuffer[0] | ((col) & 0x7f) << 1;
+			tmpbuffer[1] = (col >> 7) & 0x7;
+			tmpbuffer[1] = tmpbuffer[1] | (row & 0x1f) << 3;
+			tmpbuffer[2] = row >> 5;
+			tmpbuffer[3] = 0;
+			// 				std::cerr << dps[i].polarity << " " << dps[i].col << " " << dps[i].row << std::endl;
+			// 				std::cerr << *((int*)tmpbuffer) << std::endl;
+			char buffer[4];
+			if (changeEndian)
+			{
+				buffer[0] = tmpbuffer[3];
+				buffer[1] = tmpbuffer[2];
+				buffer[2] = tmpbuffer[1];
+				buffer[3] = tmpbuffer[0];
+			}
+			else
+			{
+				buffer[0] = tmpbuffer[0];
+				buffer[1] = tmpbuffer[1];
+				buffer[2] = tmpbuffer[2];
+				buffer[3] = tmpbuffer[3];
+			}
+
+			outfile.write(buffer, 4);
+
+			unsigned int uitimestamp = (unsigned int)(time);
+			//std::cerr << uitimestamp << std::endl;
+			char* tsp = (char*)&uitimestamp;
+			if (changeEndian)
+			{
+				buffer[0] = tsp[3];
+				buffer[1] = tsp[2];
+				buffer[2] = tsp[1];
+				buffer[3] = tsp[0];
+			}
+			else
+			{
+				buffer[0] = tsp[0];
+				buffer[1] = tsp[1];
+				buffer[2] = tsp[2];
+				buffer[3] = tsp[3];
+			}
+			//memcpy(buffer, &timestap, 4);
+			outfile.write(buffer, 4);
+
+		}
+
+
+	}
+
+}
+
 int main(int argc, char** argv)
 {
-	convertBinGen2ToAEDAT(argv[1], argv[2], 0);
-
+	if (argc > 2)
+		convertBinGen2ToAEDAT(argv[1], argv[2], 0);
+	else
+		generateArtificialStream(argv[1]);
 }
