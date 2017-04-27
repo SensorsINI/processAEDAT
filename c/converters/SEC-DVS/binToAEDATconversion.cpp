@@ -186,13 +186,15 @@ void writeAEDATHeadr(std::ofstream& file)
 
 void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool swap_bits)
 {
-	std::ofstream outfile(outfilename);
+	std::ofstream outfile(outfilename, std::ofstream::binary);
 	std::ifstream infile(infilename, std::ifstream::binary);
 	double curr_time = 0.0;
 	writeAEDATHeadr(outfile);
-	bool changeEndian = false;
+	bool changeEndian = true;
 	unsigned char buf[4];
 	int wordsread = 0;
+	int xshift = 1;
+	int yshift = 11;
 	while (!infile.eof())
 	{
 //		std::cerr << "time: "<<curr_time << std::endl;
@@ -229,18 +231,26 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 
 			for (int i = 0; i < dps.size(); i++)
 			{
-				char tmpbuffer[4];
-				tmpbuffer[0] = 0;
-				tmpbuffer[1] = 0;
-				tmpbuffer[2] = 0;
-				tmpbuffer[3] = 0;
-				tmpbuffer[0] = dps[i].polarity>0?1:0;
-				tmpbuffer[0] = tmpbuffer[0] | ((dps[i].col)&0x7f)<<1;
-				tmpbuffer[1] = (dps[i].col >> 7) & 0x7;
-				tmpbuffer[1] = tmpbuffer[1] | (dps[i].row&0x1f)<<3;
-				tmpbuffer[2] = dps[i].row >> 5;
-				tmpbuffer[3] = 0;
-// 				std::cerr << dps[i].polarity << " " << dps[i].col << " " << dps[i].row << std::endl;
+				if (dps[i].col < 0 || dps[i].col >= 640 || dps[i].row < 0 || dps[i].row >= 480)
+					continue;
+				int addr = dps[i].polarity>0 ? 1 : 0;
+				addr = addr | (dps[i].col << xshift);
+				addr = addr | (dps[i].row << yshift);
+				//			int addr = 0;
+				unsigned char* tmpbuffer = (unsigned char*)(&addr);
+
+// 				char tmpbuffer[4];
+// 				tmpbuffer[0] = 0;
+// 				tmpbuffer[1] = 0;
+// 				tmpbuffer[2] = 0;
+// 				tmpbuffer[3] = 0;
+// 				tmpbuffer[0] = dps[i].polarity>0?1:0;
+// 				tmpbuffer[0] = tmpbuffer[0] | ((dps[i].col)&0x7f)<<1;
+// 				tmpbuffer[1] = (dps[i].col >> 7) & 0x7;
+// 				tmpbuffer[1] = tmpbuffer[1] | (dps[i].row&0x1f)<<3;
+// 				tmpbuffer[2] = dps[i].row >> 5;
+// 				tmpbuffer[3] = 0;
+ 				//std::cerr << dps[i].polarity << " " << dps[i].col << " " << dps[i].row << std::endl;
 // 				std::cerr << *((int*)tmpbuffer) << std::endl;
 				char buffer[4];
 				if (changeEndian)
@@ -397,7 +407,7 @@ void generateArtificialStream(const char* outfilename)
 int main(int argc, char** argv)
 {
 	if (argc > 2)
-		convertBinGen2ToAEDAT(argv[1], argv[2], 0);
+		convertBinGen2ToAEDAT(argv[1], argv[2], atoi(argv[3]));
 	else
 		generateArtificialStream(argv[1]);
 }
