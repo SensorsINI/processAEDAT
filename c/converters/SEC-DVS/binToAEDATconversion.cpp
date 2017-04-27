@@ -63,7 +63,7 @@ int interpretTPGen2(unsigned char w[4])
 	return timestamp;
 }
 
-bool interpretPaddrGen2(unsigned char w[4], std::vector<dvs_event> & dps, int flip, int maxind, int column, int timestamp)
+bool interpretPaddrGen2(unsigned char w[4], std::vector<dvs_event> & dps, int colflip, int rowflip, int column, int timestamp)
 {
 	bool success = false;
 	unsigned int w0 = w[0];
@@ -85,8 +85,10 @@ bool interpretPaddrGen2(unsigned char w[4], std::vector<dvs_event> & dps, int fl
 				dp.sensorid = w1 & 128;
 				dp.ts = timestamp;
 
-				if (dp.col >= 0 && dp.col <= maxind && flip == 1)
-					dp.col = int(maxind - (int)dp.col);
+				if (dp.col >= 0 && dp.col < SENSOR_WIDTH && colflip == 1)
+					dp.col = int(SENSOR_WIDTH - 1 - (int)dp.col);
+				if (dp.row >= 0 && dp.row < SENSOR_HEIGHT && rowflip == 1)
+					dp.row = int(SENSOR_HEIGHT - 1 - (int)dp.row);
 				dps.push_back(dp);
 			}
 			if ((w2&(1 << i)) > 0)
@@ -97,8 +99,10 @@ bool interpretPaddrGen2(unsigned char w[4], std::vector<dvs_event> & dps, int fl
 				dp.sensorid = w1 & 128;
 				dp.ts = timestamp;
 
-				if (dp.col >= 0 && dp.col <= maxind && flip == 1)
-					dp.col = int(maxind - (int)dp.col);
+				if (dp.col >= 0 && dp.col < SENSOR_WIDTH && colflip == 1)
+					dp.col = int(SENSOR_WIDTH - 1 - (int)dp.col);
+				if (dp.row >= 0 && dp.row < SENSOR_HEIGHT && rowflip == 1)
+					dp.row = int(SENSOR_HEIGHT - 1 - (int)dp.row);
 				dps.push_back(dp);
 			}
 		}
@@ -225,7 +229,7 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 			}
 			else if (column>-1)
 			{
-				interpretPaddrGen2(buf, dps, 0, SENSOR_WIDTH - 1, column, timestamp);
+				interpretPaddrGen2(buf, dps, 0,1, column, timestamp);
 //				std::cerr << "data  " << std::endl;
 			}
 
@@ -233,7 +237,7 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 			{
 				if (dps[i].col < 0 || dps[i].col >= 640 || dps[i].row < 0 || dps[i].row >= 480)
 					continue;
-				int addr = dps[i].polarity>0 ? 1 : 0;
+				int addr = dps[i].polarity!=0 ? 1 : 0;
 				addr = addr | (dps[i].col << xshift);
 				addr = addr | (dps[i].row << yshift);
 				//			int addr = 0;
@@ -270,7 +274,7 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 
 				outfile.write(buffer, 4);
 
-				unsigned int uitimestamp = (unsigned int)(curr_time*1000);
+				unsigned int uitimestamp = (unsigned int)(curr_time*1000 + timestamp);
 				//std::cerr << uitimestamp << std::endl;
 				char* tsp = (char*)&uitimestamp;
 				if (changeEndian)
