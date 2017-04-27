@@ -142,19 +142,46 @@ bool interpretPendGen2(unsigned char w[4])
 
 void writeAEDATHeadr(std::ofstream& file)
 {
+/*
+#!AER-DAT2.0
+# This is a raw AE data file - do not edit
+# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event
+# Timestamps tick is 1 us
+# created Thu Jun 07 13:10:59 CEST 2012
+
+*/
+
+
 	/*
-	#!AER-DAT2.0
+	#!AER-DAT2.0x
 	# This is a raw AE data file - do not edit
 	# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event
 	# Timestamps tick is 1 us
 	# created Fri Aug 03 16:29:47 CEST 2012
 	*/
+
+
 	file << "#!AER-DAT2.0" << std::endl;
 	file << "# This is a raw AE data file - do not edit" << std::endl;
 	file << "# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event" << std::endl;
 	file << "# Timestamps tick is 1 us" << std::endl;
 	file << "# created CC 2017" << std::endl;
+	file << "#End Of ASCII Header\r\n\n\n\n\n\n";// << std::endl;
+	
+// 	file << "#!AER-DAT2.0\r\n";
+// 	file << "# This is a raw AE data file - do not edit\r\n";
+// 	file << "# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\r\n";
+// 	file << "# Timestamps tick is 1 us\r\n";
+// 	file << "# created CC 2017\r\n";
+// 	file << "# End Of ASCII Header\r\n";
 
+	/*
+	file << "#!AER-DAT2.0" << std::endl;
+	file << "# This is a raw AE data file - do not edit" << std::endl;
+	file << "# Data format is int32 address, int32 timestamp(8 bytes total), repeated for each event" << std::endl;
+	file << "# Timestamps tick is 1 us" << std::endl;
+	file << "# created Thu Jun 07 13:10 : 59 CEST 2012" << std::endl;
+*/
 }
 
 void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool swap_bits)
@@ -265,38 +292,61 @@ void convertBinGen2ToAEDAT(const char* infilename, const char* outfilename, bool
 
 void generateArtificialStream(const char* outfilename)
 {
-	std::ofstream outfile(outfilename);
+	std::ofstream outfile(outfilename, /*std::ios::out | std::ios::binary*/ std::ofstream::binary);
 
 	writeAEDATHeadr(outfile);
-	bool changeEndian = false;
+	bool changeEndian = true;
 	int duration = 0.1*1000000;
 	double dx = 640.0 / duration;
 	
 	int row1 = 100;
 	int row2 = 200;
 	int polarity = 1;
+
+	int xshift = 1;
+	int yshift = 11;
+	int xmask = 0x7ff;
+	int ymask = 0xff800;
+
+//	int itime = 29; 
 	for (double x = 0.0; x < 640.0; x += dx)
 	{
 		double time = duration*x / 640.0;
 		int col = (int)x;
 		for (int i = row1; i < row2; i++)
 		{
+//			int time = itime;
+//			itime++;
 			int row = i;
 
+			unsigned char buffer[4];
+
+
+
+#if 0
 			char tmpbuffer[4];
 			tmpbuffer[0] = 0;
 			tmpbuffer[1] = 0;
 			tmpbuffer[2] = 0;
 			tmpbuffer[3] = 0;
+
 			tmpbuffer[0] = polarity;
-			tmpbuffer[0] = tmpbuffer[0] | ((col) & 0x7f) << 1;
+			tmpbuffer[0] = tmpbuffer[0] | (((col) & 0x7f) << 1);
 			tmpbuffer[1] = (col >> 7) & 0x7;
-			tmpbuffer[1] = tmpbuffer[1] | (row & 0x1f) << 3;
+			tmpbuffer[1] = tmpbuffer[1] | ((row & 0x1f) << 3);
 			tmpbuffer[2] = row >> 5;
 			tmpbuffer[3] = 0;
+
+
+#else
+			int addr = polarity;
+			addr = addr | (col << xshift);
+			addr = addr | (row << yshift);
+//			int addr = 0;
+			unsigned char* tmpbuffer = (unsigned char*)(&addr);
+#endif
 			// 				std::cerr << dps[i].polarity << " " << dps[i].col << " " << dps[i].row << std::endl;
 			// 				std::cerr << *((int*)tmpbuffer) << std::endl;
-			char buffer[4];
 			if (changeEndian)
 			{
 				buffer[0] = tmpbuffer[3];
@@ -312,11 +362,12 @@ void generateArtificialStream(const char* outfilename)
 				buffer[3] = tmpbuffer[3];
 			}
 
-			outfile.write(buffer, 4);
+			outfile.write((char*)buffer, 4);
 
 			unsigned int uitimestamp = (unsigned int)(time);
+//			unsigned int uitimestamp = (unsigned int)(30);
 			//std::cerr << uitimestamp << std::endl;
-			char* tsp = (char*)&uitimestamp;
+			unsigned char* tsp = (unsigned char*)&uitimestamp;
 			if (changeEndian)
 			{
 				buffer[0] = tsp[3];
@@ -332,13 +383,15 @@ void generateArtificialStream(const char* outfilename)
 				buffer[3] = tsp[3];
 			}
 			//memcpy(buffer, &timestap, 4);
-			outfile.write(buffer, 4);
+			//std::cerr << (int)(buffer[0]) << " " << (int)(buffer[1]) << " " << (int)(buffer[2]) << " " << (int)(buffer[3]) << " " << std::endl;
+			outfile.write((char*)buffer, 4);
+
 
 		}
 
 
 	}
-
+//	std::cerr <<"time: "<< itime << std::endl;
 }
 
 int main(int argc, char** argv)
