@@ -14,13 +14,13 @@ window = app.Window(1024,1024, color=(1,1,1,1))
 points = PointCollection("agg", color="local", size="local")
 
 # PARAMETERS 
-host = "127.0.0.1"
+host = "172.19.11.247"
 port = 7777
 xdim = 64
 ydim = 64
 jaer_logging = True
 
-Z = [[],[]]
+Z = [[],[], []]
 q = Queue.Queue()
 q.put(Z)
 counter = 0
@@ -78,8 +78,8 @@ def ind2sub(array_shape, ind):
 def caerSpikeEventGetY(coreid,chipid,neuronid):
     
     columnId = (neuronid & 0x0F)
-    addColumn = (coreid & 0x01)
-    addColumnChip = (chipid & (0x01 << 2))
+    addColumn = bool(coreid & 0x01)
+    addColumnChip = bool(chipid & (0x01 << 2))
     columnId = (columnId + (addColumn) * 16 + (addColumnChip) * 32)
 
     return columnId
@@ -87,14 +87,14 @@ def caerSpikeEventGetY(coreid,chipid,neuronid):
 def caerSpikeEventGetX(coreid,chipid,neuronid):
 
     rowId = ((neuronid >> 4) & 0x0F)
-    addRow = (coreid & (0x01 << 1))
-    addRowChip = (chipid & (0x01 << 3))
+    addRow = bool(coreid & (0x01 << 1))
+    addRowChip = bool(chipid & (0x01 << 3))
     rowId = (rowId + (addRow) * 16 + (addRowChip) * 32)
 
     return rowId
 
 
-def read_events(Z):
+def read_events(q):
     """ A simple function that read events from cAER tcp"""
     
     while getattr(t, "do_run", True):
@@ -143,14 +143,14 @@ def read_events(Z):
         lock.acquire()
         end = time.clock()
         print "%.2gs" % (end-start)
-        q.put([[x_addr_tot],[y_addr_tot]])
+        q.put([[core_id_tot], [chip_id_tot], [neuron_id_tot]])
         lock.release()
    
 
 t = threading.Thread(target=read_events,args=(q,))
 lock = threading.Lock()
 t.start()    
-    
+dt = 0;    
 @window.event    
 def on_close():
     t.do_run = False
@@ -162,20 +162,23 @@ def on_close():
 def on_draw(dt):
     window.clear()
     points.draw()
-    print("check")
+    #print("check")
     if(q.empty() != True):
         lock.acquire()
         tt = q.get()
-        xx = np.array(tt[0])
-        yy = np.array(tt[1])
-        for key in range(len(xx)):
-            print(type(xx[key]))
-            for el in range(len(xx[key])):
-                x_c = float(xx[key][el])/64.0
-                y_c = float(yy[key][el])/64.0
-                points.append([x_c,y_c,0],
-                          color = np.random.uniform(0,1,4),
-                          size  = np.random.uniform(2,2,1))
+        coreid = [item for sublist in tt[0] for item in sublist]
+        chipid = [item for sublist in tt[1] for item in sublist]
+        neuronid = [item for sublist in tt[2] for item in sublist]
+        for i in range(len(chipid)):
+            dt += 1.0/256.0
+            if(dt >= 1):
+                dt = 0
+            y_c = (neuronid[i])*((chipid[i]>>2)+16)+(coreid[i]*16)
+            y_c = float(y_c)/(256.0*4.0)
+            print("quadrant->",str(chipid[i]>>2),"xc->", str(dt), "yc->",str(y_c))
+            points.append([dt,y_c,0],
+                      color = np.random.uniform(0,1,4),
+                      size  = np.random.uniform(2,2,1))
         lock.release()
     else:
 	    print("empty")
