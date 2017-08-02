@@ -20,7 +20,7 @@ xdim = 64
 ydim = 64
 jaer_logging = True
 
-Z = [[],[], []]
+Z = [[],[], [], []]
 q = Queue.Queue()
 q.put(Z)
 counter = 0
@@ -105,9 +105,7 @@ def read_events(q):
         core_id_tot = []
         chip_id_tot = []
         neuron_id_tot = []
-        x_addr_tot = []
-        y_addr_tot = []
-        pol_tot = []
+        timestamp_tot = []
         print("eventtype->"+str(int(eventtype)))
         if(eventtype == 12):  # something is wrong as we set in the cAER to send only polarity events
             eventtype = struct.unpack('H', data[0:2])[0]
@@ -133,17 +131,13 @@ def read_events(q):
                 neuron_id_tot.append(neuron_id)
                 #print (core_id, chip_id, neuron_id, 1)
                 counter = counter + eventsize
-                xx = caerSpikeEventGetX(core_id, chip_id, neuron_id)
-                yy = caerSpikeEventGetY(core_id, chip_id, neuron_id)
-                x_addr_tot.append(xx)
-                y_addr_tot.append(yy)     
-                pol_tot.append(1)
+                timestamp_tot.append(timestamp)
                 #print("xx->", str(xx), "yy->",str(yy))
         
         lock.acquire()
         end = time.clock()
         print "%.2gs" % (end-start)
-        q.put([[core_id_tot], [chip_id_tot], [neuron_id_tot]])
+        q.put([[core_id_tot], [chip_id_tot], [neuron_id_tot], [timestamp_tot]])
         lock.release()
    
 
@@ -169,13 +163,22 @@ def on_draw(dt):
         coreid = [item for sublist in tt[0] for item in sublist]
         chipid = [item for sublist in tt[1] for item in sublist]
         neuronid = [item for sublist in tt[2] for item in sublist]
+        timestamp = [item for sublist in tt[3] for item in sublist]
+        timestamp = np.diff(timestamp)
+        np.append(timestamp,1)
         for i in range(len(chipid)):
-            dt += 1.0/256.0
+            if(i < len(chipid)-1):
+                dt += timestamp[i]/256.0
             if(dt >= 1):
                 dt = 0
             y_c = (neuronid[i])*((chipid[i]>>2)+16)+(coreid[i]*16)
-            y_c = float(y_c)/(256.0*4.0)
-            print("quadrant->",str(chipid[i]>>2),"xc->", str(dt), "yc->",str(y_c))
+            y_c = float(y_c)/(1024.0*4.0)
+            if(chipid[i] > 4):
+                mul = 1
+            else:
+                mul = -1
+            y_c = y_c * mul
+            #print("timestamp->",str(timestamp),"quadrant->",str(chipid[i]>>2),"xc->", str(dt), "yc->",str(y_c))
             points.append([dt,y_c,0],
                       color = np.random.uniform(0,1,4),
                       size  = np.random.uniform(2,2,1))
