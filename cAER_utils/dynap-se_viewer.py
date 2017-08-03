@@ -10,8 +10,8 @@ import struct
 import time
 import threading, Queue
 
-sizeW = 1024
-window = app.Window(sizeW,sizeW, color=(1,1,1,1))
+sizeW = 4096
+window = app.Window(sizeW,sizeW, color=(0,0,0,1))
 points = PointCollection("agg", color="local", size="local")
 
 # PARAMETERS 
@@ -69,37 +69,6 @@ def matrix_active(x, y, pol):
                 matrix[y[i], x[i]] = 1
 
     return matrix
-
-def sub2ind(array_shape, rows, cols):
-    ind = rows * array_shape[1] + cols
-    ind[ind < 0] = -1
-    ind[ind >= array_shape[0] * array_shape[1]] = -1
-    return ind
-
-def ind2sub(array_shape, ind):
-    ind[ind < 0] = -1
-    ind[ind >= array_shape[0] * array_shape[1]] = -1
-    rows = (ind.astype('int') / array_shape[1])
-    cols = ind % array_shape[1]
-    return (rows, cols)
-    
-def caerSpikeEventGetY(coreid,chipid,neuronid):
-    
-    columnId = (neuronid & 0x0F)
-    addColumn = bool(coreid & 0x01)
-    addColumnChip = bool(chipid & (0x01 << 2))
-    columnId = (columnId + (addColumn) * 16 + (addColumnChip) * 32)
-
-    return columnId
-
-def caerSpikeEventGetX(coreid,chipid,neuronid):
-
-    rowId = ((neuronid >> 4) & 0x0F)
-    addRow = bool(coreid & (0x01 << 1))
-    addRowChip = bool(chipid & (0x01 << 3))
-    rowId = (rowId + (addRow) * 16 + (addRowChip) * 32)
-
-    return rowId
 
 
 def read_events(q):
@@ -221,13 +190,13 @@ def on_draw(dt):
                     y_c = float(y_c)/(1024*2.0)
                 elif((chipid[i]>>2) == 2 ):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
-                    y_c = (float(y_c)/(1024*4.0))*2-((1024*0.5)/sizeW)          
+                    y_c = (float(y_c)/(1024*4.0))*2-((sizeW*0.5)/sizeW)          
                 elif((chipid[i]>>2) == 1 ):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
                     y_c = -(float(y_c)/(1024*2.0))
                 elif((chipid[i]>>2) == 3 ):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
-                    y_c = -(float(y_c)/(1024*2.0))+((1024*0.5)/sizeW)*3          
+                    y_c = -(float(y_c)/(1024*2.0))+((sizeW*0.5)/sizeW)*3          
                     #print(y_c)
                 if(coreid[i] == 0):
                     col = (1,0,1,1)
@@ -237,11 +206,11 @@ def on_draw(dt):
                     col = (0,1,1,1)
                 elif(coreid[i] == 3):
                     col = (0,0,1,1)
-                y_c = round(y_c, 4)
+                y_c = round(y_c, 6)
 
                 points.append([dtt,y_c,0],
                           color = col,
-                          size  = np.random.uniform(2,2,1))
+                          size  = 1)
                       
         lock.release()
     else:
