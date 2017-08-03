@@ -10,7 +10,8 @@ import struct
 import time
 import threading, Queue
 
-window = app.Window(1024,1024, color=(1,1,1,1))
+sizeW = 1024
+window = app.Window(sizeW,sizeW, color=(1,1,1,1))
 points = PointCollection("agg", color="local", size="local")
 
 # PARAMETERS 
@@ -106,7 +107,7 @@ def read_events(q):
         chip_id_tot = []
         neuron_id_tot = []
         timestamp_tot = []
-        print("eventtype->"+str(int(eventtype)))
+        #print("eventtype->"+str(int(eventtype)))
         if(eventtype == 12):  # something is wrong as we set in the cAER to send only polarity events
             eventtype = struct.unpack('H', data[0:2])[0]
             eventsource = struct.unpack('H', data[2:4])[0]
@@ -136,15 +137,37 @@ def read_events(q):
         
         lock.acquire()
         end = time.clock()
-        print "%.2gs" % (end-start)
+        #print "%.2gs" % (end-start)
         q.put([[core_id_tot], [chip_id_tot], [neuron_id_tot], [timestamp_tot]])
         lock.release()
    
+import sys   
+sys.setrecursionlimit(sizeW*10)
+
+def shiftList(ll):
+    if(len(ll) == 0):
+        return
+    else:
+        nel = len(ll)
+        bc = ll[nel-1]
+        ll[nel-1].vertices[0][0][0] = bc.vertices[0][0][0]-0.1
+        shiftList(ll)
+            
+def emptyList(ll):
+    if(len(ll) == 0):
+        return
+    else:
+        nel = len(ll)
+        bc = ll[nel-1]
+        if(bc.vertices[0][0][0] < -1):
+            del ll[nel-1]
+        emptyList(ll)    
 
 t = threading.Thread(target=read_events,args=(q,))
 lock = threading.Lock()
 t.start()    
-dt = 0;    
+dtt = 0; 
+   
 @window.event    
 def on_close():
     t.do_run = False
@@ -154,9 +177,9 @@ def on_close():
     
 @window.event
 def on_draw(dt):
+    global dtt 
     window.clear()
     points.draw()
-    #print("check")
     if(q.empty() != True):
         lock.acquire()
         tt = q.get()
@@ -165,29 +188,45 @@ def on_draw(dt):
         neuronid = [item for sublist in tt[2] for item in sublist]
         timestamp = [item for sublist in tt[3] for item in sublist]
         timestamp = np.diff(timestamp)
-        np.append(timestamp,1)
-        for i in range(len(chipid)):
-            if(i < len(chipid)-1):
-                dt += timestamp[i]/256.0
-            if(dt >= 1):
-                dt = 0
-            y_c = (neuronid[i])*((chipid[i]>>2)+16)+(coreid[i]*16)
-            y_c = float(y_c)/(1024.0*4.0)
-            if(chipid[i] > 4):
-                mul = 1
-            else:
-                mul = -1
-            y_c = y_c * mul
-            #print("timestamp->",str(timestamp),"quadrant->",str(chipid[i]>>2),"xc->", str(dt), "yc->",str(y_c))
-            points.append([dt,y_c,0],
-                      color = np.random.uniform(0,1,4),
-                      size  = np.random.uniform(2,2,1))
+        timestamp = np.insert(timestamp,0,0.0001)
+        full_time = 1024.0
+        if(len(chipid) > 1):
+            for i in range(len(chipid)):
+                if(float(timestamp[i])*1e-6 >= 0):
+                    dtt += float(timestamp[i])*1e-6
+                else:
+                    print("NEG")
+                    print(float(timestamp[i])*1e-6)
+                if(dtt >= 1.0):
+                    dtt = -1.0
+                    shiftList(points)
+                y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
+                y_c = float(y_c)/(1024.0*4.0)
+                if( (chipid[i]>>2) > 2):
+                    mul = 1
+                else:
+                    mul = -1
+                y_c = y_c * mul
+                if(coreid[i] == 0):
+                    col = (1,0,1,1)
+                elif(coreid[i] == 1):
+                    col = (1,0,0,1)
+                elif(coreid[i] == 2):
+                    col = (0,1,1,1)
+                elif(coreid[i] == 3):
+                    col = (0,0,1,1)
+                points.append([dtt,y_c,0],
+                          color = col,
+                          size  = np.random.uniform(2,2,1))
+                      
         lock.release()
     else:
 	    print("empty")
+	    
+dtt = -1.0	    
 window.attach(points["transform"])
 window.attach(points["viewport"])
-app.run()
+app.run(framerate=60)
 
 
 
