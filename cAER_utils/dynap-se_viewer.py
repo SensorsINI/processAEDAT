@@ -27,7 +27,14 @@ q.put(Z)
 counter = 0
 
 sock = socket.socket()
-sock.connect((host, port))
+connected = False
+while not connected:
+    try:
+        sock.connect((host, port))
+        connected = True
+    except Exception as e:
+        pass #Do nothing, just try again
+
 ## initialize network
 ## as in http://inilabs.com/support/software/fileformat/#h.kbta1pm6k3qt
 data = sock.recv(20, socket.MSG_WAITALL)
@@ -144,6 +151,14 @@ def read_events(q):
 import sys   
 sys.setrecursionlimit(sizeW*10)
 
+def clearFront(ll, i, index=0):
+    if(index == 0):
+        index = 500
+    if(len(ll) > i+index):
+        del ll[i-index]
+        index -= 1
+        clearFront(ll, i, index=index)
+
 def shiftList(ll):
     if(len(ll) == 0):
         return
@@ -189,24 +204,31 @@ def on_draw(dt):
         timestamp = [item for sublist in tt[3] for item in sublist]
         timestamp = np.diff(timestamp)
         timestamp = np.insert(timestamp,0,0.0001)
-        full_time = 1024.0
+        full_time = float(sizeW)
         if(len(chipid) > 1):
             for i in range(len(chipid)):
                 if(float(timestamp[i])*1e-6 >= 0):
-                    dtt += float(timestamp[i])*1e-6
+                    dtt += float(timestamp[i])*1e-3
+                    clearFront(points, i)
                 else:
                     print("NEG")
                     print(float(timestamp[i])*1e-6)
                 if(dtt >= 1.0):
                     dtt = -1.0
-                    shiftList(points)
-                y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
-                y_c = float(y_c)/(1024.0*4.0)
-                if( (chipid[i]>>2) > 2):
-                    mul = 1
-                else:
-                    mul = -1
-                y_c = y_c * mul
+                y_c = 0
+                if( (chipid[i]>>2) == 0):
+                    y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
+                    y_c = float(y_c)/(1024*2.0)
+                elif((chipid[i]>>2) == 2 ):
+                    y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
+                    y_c = (float(y_c)/(1024*4.0))*2-((1024*0.5)/sizeW)          
+                elif((chipid[i]>>2) == 1 ):
+                    y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
+                    y_c = -(float(y_c)/(1024*2.0))
+                elif((chipid[i]>>2) == 3 ):
+                    y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
+                    y_c = -(float(y_c)/(1024*2.0))+((1024*0.5)/sizeW)*3          
+                    #print(y_c)
                 if(coreid[i] == 0):
                     col = (1,0,1,1)
                 elif(coreid[i] == 1):
@@ -215,6 +237,8 @@ def on_draw(dt):
                     col = (0,1,1,1)
                 elif(coreid[i] == 3):
                     col = (0,0,1,1)
+                y_c = round(y_c, 4)
+
                 points.append([dtt,y_c,0],
                           color = col,
                           size  = np.random.uniform(2,2,1))
@@ -223,6 +247,7 @@ def on_draw(dt):
     else:
 	    print("empty")
 	    
+
 dtt = -1.0	    
 window.attach(points["transform"])
 window.attach(points["viewport"])
