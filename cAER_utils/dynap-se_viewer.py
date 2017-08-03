@@ -60,18 +60,6 @@ if(source_number != 1 ):
     print("Source Number version not implemented -> " + str(source_number))
     raise Exception
 
-def matrix_active(x, y, pol):
-    matrix = np.zeros([ydim, xdim])
-    for i in range(len(x)):
-        if(y[i] < ydim and x[i] < xdim):
-            if(pol[i] == 0):
-                matrix[y[i], x[i]] = -1  
-            else:
-                matrix[y[i], x[i]] = 1
-
-    return matrix
-
-
 def read_events(q):
     """ A simple function that read events from cAER tcp"""
     
@@ -148,6 +136,7 @@ def emptyList(ll):
             del ll[nel-1]
         emptyList(ll)    
 
+# start thread that reads from net, it communicates to the main via the Queue q
 t = threading.Thread(target=read_events,args=(q,))
 lock = threading.Lock()
 t.start()    
