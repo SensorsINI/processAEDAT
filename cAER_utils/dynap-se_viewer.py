@@ -10,22 +10,23 @@ import struct
 import time
 import threading, Queue
 
-sizeW = 4096
-window = app.Window(sizeW,sizeW, color=(0,0,0,1))
-points = PointCollection("agg", color="local", size="local")
-
 # PARAMETERS 
 host = "172.19.11.247"
 port = 7777
 xdim = 64
 ydim = 64
-jaer_logging = True
+sizeW = 512
+#end parameters
+
+
+window = app.Window(sizeW,sizeW, color=(0,0,0,1))
+points = PointCollection("agg", color="local", size="local")
 
 Z = [[],[], [], []]
 q = Queue.Queue()
 q.put(Z)
-counter = 0
 
+#connect to remote cAER
 sock = socket.socket()
 connected = False
 while not connected:
@@ -122,7 +123,7 @@ sys.setrecursionlimit(sizeW*10)
 
 def clearFront(ll, i, index=0):
     if(index == 0):
-        index = 500
+        index = 1
     if(len(ll) > i+index):
         del ll[i-index]
         index -= 1
@@ -173,15 +174,12 @@ def on_draw(dt):
         timestamp = [item for sublist in tt[3] for item in sublist]
         timestamp = np.diff(timestamp)
         timestamp = np.insert(timestamp,0,0.0001)
-        full_time = float(sizeW)
         if(len(chipid) > 1):
             for i in range(len(chipid)):
-                if(float(timestamp[i])*1e-6 >= 0):
-                    dtt += float(timestamp[i])*1e-3
-                    clearFront(points, i)
-                else:
-                    print("NEG")
-                    print(float(timestamp[i])*1e-6)
+
+                dtt += float(timestamp[i])*1e-3
+                clearFront(points, i)
+
                 if(dtt >= 1.0):
                     dtt = -1.0
                 y_c = 0
@@ -210,7 +208,7 @@ def on_draw(dt):
 
                 points.append([dtt,y_c,0],
                           color = col,
-                          size  = 1)
+                          size  = 3)
                       
         lock.release()
     else:
