@@ -142,6 +142,7 @@ def on_draw(dt):
                 if(dtt >= 1.0):
                     dtt = -1.0
                     del points[...]
+                    q.queue.clear()
                 y_c = 0
                 if( (chipid[i]>>2) == 0):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
@@ -166,15 +167,10 @@ def on_draw(dt):
                     col = (0,0,1,1)
                 y_c = round(y_c, 6)
 
-                points.append([dtt,y_c,0],
-                          color = col,
-                          size  = 3)
+                points.append([dtt,y_c,0], color = col, size  = 3)
                       
         lock.release()
-    else:
-	    print("empty")
 	    
-
 dtt = -1.0	    
 window.attach(points["transform"])
 window.attach(points["viewport"])
