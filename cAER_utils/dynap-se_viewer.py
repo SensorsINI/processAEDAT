@@ -106,37 +106,7 @@ def read_events(q):
         #print "%.2gs" % (end-start)
         q.put([[core_id_tot], [chip_id_tot], [neuron_id_tot], [timestamp_tot]])
         lock.release()
-   
-import sys   
-sys.setrecursionlimit(sizeW*10)
-
-def clearFront(ll, i, index=0):
-    if(index == 0):
-        index = 10
-    if(len(ll) > i+index):
-        del ll[i-index]
-        index -= 1
-        clearFront(ll, i, index=index)
-
-def shiftList(ll):
-    if(len(ll) == 0):
-        return
-    else:
-        nel = len(ll)
-        bc = ll[nel-1]
-        ll[nel-1].vertices[0][0][0] = bc.vertices[0][0][0]-0.1
-        shiftList(ll)
-            
-def emptyList(ll):
-    if(len(ll) == 0):
-        return
-    else:
-        nel = len(ll)
-        bc = ll[nel-1]
-        if(bc.vertices[0][0][0] < -1):
-            del ll[nel-1]
-        emptyList(ll)    
-
+    
 # start thread that reads from net, it communicates to the main via the Queue q
 t = threading.Thread(target=read_events,args=(q,))
 lock = threading.Lock()
@@ -168,14 +138,10 @@ def on_draw(dt):
             for i in range(len(chipid)):
 
                 dtt += float(timestamp[i])*timeMul
-                #clearFront(points, i)
                 
                 if(dtt >= 1.0):
                     dtt = -1.0
                     del points[...]
-                    #new_points = PointCollection("agg", color="local", size="local")
-                    #points, new_points = new_points, points    
-                    #del new_points
                 y_c = 0
                 if( (chipid[i]>>2) == 0):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
