@@ -15,7 +15,8 @@ host = "172.19.11.247"
 port = 7777
 xdim = 64
 ydim = 64
-sizeW = 512
+sizeW = 1024
+timeMul = 10e-6
 #end parameters
 
 
@@ -111,7 +112,7 @@ sys.setrecursionlimit(sizeW*10)
 
 def clearFront(ll, i, index=0):
     if(index == 0):
-        index = 1
+        index = 10
     if(len(ll) > i+index):
         del ll[i-index]
         index -= 1
@@ -166,11 +167,15 @@ def on_draw(dt):
         if(len(chipid) > 1):
             for i in range(len(chipid)):
 
-                dtt += float(timestamp[i])*1e-3
-                clearFront(points, i)
-
+                dtt += float(timestamp[i])*timeMul
+                #clearFront(points, i)
+                
                 if(dtt >= 1.0):
                     dtt = -1.0
+                    del points[...]
+                    #new_points = PointCollection("agg", color="local", size="local")
+                    #points, new_points = new_points, points    
+                    #del new_points
                 y_c = 0
                 if( (chipid[i]>>2) == 0):
                     y_c = (neuronid[i])+(coreid[i]*256)+((chipid[i]>>2)*1024)
