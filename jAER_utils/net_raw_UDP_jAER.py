@@ -67,49 +67,49 @@ def net_raw_UDP_jAER(host='127.0.0.1', port=8991, buf_size=63000, num_read=250, 
 			# print "addr\t\t", addr
 			# print "timestamp\t", ts
 		
-		if(camera == 'DAVIS240'):
-			eventtype = (addr >> eventtypeshift) & 0x01
-		else:
-			eventtype = EVT_DVS
+			if(camera == 'DAVIS240'):
+				eventtype = (addr >> eventtypeshift) & 0x01
+			else:
+				eventtype = EVT_DVS
 		
-		if(eventtype == 0):  # this is a DVS event
-			x_addr = (addr & xmask) >> xshift
-			y_addr = (addr & ymask) >> yshift 
-			a_pol = (addr & pmask) >> pshift
-			if debug >= 3: 
-				print("ts->", ts)  # ok
-				print("x-> ", x_addr)
-				print("y-> ", y_addr)
-				print("pol->", a_pol)
+			if(eventtype == 0):  # this is a DVS event
+				x_addr = (addr & xmask) >> xshift
+				y_addr = (addr & ymask) >> yshift 
+				a_pol = (addr & pmask) >> pshift
+				if debug >= 3: 
+					print("ts->", ts)  # ok
+					print("x-> ", x_addr)
+					print("y-> ", y_addr)
+					print("pol->", a_pol)
 
-			timestamps.append(ts)
-			xaddr.append(x_addr)
-			yaddr.append(y_addr)
-			pol.append(a_pol)
+				timestamps.append(ts)
+				xaddr.append(x_addr)
+				yaddr.append(y_addr)
+				pol.append(a_pol)
 
-		if(eventtype == 1):  # this is an APS packet
-			x1 = sizeX
-			y1 = sizeY
+			if(eventtype == 1):  # this is an APS packet
+				x1 = sizeX
+				y1 = sizeY
 
-			x_addr = (addr & xmask) >> xshift
-			y_addr = (addr & ymask) >> yshift            
-			adc_data = addr & adcmask
-			read_reset = (addr >> 10) & 3
+				x_addr = (addr & xmask) >> xshift
+				y_addr = (addr & ymask) >> yshift            
+				adc_data = addr & adcmask
+				read_reset = (addr >> 10) & 3
 
-			if(x_addr >= x0 and x_addr < x1 and y_addr >= y0 and y_addr < y1):
-				if(read_reset == 0):  # is reset read
-					# print "reset", read_reset
-					frame[1, x_addr, y_addr] = adc_data
-					frame[5, x_addr, y_addr] = ts[0]  # resetTsBuffer;
-				if(read_reset == 1):  # is read signal
-					# print "read", read_reset
-					frame[2, x_addr, y_addr] = adc_data
-					frame[4, x_addr, y_addr] = ts[0]  # readTsBuffer;
-				# if(read_reset == 3):    # is imu read 
-					# print "read_reset", read_reset
-					# TODO: implement this
-			if((read_reset == 0) and x_addr == 0 and y_addr == 0):
-				frame = np.zeros([7, sizeX, sizeY]);
-				frames.append(frame)
+				if(x_addr >= x0 and x_addr < x1 and y_addr >= y0 and y_addr < y1):
+					if(read_reset == 0):  # is reset read
+						# print "reset", read_reset
+						frame[1, x_addr, y_addr] = adc_data
+						frame[5, x_addr, y_addr] = ts[0]  # resetTsBuffer;
+					if(read_reset == 1):  # is read signal
+						# print "read", read_reset
+						frame[2, x_addr, y_addr] = adc_data
+						frame[4, x_addr, y_addr] = ts[0]  # readTsBuffer;
+					# if(read_reset == 3):    # is imu read 
+						# print "read_reset", read_reset
+						# TODO: implement this
+				if((read_reset == 0) and x_addr == 0 and y_addr == 0):
+					frame = np.zeros([7, sizeX, sizeY]);
+					frames.append(frame)
 
 	return timestamps, xaddr, yaddr, pol, frames 
