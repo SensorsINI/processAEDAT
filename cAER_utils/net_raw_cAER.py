@@ -7,11 +7,14 @@
 import socket
 import struct
 
-host = "172.19.10.110"
+host = "127.0.0.1"
 port = 7777
 
 sock = socket.socket()
 sock.connect((host, port))
+
+# Discard initial main header, 20 bytes
+sock.recv(20, socket.MSG_WAITALL)
 
 ############################################
 # #header of the packet is in total 24 bytes
@@ -41,8 +44,8 @@ sock.connect((host, port))
 # timestamp 4 bytes     // timestamp in us
 
 while(1):
-    data = sock.recv(28)  # we read the header of the packet
-    
+    data = sock.recv(28, socket.MSG_WAITALL)  # we read the header of the packet
+
     # read header
     eventtype = struct.unpack('H', data[0:2])[0]
     if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
