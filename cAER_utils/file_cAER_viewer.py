@@ -47,8 +47,8 @@ def ind2sub(array_shape, ind):
 def skip_header():
     ''' skip header '''
     line = file_read.readline()
-    while line.startswith("#"):
-        if ( line == '#!END-HEADER\r\n'):
+    while line.startswith(b'#'):
+        if ( line == b'#!END-HEADER\r\n'):
             break
         else:
             line = file_read.readline()
